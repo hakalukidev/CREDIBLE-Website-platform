@@ -1,0 +1,812 @@
+// Credible - Database Schema
+// PostgreSQL + Prisma
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserRole {
+  GUEST
+  CUSTOMER
+  BUSINESS
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+  DELETED
+}
+
+enum BusinessStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  SUSPENDED
+  CLOSED
+}
+
+enum VerificationStatus {
+  NOT_STARTED
+  PENDING
+  DOCUMENTS_UPLOADED
+  AUTO_CHECKING
+  HUMAN_REVIEW_REQUIRED
+  APPROVED
+  REJECTED
+}
+
+enum VerificationLevel {
+  NONE
+  BASIC
+  CERTIFIED
+  PREMIUM
+}
+
+enum DocumentType {
+  TRADE_LICENSE
+  NATIONAL_ID
+  TAX_CERTIFICATE
+  BUSINESS_REGISTRATION
+  ADDRESS_PROOF
+  PROFESSIONAL_LICENSE
+  OTHER
+}
+
+enum DocumentStatus {
+  UPLOADED
+  PROCESSING
+  AI_EXTRACTED
+  AI_FLAGGED
+  APPROVED
+  REJECTED
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  FLAGGED
+  HIDDEN
+  DELETED
+  PENDING_MODERATION
+}
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  UNPAID
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+  CANCELED
+}
+
+enum PaymentGateway {
+  AAMARPAY
+  SSLCOMMERZ
+  MANUAL
+}
+
+enum BillingCycle {
+  ONE_TIME
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum PaymentMethodKind {
+  CREDIT_CARD
+  MOBILE_BANKING
+  BANK_TRANSFER
+  SSLCOMMERZ
+  AAMARPAY
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum ContactRequestStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  REJECTED
+}
+
+// ============================================================
+// MODELS
+// ============================================================
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  emailVerifiedAt DateTime?
+  phone           String?          @unique
+  phoneVerifiedAt DateTime?
+  passwordHash    String?
+  firstName       String?
+  lastName        String?
+  avatar          String?
+  role            UserRole         @default(CUSTOMER)
+  status          UserStatus       @default(ACTIVE)
+  locale          String?          @default("en")
+  lastLoginAt     DateTime?
+  // OAuth
+  providers       OAuthAccount[]
+  // Relations
+  business        Business?
+  reviews         Review[]
+  flags           ReviewFlag[]     @relation("FlagAuthor")
+  contactRequests ContactRequest[] @relation("ContactRequester")
+  subscriptions   Subscription[]
+  payments        Payment[]
+  paymentMethods  PaymentMethod[]
+  // Phase 5
+  apiKeys         ApiKey[]
+  // Timestamps
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+
+  @@index([role])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OAuthAccount {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       String // google, facebook
+  providerUserId String
+  accessToken    String?   @db.Text
+  refreshToken   String?   @db.Text
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+}
+
+model OtpToken {
+  id         String    @id @default(cuid())
+  userId     String?
+  email      String?
+  phone      String?
+  codeHash   String
+  purpose    String // email_verify, phone_verify, login, review
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([email, purpose])
+  @@index([phone, purpose])
+  @@index([expiresAt])
+}
+
+model Category {
+  id              String     @id @default(cuid())
+  slug            String     @unique
+  name            String
+  description     String?    @db.Text
+  icon            String?
+  parentId        String?
+  parent          Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children        Category[] @relation("CategoryTree")
+  businesses      Business[]
+  // SEO
+  metaTitle       String?
+  metaDescription String?    @db.Text
+  isActive        Boolean    @default(true)
+  order           Int        @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([parentId])
+  @@index([isActive])
+}
+
+model Business {
+  id                       String                    @id @default(cuid())
+  ownerId                  String                    @unique
+  owner                    User                      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  slug                     String                    @unique
+  legalName                String
+  displayName              String
+  description              String?                   @db.Text
+  logo                     String?
+  coverImage               String?
+  email                    String?
+  phone                    String?
+  website                  String?
+  // Location
+  addressLine1             String?
+  addressLine2             String?
+  city                     String?
+  state                    String?
+  postalCode               String?
+  country                  String?                   @default("BD")
+  latitude                 Float?
+  longitude                Float?
+  // Business details
+  yearEstablished          Int?
+  employeeCount            String?
+  hoursJson                Json?
+  // Status & verification
+  status                   BusinessStatus            @default(DRAFT)
+  verificationStatus       VerificationStatus        @default(NOT_STARTED)
+  verificationLevel        VerificationLevel         @default(NONE)
+  verifiedAt               DateTime?
+  // Aggregates (denormalized for performance)
+  ratingAverage            Decimal?                  @db.Decimal(3, 2)
+  ratingCount              Int                       @default(0)
+  // Badges (legacy denormalised fields kept for backwards-compat; primary badge lives in `Badge` model)
+  badgeHash                String?                   @unique
+  badgeIssuedAt            DateTime?
+  verificationUrl          String?
+  // Phase 3 — direct relation to the canonical Badge row
+  badge                    Badge?
+  // SEO
+  metaTitle                String?
+  metaDescription          String?                   @db.Text
+  // Relations
+  categoryId               String?
+  category                 Category?                 @relation(fields: [categoryId], references: [id])
+  reviews                  Review[]
+  documents                VerificationDocument[]
+  verificationApplications VerificationApplication[]
+  contactRequests          ContactRequest[]
+  subscriptions            Subscription[]
+  payments                 Payment[]
+  invoices                 Invoice[]
+  voucherRedemptions       VoucherRedemption[]
+  // Phase 5
+  widgetImpressions        WidgetImpression[]
+  visitLogs                VisitLog[]
+  reviewInvitations        ReviewInvitation[]
+  // Timestamps
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  publishedAt              DateTime?
+  deletedAt                DateTime?
+
+  @@index([status])
+  @@index([verificationStatus])
+  @@index([categoryId])
+  @@index([city])
+  @@index([ratingAverage])
+  @@index([createdAt])
+}
+
+model Review {
+  id                 String       @id @default(cuid())
+  businessId         String
+  business           Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId             String
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating             Int // 1..5
+  title              String?
+  content            String       @db.Text
+  // Engagement
+  helpfulCount       Int          @default(0)
+  reportCount        Int          @default(0)
+  // Moderation
+  status             ReviewStatus @default(PUBLISHED)
+  isVerifiedPurchase Boolean      @default(false)
+  // Response from business
+  responseContent    String?      @db.Text
+  responseAt         DateTime?
+  // Edit window
+  editableUntil      DateTime?
+  editedAt           DateTime?
+  // Relations
+  flags              ReviewFlag[]
+  // Timestamps
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  deletedAt          DateTime?
+
+  // CRITICAL: One review per user per business
+  @@unique([userId, businessId])
+  @@index([businessId, status])
+  @@index([businessId, createdAt])
+  @@index([businessId, rating])
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model ReviewFlag {
+  id           String    @id @default(cuid())
+  reviewId     String
+  review       Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  flaggedById  String
+  flaggedBy    User      @relation("FlagAuthor", fields: [flaggedById], references: [id])
+  reason       String
+  notes        String?   @db.Text
+  resolvedAt   DateTime?
+  resolvedById String?
+  createdAt    DateTime  @default(now())
+
+  @@unique([reviewId, flaggedById])
+  @@index([reviewId])
+  @@index([resolvedAt])
+}
+
+model VerificationApplication {
+  id                String                     @id @default(cuid())
+  businessId        String
+  business          Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  status            VerificationStatus         @default(PENDING)
+  level             VerificationLevel          @default(BASIC)
+  // AI extraction
+  aiScore           Float?
+  aiNotes           String?                    @db.Text
+  aiRawJson         Json?
+  // Admin review
+  reviewerId        String?
+  reviewedAt        DateTime?
+  rejectionReason   String?                    @db.Text
+  // Phase 3 — extended workflow fields
+  type              VerificationType           @default(BASIC)
+  appliedAt         DateTime?
+  submittedAt       DateTime?
+  additionalNotes   String?                    @db.Text
+  estimatedReviewAt DateTime?
+  // Relations
+  documents         VerificationDocument[]
+  statusHistory     ApplicationStatusHistory[]
+  aiAnalysis        AIAnalysisResult?
+  // Timestamps
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+
+  @@index([businessId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum VerificationType {
+  BASIC
+  PREMIUM
+}
+
+model VerificationDocument {
+  id              String                   @id @default(cuid())
+  businessId      String
+  business        Business                 @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  applicationId   String?
+  application     VerificationApplication? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  type            DocumentType
+  status          DocumentStatus           @default(UPLOADED)
+  fileKey         String // S3/R2 object key
+  fileUrl         String?
+  mimeType        String
+  fileSize        Int
+  originalName    String?
+  // AI extraction
+  extractedJson   Json?
+  extractedFields Json?
+  // Encryption
+  encrypted       Boolean                  @default(true)
+  // Review
+  rejectionReason String?
+  uploadedAt      DateTime                 @default(now())
+  reviewedAt      DateTime?
+  reviewedById    String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@index([businessId])
+  @@index([applicationId])
+  @@index([status])
+}
+
+// ----------------------------------------------------------------------------
+// Phase 3 — verification audit, AI analysis, and Badge model
+// ----------------------------------------------------------------------------
+
+model ApplicationStatusHistory {
+  id            String                  @id @default(cuid())
+  applicationId String
+  application   VerificationApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  status        VerificationStatus
+  note          String?                 @db.Text
+  createdBy     String? // user id (admin / business owner)
+  createdAt     DateTime                @default(now())
+
+  @@index([applicationId])
+  @@index([createdAt])
+}
+
+model AIAnalysisResult {
+  id                String                  @id @default(cuid())
+  applicationId     String                  @unique
+  application       VerificationApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  extractedFields   Json // [{ field: string, value: string, confidence: number }]
+  flags             Json // [{ severity: 'LOW'|'MEDIUM'|'HIGH', message: string }]
+  confidenceScore   Int // 0..100
+  suggestedDecision String // 'APPROVE' | 'REJECT'
+  summary           String?                 @db.Text
+  rawResponse       Json?
+  modelUsed         String // 'deterministic-stub' / 'gpt-4o' / 'claude-3-opus'
+  processedAt       DateTime                @default(now())
+
+  @@index([processedAt])
+}
+
+model Badge {
+  id               String            @id @default(cuid())
+  badgeId          String            @unique // e.g. CRED-XXXXXXXX
+  businessId       String            @unique
+  business         Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  type             VerificationLevel @default(BASIC)
+  imageUrl         String? // S3 URL for badge SVG/PNG
+  verificationUrl  String // public URL of the verify page
+  issuedAt         DateTime          @default(now())
+  expiresAt        DateTime?
+  isActive         Boolean           @default(true)
+  revokedAt        DateTime?
+  revocationReason String?           @db.Text
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([isActive])
+}
+
+model SubscriptionPlanInfo {
+  id              String           @id @default(cuid())
+  code            SubscriptionPlan @unique
+  name            String
+  description     String?          @db.Text
+  priceMonthly    Decimal          @db.Decimal(10, 2)
+  priceYearly     Decimal          @db.Decimal(10, 2)
+  currency        String           @default("BDT")
+  featuresJson    Json?
+  maxBusinesses   Int              @default(1)
+  maxReviews      Int              @default(100)
+  hasVerification Boolean          @default(false)
+  hasBadge        Boolean          @default(false)
+  priority        Int              @default(0)
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Subscription {
+  id                    String              @id @default(cuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId            String?
+  business              Business?           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  plan                  SubscriptionPlan
+  status                SubscriptionStatus  @default(TRIALING)
+  gateway               PaymentGateway?
+  gatewaySubscriptionId String?
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  cancelAtPeriodEnd     Boolean             @default(false)
+  canceledAt            DateTime?
+  trialEndsAt           DateTime?
+  // Phase 4 — billing cadence & bookkeeping
+  billingCycle          BillingCycle?
+  lastPaymentDate       DateTime?
+  nextPaymentDate       DateTime?
+  autoRenew             Boolean             @default(true)
+  amount                Decimal?            @db.Decimal(10, 2)
+  cancellationReason    String?             @db.Text
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  // Relations
+  payments              Payment[]
+  usage                 SubscriptionUsage[]
+  invoices              Invoice[]
+  voucherRedemptions    VoucherRedemption[]
+
+  @@index([userId])
+  @@index([businessId])
+  @@index([status])
+}
+
+model Payment {
+  id             String             @id @default(cuid())
+  userId         String
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId     String?
+  business       Business?          @relation(fields: [businessId], references: [id])
+  subscriptionId String?
+  subscription   Subscription?      @relation(fields: [subscriptionId], references: [id])
+  gateway        PaymentGateway
+  gatewayTxnId   String?
+  amount         Decimal            @db.Decimal(10, 2)
+  currency       String             @default("BDT")
+  status         PaymentStatus      @default(PENDING)
+  paymentMethod  PaymentMethodKind?
+  receiptUrl     String?
+  paidAt         DateTime?
+  // IPN / Callback raw payloads
+  ipnPayload     Json?
+  // Refund
+  refundAmount   Decimal?           @db.Decimal(10, 2)
+  refundedAt     DateTime?
+  refundReason   String?            @db.Text
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([businessId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([gatewayTxnId])
+  @@index([userId, createdAt])
+  @@index([businessId, createdAt])
+}
+
+model SubscriptionUsage {
+  id                String       @id @default(cuid())
+  subscriptionId    String
+  subscription      Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  month             String // Format: YYYY-MM
+  reviewInvitations Int          @default(0)
+  reviewResponses   Int          @default(0)
+  documentUploads   Int          @default(0)
+  apiCalls          Int          @default(0)
+  websiteViews      Int          @default(0)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@unique([subscriptionId, month])
+  @@index([month])
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  invoiceNumber  String        @unique // e.g. INV-2026-0001
+  subscriptionId String
+  subscription   Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  businessId     String
+  business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  amount         Decimal       @db.Decimal(10, 2)
+  tax            Decimal       @default(0) @db.Decimal(10, 2)
+  totalAmount    Decimal       @db.Decimal(10, 2)
+  currency       String        @default("BDT")
+  status         InvoiceStatus @default(DRAFT)
+  dueDate        DateTime
+  paidAt         DateTime?
+  pdfUrl         String?
+  items          Json
+  notes          String?       @db.Text
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([businessId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Voucher {
+  id                String              @id @default(cuid())
+  code              String              @unique
+  description       String?             @db.Text
+  discountType      DiscountType
+  discountValue     Decimal             @db.Decimal(10, 2)
+  maxDiscountAmount Decimal?            @db.Decimal(10, 2)
+  minPurchaseAmount Decimal?            @db.Decimal(10, 2)
+  maxUses           Int?
+  usedCount         Int                 @default(0)
+  validFrom         DateTime
+  validUntil        DateTime
+  isActive          Boolean             @default(true)
+  applicablePlans   SubscriptionPlan[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  redemptions       VoucherRedemption[]
+
+  @@index([isActive])
+  @@index([validUntil])
+}
+
+model VoucherRedemption {
+  id              String        @id @default(cuid())
+  voucherId       String
+  voucher         Voucher       @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  businessId      String
+  business        Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  subscriptionId  String?
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  discountApplied Decimal       @db.Decimal(10, 2)
+  redeemedAt      DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+
+  @@index([voucherId])
+  @@index([businessId])
+  @@index([subscriptionId])
+}
+
+model PaymentMethod {
+  id              String         @id @default(cuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gateway         PaymentGateway
+  gatewayMethodId String?
+  type            String // card, mobile_banking, etc.
+  last4           String?
+  expiryMonth     Int?
+  expiryYear      Int?
+  isDefault       Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([userId])
+}
+
+model ContactRequest {
+  id          String               @id @default(cuid())
+  businessId  String
+  business    Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  requesterId String?
+  requester   User?                @relation("ContactRequester", fields: [requesterId], references: [id])
+  name        String
+  email       String
+  phone       String?
+  message     String               @db.Text
+  status      ContactRequestStatus @default(NEW)
+  notes       String?              @db.Text
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([businessId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([businessId, status])
+  @@index([businessId, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  target    String?
+  meta      Json?
+  ip        String?
+  userAgent String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Setting {
+  key       String   @id
+  valueJson Json
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+// ============================================================
+// Phase 5 — Public API, Analytics, Widget tracking
+// ============================================================
+
+model ApiKey {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Hashed key — only the prefix is shown to the user once on creation
+  keyHash    String       @unique
+  keyPrefix  String // first 8 chars, used for lookup + display
+  name       String
+  scopes     String[] // e.g. ["public.read", "widget.read"]
+  isActive   Boolean      @default(true)
+  rateLimit  Int          @default(60) // requests/minute
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  requests   ApiRequest[]
+
+  @@index([userId])
+  @@index([keyPrefix])
+  @@index([isActive])
+}
+
+model ApiRequest {
+  id         String   @id @default(cuid())
+  apiKeyId   String
+  apiKey     ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  method     String
+  path       String   @db.Text
+  status     Int
+  durationMs Int
+  ip         String?
+  userAgent  String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([apiKeyId, createdAt])
+  @@index([status])
+}
+
+model WidgetImpression {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  widgetType String // 'review' | 'trust-score' | 'badge' | 'leave-review'
+  referrer   String?  @db.Text
+  userAgent  String?  @db.Text
+  ipHash     String? // SHA-256 of IP (GDPR-safe)
+  createdAt  DateTime @default(now())
+
+  @@index([businessId, createdAt])
+  @@index([widgetType])
+  @@index([businessId, widgetType, createdAt])
+}
+
+model VisitLog {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  referrer   String?  @db.Text
+  userAgent  String?  @db.Text
+  ipHash     String?
+  country    String?
+  createdAt  DateTime @default(now())
+
+  @@index([businessId, createdAt])
+  @@index([businessId, country])
+}
+
+model ReviewInvitation {
+  id            String    @id @default(cuid())
+  businessId    String
+  business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerEmail String?
+  customerPhone String?
+  channel       String // 'email' | 'sms' | 'link'
+  token         String    @unique
+  status        String    @default("PENDING") // PENDING|OPENED|SUBMITTED|EXPIRED
+  sentAt        DateTime?
+  openedAt      DateTime?
+  submittedAt   DateTime?
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([businessId, createdAt])
+  @@index([businessId, status])
+  @@index([token])
+  @@index([expiresAt])
+}

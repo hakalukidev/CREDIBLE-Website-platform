@@ -1,0 +1,287 @@
+openapi: 3.0.3
+info:
+  title: Credible Public API
+  version: 1.0.0
+  description: |
+    Read-only access to business profiles, reviews, trust scores, and
+    verification badges. Authentication is via the `X-API-Key` header
+    (issued from the business dashboard). All endpoints return the standard
+    envelope `{ success, data, meta? }` or `{ success: false, error }`.
+  contact:
+    name: Credible API Support
+    email: api@credible.com
+servers:
+  - url: https://api.credible.com/api/v1
+    description: Production
+  - url: http://localhost:4000/api/v1
+    description: Local development
+
+tags:
+  - name: Business
+    description: Public business profile and aggregated data.
+  - name: Reviews
+    description: Read published reviews.
+  - name: Widgets
+    description: Embeddable widget data and impression tracking.
+
+security:
+  - ApiKey: []
+
+paths:
+  /public/health:
+    get:
+      summary: Health probe
+      security: []
+      tags: [Business]
+      responses:
+        '200':
+          description: Service is healthy
+
+  /public/business/{slugOrId}:
+    get:
+      summary: Get a business profile
+      tags: [Business]
+      parameters:
+        - in: path
+          name: slugOrId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Business summary
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Business' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /public/business/{slugOrId}/reviews:
+    get:
+      summary: List published reviews for a business
+      tags: [Reviews]
+      parameters:
+        - in: path
+          name: slugOrId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 1 }
+        - in: query
+          name: perPage
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+        - in: query
+          name: sortBy
+          schema: { type: string, enum: [createdAt, rating, helpfulCount], default: createdAt }
+      responses:
+        '200':
+          description: A page of reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Review' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+  /public/business/{slugOrId}/trust-score:
+    get:
+      summary: Compute the trust score
+      tags: [Business]
+      parameters:
+        - in: path
+          name: slugOrId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Trust score
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/TrustScore' }
+
+  /public/business/{slugOrId}/badge:
+    get:
+      summary: Get verification badge info
+      tags: [Business]
+      parameters:
+        - in: path
+          name: slugOrId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Badge info
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Badge' }
+
+  /public/business/{slugOrId}/widget:
+    get:
+      summary: Combined payload for the embed widget
+      description: Returns the business summary, top reviews, and trust score in one call.
+      tags: [Widgets]
+      parameters:
+        - in: path
+          name: slugOrId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Combined widget payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      business: { $ref: '#/components/schemas/Business' }
+                      reviews:
+                        type: array
+                        items: { $ref: '#/components/schemas/Review' }
+                      trust: { $ref: '#/components/schemas/TrustScore' }
+
+  /public/business/{slugOrId}/widget/event:
+    post:
+      summary: Track a widget impression / interaction
+      tags: [Widgets]
+      parameters:
+        - in: path
+          name: slugOrId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [widgetType]
+              properties:
+                widgetType:
+                  type: string
+                  maxLength: 32
+      responses:
+        '204': { description: Tracked }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  responses:
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Unauthorized:
+      description: Missing or invalid API key
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Forbidden:
+      description: Missing required scope
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+
+  schemas:
+    Business:
+      type: object
+      properties:
+        id: { type: string }
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string }
+        logo: { type: string, format: uri }
+        category: { type: string }
+        city: { type: string }
+        country: { type: string }
+        isVerified: { type: boolean }
+        verificationLevel:
+          type: string
+          enum: [NONE, BASIC, CERTIFIED, PREMIUM]
+        averageRating: { type: number, format: float, minimum: 0, maximum: 5 }
+        totalReviews: { type: integer }
+        profileUrl: { type: string, format: uri }
+        verificationUrl: { type: string, format: uri }
+
+    Review:
+      type: object
+      properties:
+        id: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        title: { type: string }
+        comment: { type: string }
+        helpfulCount: { type: integer }
+        customerName: { type: string }
+        createdAt: { type: string, format: date-time }
+        response:
+          type: object
+          properties:
+            content: { type: string }
+            at: { type: string, format: date-time }
+
+    TrustScore:
+      type: object
+      properties:
+        score: { type: integer, minimum: 0, maximum: 100 }
+        rating:
+          type: string
+          enum: [Excellent, Good, Average, 'Needs Improvement']
+        reviewCount: { type: integer }
+        isVerified: { type: boolean }
+        responseRate: { type: integer, minimum: 0, maximum: 100 }
+        components:
+          type: object
+          properties:
+            reviewScore: { type: integer }
+            verificationScore: { type: integer }
+            responseScore: { type: integer }
+            engagementScore: { type: integer }
+
+    Badge:
+      type: object
+      properties:
+        hasBadge: { type: boolean }
+        badgeType:
+          type: string
+          enum: [VERIFIED, CERTIFIED, PREMIUM]
+        verificationUrl: { type: string, format: uri }
+        businessName: { type: string }
+        businessSlug: { type: string }
+
+    PaginationMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        perPage: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+
+    ApiError:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
