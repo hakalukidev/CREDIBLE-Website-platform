@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
@@ -28,15 +27,54 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children'>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   loading?: boolean;
+  children?: React.ReactNode;
+}
+
+/**
+ * Find the first valid React element among children. We avoid the Radix Slot
+ * pattern entirely because the `asChild` consumers in this project (Next.js
+ * `<Link>`, plain `<a>`, etc.) don't need its Slottable/escape-hatch machinery.
+ * Instead we clone the element and forward our classes/ref/handlers onto it.
+ */
+function findSingleChild(children: React.ReactNode): React.ReactElement | null {
+  let found: React.ReactElement | null = null;
+  React.Children.forEach(children, (child) => {
+    if (found) return;
+    if (React.isValidElement(child)) found = child;
+  });
+  return found;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, loading = false, children, disabled, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'button';
+  ({ className, variant, size, asChild = false, loading = false, children, disabled, type, ...props }, ref) => {
+    const classes = cn(buttonVariants({ variant, size }), className);
+
+    // asChild: merge our props onto the consumer's single child element.
+    if (asChild) {
+      const child = findSingleChild(children);
+      if (!child) {
+        // Defensive fallback: no valid child to project onto, render a real <button>.
+        return (
+          <button className={classes} ref={ref} type={type ?? 'button'} {...props}>
+            {children}
+          </button>
+        );
+      }
+      const childProps = (child.props ?? {}) as Record<string, unknown>;
+      const mergedProps: Record<string, unknown> = { ...props, className: classes };
+      // Preserve the child's own className by appending ours.
+      if (typeof childProps.className === 'string' && childProps.className) {
+        mergedProps.className = cn(classes, childProps.className);
+      }
+      // Forward the ref onto the child element when possible.
+      if (ref) mergedProps.ref = ref;
+      return React.cloneElement(child, mergedProps);
+    }
+
     const spinner = loading ? (
       <svg
         className="h-4 w-4 animate-spin"
@@ -53,32 +91,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         />
       </svg>
     ) : null;
-    // Radix Slot requires exactly ONE child element. When `asChild` is set
-    // we must therefore wrap spinner + children in a single <span>.
-    if (asChild) {
-      return (
-        <Slot
-          className={cn(buttonVariants({ variant, size }), className)}
-          ref={ref as React.Ref<HTMLElement>}
-          {...props}
-        >
-          <span className="inline-flex items-center justify-center gap-2">
-            {spinner}
-            {children}
-          </span>
-        </Slot>
-      );
-    }
+
     return (
-      <Comp
-        className={cn(buttonVariants({ variant, size }), className)}
+      <button
+        className={classes}
         ref={ref}
+        type={type ?? 'button'}
         disabled={disabled || loading}
         {...props}
       >
         {spinner}
         {children}
-      </Comp>
+      </button>
     );
   },
 );

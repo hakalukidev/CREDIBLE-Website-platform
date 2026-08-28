@@ -32,7 +32,8 @@ export const createBusinessSchema = z
       .string()
       .trim()
       .regex(/^\+?[0-9 ()-]{7,20}$/u)
-      .optional(),
+      .optional()
+      .or(z.literal('').transform(() => undefined)),
     website: optionalUrl,
     addressLine1: z.string().trim().max(200).optional(),
     addressLine2: z.string().trim().max(200).optional(),

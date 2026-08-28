@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { LogOut, Menu, Search, ShieldCheck, User2, LayoutDashboard, X } from 'lucide-react';
+import { LogOut, Menu, Search, User2, LayoutDashboard, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -46,7 +47,9 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container-wide flex h-16 items-center gap-4">
         <Link href="/" className="flex items-center gap-2">
-          <ShieldCheck className="h-6 w-6 text-primary" />
+          <span className="relative block h-7 w-7 overflow-hidden">
+            <Image src="/logo.jpg" alt="Credible" width={28} height={28}  />
+          </span>
           <span className="text-lg font-bold tracking-tight">Credible</span>
         </Link>
 

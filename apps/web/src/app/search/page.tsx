@@ -46,7 +46,7 @@ export default async function SearchPage({
 
 function SearchSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: 6 }).map((_, i) => (
         <Skeleton key={i} className="h-40" />
       ))}

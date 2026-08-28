@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { VerifiedBadge } from '@/components/verification/verified-badge';
 import { StarRating } from '@/components/reviews/star-rating';
+import { BusinessCard } from '@/components/business/business-card';
 import {
   organizationSchema,
   websiteSchemaWithSearchAction,
@@ -15,32 +16,44 @@ const FEATURED = [
   {
     id: 'demo-1',
     slug: 'bluebell-cafe-dhaka',
-    displayName: 'Bluebell Cafe Dhaka',
+    name: 'Bluebell Cafe Dhaka',
+    description: 'A cosy cafe serving specialty coffee, fresh pastries, and light meals in the heart of Gulshan.',
+    coverImage: null,
     logo: null,
-    city: 'Dhaka',
-    ratingAverage: 4.7,
-    ratingCount: 312,
-    verificationLevel: 'CERTIFIED' as const,
+    rating: 4.7,
+    reviewCount: 312,
+    badgeType: 'CERTIFIED' as const,
+    location: { city: 'Dhaka', state: null, country: 'Bangladesh' },
+    category: 'Restaurants & Food',
+    establishedYear: 2019,
   },
   {
     id: 'demo-2',
     slug: 'hossain-and-associates',
-    displayName: 'Hossain & Associates',
+    name: 'Hossain & Associates',
+    description: 'Full-service law firm specialising in corporate, IP, and commercial litigation across Bangladesh.',
+    coverImage: null,
     logo: null,
-    city: 'Chattogram',
-    ratingAverage: 4.5,
-    ratingCount: 128,
-    verificationLevel: 'BASIC' as const,
+    rating: 4.5,
+    reviewCount: 128,
+    badgeType: 'BASIC' as const,
+    location: { city: 'Chattogram', state: null, country: 'Bangladesh' },
+    category: 'Legal Services',
+    establishedYear: 2015,
   },
   {
     id: 'demo-3',
     slug: 'medex-clinic',
-    displayName: 'MedEx Clinic',
+    name: 'MedEx Clinic',
+    description: 'Modern diagnostic and outpatient clinic with experienced physicians and state-of-the-art equipment.',
+    coverImage: null,
     logo: null,
-    city: 'Dhaka',
-    ratingAverage: 4.9,
-    ratingCount: 540,
-    verificationLevel: 'PREMIUM' as const,
+    rating: 4.9,
+    reviewCount: 540,
+    badgeType: 'PREMIUM' as const,
+    location: { city: 'Dhaka', state: null, country: 'Bangladesh' },
+    category: 'Healthcare',
+    establishedYear: 2017,
   },
 ];
 
@@ -181,26 +194,9 @@ export default function HomePage() {
             See all →
           </Link>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {FEATURED.map((b) => (
-            <Link key={b.id} href={`/business/${b.slug}`}>
-              <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-semibold">{b.displayName}</p>
-                      <p className="text-xs text-muted-foreground">{b.city}</p>
-                    </div>
-                    <VerifiedBadge level={b.verificationLevel} withLabel={false} />
-                  </div>
-                  <div className="mt-4 flex items-center gap-2">
-                    <StarRating value={b.ratingAverage} />
-                    <span className="text-sm font-medium">{b.ratingAverage.toFixed(1)}</span>
-                    <span className="text-xs text-muted-foreground">({b.ratingCount})</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+            <BusinessCard key={b.id} {...b} />
           ))}
         </div>
       </section>

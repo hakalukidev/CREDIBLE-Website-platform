@@ -23,6 +23,23 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
+      <head>
+        {/*
+          Pre-paint theme boot. Rendered as a real HTML <script> from a
+          server component (not JSX inside a React client tree), so it does
+          not trip the React 19 / Next 16 "script tag inside React
+          component" diagnostic that next-themes' inline script did. It
+          mirrors exactly what next-themes was doing: read the stored
+          preference (or system default), toggle the `dark` class, and set
+          `color-scheme` before first paint to avoid a theme flash.
+        */}
+        <script
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var k='theme';var s=localStorage.getItem(k);var t=(s==='light'||s==='dark')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');var c=t==='dark';document.documentElement.classList.toggle('dark',c);document.documentElement.style.colorScheme=t;}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-screen font-sans">
         <a
           href="#main-content"

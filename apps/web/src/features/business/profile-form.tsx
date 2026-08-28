@@ -15,8 +15,12 @@ import {
   BUSINESS_DAYS,
   BUSINESS_DAY_LABELS,
   businessProfileUpdateSchema,
+  createBusinessSchema,
   type BusinessProfileUpdateInput,
+  type CreateBusinessInput,
 } from '@credible/shared';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { Building2 } from 'lucide-react';
 
 interface CategoryOption {
   id: string;
@@ -29,7 +33,166 @@ type ProfileFormValues = BusinessProfileUpdateInput;
 export function ProfileForm() {
   const qc = useQueryClient();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, error: profileError } = useQuery({
+    queryKey: qk.businesses.me(),
+    queryFn: async () => {
+      const res = await apiClient.get<{ success: true; data: ProfileResponse }>(
+        '/businesses/me/profile',
+      );
+      return res.data.data;
+    },
+    retry: false,
+  });
+
+  const noBusiness =
+    profileError &&
+    ((profileError as { response?: { status?: number } })?.response?.status === 404);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-32" />
+        ))}
+      </div>
+    );
+  }
+
+  if (noBusiness) {
+    return <CreateBusinessForm />;
+  }
+
+  if (profileError && !noBusiness) {
+    return (
+      <Card>
+        <CardContent className="pt-6 text-sm text-destructive">
+          {extractError(profileError).message}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return <EditBusinessProfile />;
+}
+
+// ----------------------------------------------------------------------------
+// Create Business Form
+// ----------------------------------------------------------------------------
+
+type CreateFormValues = CreateBusinessInput;
+
+function CreateBusinessForm() {
+  const qc = useQueryClient();
+
+  const { data: categories } = useQuery({
+    queryKey: qk.categories.list(),
+    queryFn: async () => {
+      const res = await apiClient.get<{ success: true; data: CategoryOption[] }>('/categories');
+      return res.data.data;
+    },
+  });
+
+  const form = useForm<CreateFormValues>({
+    resolver: zodResolver(createBusinessSchema),
+    defaultValues: {
+      legalName: '',
+      displayName: '',
+      description: '',
+      email: '',
+      phone: '',
+      website: '',
+      addressLine1: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: 'BD',
+    },
+  });
+
+  const create = useMutation({
+    mutationFn: async (values: CreateFormValues) => {
+      const res = await apiClient.post<{ success: true; data: { id: string } }>(
+        '/businesses',
+        values,
+      );
+      return res.data.data;
+    },
+    onSuccess: () => {
+      toast.success('Business created! Now set up your profile.');
+      qc.invalidateQueries({ queryKey: qk.businesses.me() });
+    },
+    onError: (err) => {
+      toast.error(extractError(err).message);
+    },
+  });
+
+  const onSubmit: SubmitHandler<CreateFormValues> = (values) => {
+    const cleaned = Object.fromEntries(
+      Object.entries(values).filter(([, v]) => v !== ''),
+    ) as CreateFormValues;
+    create.mutate(cleaned);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <Building2 className="h-6 w-6 text-primary" />
+          <div>
+            <CardTitle>Create your business profile</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Get started by entering your business details. You can add photos and more info after.
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <Field label="Legal name *" error={form.formState.errors.legalName?.message}>
+            <Input {...form.register('legalName')} placeholder="Official business name" />
+          </Field>
+          <Field label="Display name *" error={form.formState.errors.displayName?.message}>
+            <Input {...form.register('displayName')} placeholder="Name shown to customers" />
+          </Field>
+          <Field label="Description" error={form.formState.errors.description?.message}>
+            <Textarea rows={3} {...form.register('description')} placeholder="Brief description of your business" />
+          </Field>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Email" error={form.formState.errors.email?.message}>
+              <Input type="email" {...form.register('email')} placeholder="contact@business.com" />
+            </Field>
+            <Field label="Phone" error={form.formState.errors.phone?.message}>
+              <Input {...form.register('phone')} placeholder="+880 1XXXXXXXXX" />
+            </Field>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="City" error={form.formState.errors.city?.message}>
+              <Input {...form.register('city')} />
+            </Field>
+            <Field label="Country (ISO-2)" error={form.formState.errors.country?.message}>
+              <Input maxLength={2} {...form.register('country')} />
+            </Field>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button type="submit" loading={create.isPending}>
+              Create business
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Edit Business Profile
+// ----------------------------------------------------------------------------
+
+function EditBusinessProfile() {
+  const qc = useQueryClient();
+
+  const { data: profile } = useQuery({
     queryKey: qk.businesses.me(),
     queryFn: async () => {
       const res = await apiClient.get<{ success: true; data: ProfileResponse }>(
@@ -72,7 +235,6 @@ export function ProfileForm() {
     },
   });
 
-  // Reset form when profile arrives
   useEffect(() => {
     if (profile) {
       form.reset({
@@ -120,26 +282,16 @@ export function ProfileForm() {
   });
 
   const onSubmit: SubmitHandler<ProfileFormValues> = (values) => {
-    // Drop empty optional strings to avoid server rejection
     const cleaned: ProfileFormValues = Object.fromEntries(
       Object.entries(values).filter(([, v]) => v !== ''),
     ) as ProfileFormValues;
     save.mutate(cleaned);
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-32" />
-        ))}
-      </div>
-    );
-  }
-
   return (
     <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
       <BasicInfoSection form={form} />
+      <ImagesSection form={form} />
       <ContactSection form={form} />
       <AddressSection form={form} />
       <HoursSection form={form} />
@@ -188,6 +340,40 @@ function BasicInfoSection({ form }: SectionProps) {
         <Field label="Employee count" error={form.formState.errors.employeeCount?.message}>
           <Input {...form.register('employeeCount')} />
         </Field>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ImagesSection({ form }: SectionProps) {
+  const logo = form.watch('logo');
+  const coverImage = form.watch('coverImage');
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Photos</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Upload a logo and cover image so customers can easily recognise your business.
+        </p>
+        <div className="flex flex-wrap gap-6">
+          <ImageUpload
+            value={logo}
+            onChange={(url) => form.setValue('logo', url ?? '', { shouldDirty: true })}
+            namespace="public"
+            label="Logo"
+            aspect="logo"
+          />
+          <ImageUpload
+            value={coverImage}
+            onChange={(url) => form.setValue('coverImage', url ?? '', { shouldDirty: true })}
+            namespace="public"
+            label="Cover image"
+            aspect="cover"
+          />
+        </div>
       </CardContent>
     </Card>
   );
@@ -252,8 +438,6 @@ function HoursSection({ form }: SectionProps) {
 
   const setEntry = (day: string, patch: Partial<{ closed: boolean; open: string; close: string }>) => {
     const current = hours[day] ?? { closed: false };
-    // The zod schema validates any {closed,open?,close?} shape; cast through
-    // `unknown` so the typed `setValue` accepts our dynamic key.
     (form.setValue as (name: string, value: unknown, opts?: { shouldDirty?: boolean }) => void)(
       `hoursJson.${day}`,
       { ...current, ...patch },

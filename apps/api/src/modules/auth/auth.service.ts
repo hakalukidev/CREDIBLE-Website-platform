@@ -30,18 +30,24 @@ export const authService = {
 
     // Persist refresh token (optional table; left out of minimal backbone but hooked)
     const { expiresAt } = signRefreshToken(user.id);
-    await prisma.refreshToken
-      .create({
-        data: {
-          id: randomToken(16),
-          userId: user.id,
-          expiresAt,
-          revokedAt: null,
-        },
-      })
-      .catch(() => {
-        // table may not exist yet; not critical for MVP
-      });
+    // Guard against the RefreshToken model being absent from the Prisma schema:
+    // accessing `.create` on `undefined` would throw synchronously and bypass
+    // the Promise .catch(), so we check the model exists first.
+    const refreshTokenModel = (prisma as unknown as { refreshToken?: unknown }).refreshToken;
+    if (refreshTokenModel && typeof (refreshTokenModel as { create?: unknown }).create === 'function') {
+      await (refreshTokenModel as { create: (args: unknown) => Promise<unknown> })
+        .create({
+          data: {
+            id: randomToken(16),
+            userId: user.id,
+            expiresAt,
+            revokedAt: null,
+          },
+        })
+        .catch(() => {
+          // table may not exist yet; not critical for MVP
+        });
+    }
 
     return {
       user: {
