@@ -28,7 +28,7 @@ import {
   breadcrumbSchema,
   ORG_ID,
   WEBSITE_ID,
-} from '../src/lib/seo/structured-data.ts';
+} from '../src/lib/seo/structured-data';
 
 // Force SITE_URL to a stable value for the test run
 process.env.NEXT_PUBLIC_SITE_URL = 'http://localhost:3000';

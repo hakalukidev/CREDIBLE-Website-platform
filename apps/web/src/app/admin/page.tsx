@@ -1,10 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import type { Route } from 'next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldCheck, Flag, Users, Banknote } from 'lucide-react';
+import { ShieldCheck, Banknote } from 'lucide-react';
 
-const SHORTCUTS = [
+// NOTE: "Review moderation" (/admin/reviews) and "User management" (/admin/users)
+// shortcuts were removed — those pages don't exist yet, even though the API
+// already supports flagged-review moderation (GET/POST /admin/reviews/...).
+// Add them back once the corresponding frontend pages are built.
+const SHORTCUTS: Array<{ href: Route; title: string; description: string; icon: typeof ShieldCheck }> = [
   {
     href: '/admin/verification',
     title: 'Verification queue',
@@ -12,22 +17,10 @@ const SHORTCUTS = [
     icon: ShieldCheck,
   },
   {
-    href: '/admin/reviews',
-    title: 'Review moderation',
-    description: 'Triage flagged reviews and remove abusive content.',
-    icon: Flag,
-  },
-  {
     href: '/admin/billing',
     title: 'Billing & subscriptions',
     description: 'Revenue, payments, subscriptions and vouchers.',
     icon: Banknote,
-  },
-  {
-    href: '/admin/users',
-    title: 'User management',
-    description: 'Suspend, restore, or delete accounts.',
-    icon: Users,
   },
 ];
 

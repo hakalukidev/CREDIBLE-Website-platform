@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import type { Route } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
-  Flag,
   ShieldCheck,
   Banknote,
   LogOut,
@@ -16,14 +16,16 @@ import { cn } from '@/lib/utils';
 import { useUI } from '@/lib/store/theme';
 
 interface NavItem {
-  href: string;
+  href: Route;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
+// NOTE: a "Reviews" entry (/admin/reviews) was removed — that page doesn't
+// exist yet, even though the API already supports flagged-review moderation
+// (GET/POST /admin/reviews/...). Add it back once the page is built.
 const NAV_ITEMS: NavItem[] = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
-  { href: '/admin/reviews', label: 'Reviews', icon: Flag },
   { href: '/admin/verification', label: 'Verification', icon: ShieldCheck },
   { href: '/admin/billing', label: 'Billing', icon: Banknote },
 ];

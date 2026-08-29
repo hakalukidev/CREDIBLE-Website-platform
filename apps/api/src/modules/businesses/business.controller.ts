@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { businessService } from './business.service';
 import { normalizePagination, buildPaginationMeta } from '@credible/shared';
+import type { SearchBusinessesQuery } from '@credible/shared';
 import { NotFoundError } from '../../lib/errors/AppError';
 
 export const businessController = {
@@ -69,22 +70,13 @@ export const businessController = {
         city,
         verifiedOnly: verifiedOnly === 'true',
         minRating: minRating ? Number(minRating) : undefined,
-        sortBy,
+        // query is already validated by the `validate(searchBusinessesSchema, 'query')` middleware
+        sortBy: sortBy as SearchBusinessesQuery['sortBy'],
         sortOrder,
         skip,
         take,
       });
       res.json({ success: true, data: items, meta: buildPaginationMeta(total, page, perPage) });
-    } catch (e) {
-      next(e);
-    }
-  },
-
-  async getById(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await businessService.getBySlug(req.params.slug as string);
-      if (!data) throw new NotFoundError('Business');
-      res.json({ success: true, data });
     } catch (e) {
       next(e);
     }

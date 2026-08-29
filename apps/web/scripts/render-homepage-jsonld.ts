@@ -9,7 +9,7 @@ import {
   organizationSchema,
   websiteSchemaWithSearchAction,
   webApplicationSchema,
-} from '../src/lib/seo/structured-data.ts';
+} from '../src/lib/seo/structured-data';
 
 process.env.NEXT_PUBLIC_SITE_URL = 'https://credible.bd';
 

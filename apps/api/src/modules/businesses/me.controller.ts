@@ -182,9 +182,10 @@ export const meController = {
       });
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Content-Disposition', `inline; filename="credible-qr-${business.slug}.svg"`);
-      res.send(svg);
+      return res.send(svg);
     } catch (e) {
       next(e);
+      return;
     }
   },
 };

@@ -12,7 +12,7 @@
  */
 import { Prisma } from '@prisma/client';
 import { BadRequestError, NotFoundError } from '../../lib/errors/AppError';
-import { hashOtp } from '@credible/shared/utils/crypto';
+import { hashOtp, verifyOtp } from '@credible/shared/utils/crypto';
 import { env, isDev } from '../../config/env';
 import { authRepository } from '../auth/auth.repository';
 import { businessRepository } from '../businesses/business.repository';
@@ -103,7 +103,6 @@ export const guestReviewService = {
     );
     if (!otp) throw new BadRequestError('Verification code expired. Request a new one.', 'OTP_INVALID');
 
-    const { verifyOtp } = await import('@credible/shared');
     const valid = verifyOtp(input.code, otp.codeHash);
     if (!valid) {
       await authRepository.incrementOtpAttempts(otp.id);

@@ -35,7 +35,7 @@ export function errorHandler(
 
   if (err instanceof Error) {
     logger.error({ err, path: req.originalUrl }, 'Unhandled error');
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_ERROR',
@@ -43,6 +43,7 @@ export function errorHandler(
         traceId: (req as Request & { id?: string }).id,
       },
     });
+    return;
   }
 
   logger.error({ err, path: req.originalUrl }, 'Unknown error type');

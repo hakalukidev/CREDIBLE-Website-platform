@@ -274,7 +274,8 @@ export const analyticsService = {
     });
 
     const monthlyRevenue = new Map<string, number>();
-    successfulPayments.forEach((p: { paidAt: Date; amount: { toString(): string } }) => {
+    successfulPayments.forEach((p) => {
+      if (!p.paidAt) return;
       const d = new Date(p.paidAt);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       monthlyRevenue.set(key, (monthlyRevenue.get(key) ?? 0) + Number(p.amount));
@@ -284,10 +285,7 @@ export const analyticsService = {
       (s: number, v: number) => s + v,
       0,
     );
-    const priorTotal = priorPayments.reduce(
-      (s: number, p: { amount: { toString(): string } }) => s + Number(p.amount),
-      0,
-    );
+    const priorTotal = priorPayments.reduce((s, p) => s + Number(p.amount), 0);
     const revenueGrowth = priorTotal > 0 ? Math.round(((totalRevenue - priorTotal) / priorTotal) * 100) : 0;
 
     const priorUsers = await prisma.user.count({

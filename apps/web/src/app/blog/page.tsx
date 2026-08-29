@@ -1,7 +1,5 @@
-import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { pageMetadata } from '@/lib/seo/metadata';
 
 export const metadata = pageMetadata({
@@ -108,7 +106,8 @@ export default function BlogPage() {
                 </div>
                 <h2 className="font-semibold leading-snug">{post.title}</h2>
                 <p className="mt-2 text-sm text-muted-foreground flex-1">{post.excerpt}</p>
-                <div className="mt-4 flex items-center justify-between">
+                <div className="mt-4">
+                  {/* No individual post pages exist yet, so this only shows the date. */}
                   <time className="text-xs text-muted-foreground">
                     {new Date(post.date).toLocaleDateString('en-BD', {
                       year: 'numeric',
@@ -116,9 +115,6 @@ export default function BlogPage() {
                       day: 'numeric',
                     })}
                   </time>
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href={`/blog/${post.slug}`}>Read more</Link>
-                  </Button>
                 </div>
               </CardContent>
             </Card>

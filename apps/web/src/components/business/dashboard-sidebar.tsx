@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import type { Route } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, User2, MessageSquare, ShieldCheck, CreditCard, LogOut, X } from 'lucide-react';
 import { useSession } from '@/lib/store/session';
@@ -9,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { useUI } from '@/lib/store/theme';
 
 interface NavItem {
-  href: string;
+  href: Route;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }

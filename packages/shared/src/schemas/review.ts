@@ -41,12 +41,16 @@ export const reviewResponseSchema = z
   })
   .strict();
 
+export type ReviewResponseInput = z.infer<typeof reviewResponseSchema>;
+
 export const flagReviewSchema = z
   .object({
     reason: z.enum(REVIEW_FLAG_REASONS),
     notes: z.string().trim().max(500).optional(),
   })
   .strict();
+
+export type FlagReviewInput = z.infer<typeof flagReviewSchema>;
 
 export const listReviewsSchema = z
   .object({
@@ -57,6 +61,8 @@ export const listReviewsSchema = z
     minRating: z.coerce.number().min(1).max(5).optional(),
   })
   .strict();
+
+export type ListReviewsInput = z.infer<typeof listReviewsSchema>;
 
 // ----------------------------------------------------------------------------
 // Phase 2 additions — guest OTP review flow & business review management

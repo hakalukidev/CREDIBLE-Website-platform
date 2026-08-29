@@ -75,11 +75,12 @@ export const businessService = {
     return businessRepository.update(businessId, {
       ...rest,
       slug,
+      // `Business.category` is a single (to-one) relation in the schema, so
+      // only the first submitted id is used as the business's category.
       ...(categoryIds
         ? {
-            category: {
-              set: categoryIds.length === 0 ? [] : categoryIds.map((id) => ({ id })),
-            },
+            category:
+              categoryIds.length === 0 ? { disconnect: true } : { connect: { id: categoryIds[0] } },
           }
         : {}),
     });

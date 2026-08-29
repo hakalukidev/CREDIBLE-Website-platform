@@ -35,10 +35,12 @@ const envSchema = z.object({
   // OAuth
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
-  GOOGLE_CALLBACK_URL: z.string().optional(),
+  GOOGLE_CALLBACK_URL: z.string().default('http://localhost:4000/api/v1/auth/google/callback'),
   FACEBOOK_CLIENT_ID: z.string().optional(),
   FACEBOOK_CLIENT_SECRET: z.string().optional(),
-  FACEBOOK_CALLBACK_URL: z.string().optional(),
+  FACEBOOK_CALLBACK_URL: z
+    .string()
+    .default('http://localhost:4000/api/v1/auth/facebook/callback'),
 
   // SMTP
   SMTP_HOST: z.string().default('smtp.gmail.com'),

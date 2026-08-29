@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useCurrentUser } from './use-current-user';
 import type { UserRole } from '@credible/types';
@@ -29,7 +30,10 @@ export function useRequireAuth(opts: UseRequireAuthOptions = {}) {
     if (missingUser) {
       const next =
         typeof window !== 'undefined' ? encodeURIComponent(window.location.pathname) : '';
-      router.replace(`${redirectTo}${next ? `?next=${next}` : ''}`);
+      // `redirectTo` + an appended `?next=` query string isn't a route Next's
+      // typedRoutes generator can statically verify; it's caller-supplied and
+      // intentionally dynamic.
+      router.replace(`${redirectTo}${next ? `?next=${next}` : ''}` as Route);
       return;
     }
     if (roleMismatch) {
