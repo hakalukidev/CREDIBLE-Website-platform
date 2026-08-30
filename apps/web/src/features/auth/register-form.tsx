@@ -1,6 +1,7 @@
 // features/auth/register-form.tsx
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -22,12 +23,15 @@ import {
   Building2,
   ArrowRight,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import type { AuthSession } from '@credible/types';
 
 export function RegisterForm() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
   const setSession = useSession((s) => s.setSession);
   const {
     register,
@@ -120,12 +124,21 @@ export function RegisterForm() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Create a strong password"
                 {...register('password')}
-                className={`pl-10 h-11 bg-muted/50 border-muted focus:bg-background transition-colors ${errors.password ? 'border-destructive' : ''
+                className={`pl-10 pr-10 h-11 bg-muted/50 border-muted focus:bg-background transition-colors ${errors.password ? 'border-destructive' : ''
                   }`}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
             {errors.password && (
               <p className="text-xs text-destructive font-medium">{errors.password.message}</p>
