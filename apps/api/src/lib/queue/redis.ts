@@ -8,15 +8,16 @@ declare global {
 }
 
 function buildRedis(): Redis {
-  const redis = new Redis({
-    host: env.REDIS_HOST,
-    port: env.REDIS_PORT,
-    password: env.REDIS_PASSWORD || undefined,
-    db: env.REDIS_DB,
-    maxRetriesPerRequest: null,
-    enableReadyCheck: true,
-    lazyConnect: false,
-  });
+  const options = { maxRetriesPerRequest: null, enableReadyCheck: true, lazyConnect: false };
+  const redis = env.REDIS_URL
+    ? new Redis(env.REDIS_URL, options)
+    : new Redis({
+        host: env.REDIS_HOST,
+        port: env.REDIS_PORT,
+        password: env.REDIS_PASSWORD || undefined,
+        db: env.REDIS_DB,
+        ...options,
+      });
 
   redis.on('connect', () => logger.info('Redis connected'));
   redis.on('error', (err) => logger.error({ err }, 'Redis error'));

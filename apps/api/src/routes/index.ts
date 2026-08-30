@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
@@ -78,10 +78,16 @@ router.get('/health', async (_req, res) => {
   router.use('/', publicApiRouter);
 
   // OpenAPI spec — served as a static asset for docs tooling.
-  // Use import.meta.url + fileURLToPath so this works in both ESM (tsx) and
-  // bundled (tsc) builds.
+  // __dirname is src/routes in dev (tsx, unbundled) but dist/ in production
+  // (esbuild bundles everything into a single dist/server.js), so the file
+  // sits a different number of directories up depending on how we're run.
   const __dirname = dirname(fileURLToPath(import.meta.url));
-  const openapiSpec = readFileSync(join(__dirname, '..', '..', 'openapi.yaml'), 'utf8');
+  const openapiCandidates = [
+    join(__dirname, '..', 'openapi.yaml'),
+    join(__dirname, '..', '..', 'openapi.yaml'),
+  ];
+  const openapiPath = openapiCandidates.find(existsSync) ?? openapiCandidates[0];
+  const openapiSpec = readFileSync(openapiPath, 'utf8');
   router.get('/openapi.yaml', (_req, res) => {
     res.type('text/yaml').send(openapiSpec);
   });
