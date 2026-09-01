@@ -28,6 +28,7 @@ vi.mock('../../lib/logger/logger', () => ({
 
 vi.mock('../auth/auth.repository', () => ({
   authRepository: {
+    // No OTP calls anymore — left here only to surface accidental regressions.
     createOtp: vi.fn(),
     findActiveOtp: vi.fn(),
     incrementOtpAttempts: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock('../businesses/business.repository', () => ({
 vi.mock('./review.repository', () => ({
   reviewRepository: {
     findByUserAndBusiness: vi.fn(),
+    findByUserAndTarget: vi.fn(),
     create: vi.fn(),
   },
 }));
@@ -55,7 +57,6 @@ import { reviewRepository } from './review.repository';
 import { queues } from '../../lib/queue/queues';
 import { guestReviewService } from './guest.service';
 import { DuplicateReviewError, NotFoundError, BadRequestError } from '../../lib/errors/AppError';
-import { hashOtp } from '@credible/shared/utils/crypto';
 
 const prismaMock = prisma as unknown as {
   user: {
@@ -78,37 +79,13 @@ describe('guestReviewService', () => {
     vi.clearAllMocks();
   });
 
-  describe('requestOtp', () => {
-    it('persists a hashed OTP and queues an email for a valid identifier', async () => {
-      (businessRepository.findById as ReturnType<typeof vi.fn>).mockResolvedValue(publishedBusiness);
-      (authRepository.createOtp as ReturnType<typeof vi.fn>).mockResolvedValue({});
-
-      const result = await guestReviewService.requestOtp({
-        businessId: 'biz_123',
-        identifier: 'guest@example.com',
-      });
-
-      expect(result.sent).toBe(true);
-      expect(authRepository.createOtp).toHaveBeenCalledOnce();
-      const createArgs = (authRepository.createOtp as ReturnType<typeof vi.fn>).mock.calls[0][0];
-      expect(createArgs.purpose).toBe('review');
-      expect(createArgs.email).toBe('guest@example.com');
-      expect(typeof createArgs.codeHash).toBe('string');
-      expect(queues['send-email'].add).toHaveBeenCalledWith(
-        'reviewOtp',
-        expect.objectContaining({
-          template: 'reviewOtpRequested',
-          to: 'guest@example.com',
-        }),
-      );
-    });
-
-    it('throws NotFound when the business is missing', async () => {
-      (businessRepository.findById as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-      await expect(
-        guestReviewService.requestOtp({ businessId: 'missing', identifier: 'a@b.co' }),
-      ).rejects.toBeInstanceOf(NotFoundError);
-    });
+  describe('verifyAndSubmit (no OTP)', () => {
+    const baseInput = {
+      businessId: 'biz_123',
+      identifier: 'guest@example.com',
+      rating: 5,
+      content: 'Absolutely loved it — clean, fast, friendly service.',
+    };
 
     it('refuses un-published businesses', async () => {
       (businessRepository.findById as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -116,53 +93,26 @@ describe('guestReviewService', () => {
         status: 'DRAFT',
       });
       await expect(
-        guestReviewService.requestOtp({ businessId: 'biz_123', identifier: 'a@b.co' }),
+        guestReviewService.verifyAndSubmit(baseInput as any),
       ).rejects.toBeInstanceOf(BadRequestError);
     });
-  });
 
-  describe('verifyAndSubmit', () => {
-    const baseInput = {
-      businessId: 'biz_123',
-      identifier: 'guest@example.com',
-      code: '123456',
-      rating: 5,
-      content: 'Absolutely loved it — clean, fast, friendly service.',
-    };
-
-    it('rejects when no active OTP exists', async () => {
-      (businessRepository.findById as ReturnType<typeof vi.fn>).mockResolvedValue(publishedBusiness);
-      (authRepository.findActiveOtp as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-      await expect(guestReviewService.verifyAndSubmit(baseInput as any)).rejects.toMatchObject({
-        code: 'OTP_INVALID',
-      });
+    it('throws NotFound when the business is missing', async () => {
+      (businessRepository.findById as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      await expect(
+        guestReviewService.verifyAndSubmit(baseInput as any),
+      ).rejects.toBeInstanceOf(NotFoundError);
     });
 
-    it('rejects an incorrect code', async () => {
+    it('provisions a new user and creates the review without any OTP step', async () => {
       (businessRepository.findById as ReturnType<typeof vi.fn>).mockResolvedValue(publishedBusiness);
-      (authRepository.findActiveOtp as ReturnType<typeof vi.fn>).mockResolvedValue({
-        id: 'otp_1',
-        codeHash: hashOtp('999999'),
-      });
-      await expect(guestReviewService.verifyAndSubmit(baseInput as any)).rejects.toMatchObject({
-        code: 'OTP_INVALID',
-      });
-      expect(authRepository.incrementOtpAttempts).toHaveBeenCalledWith('otp_1');
-    });
-
-    it('provisions a new user and creates the review on success', async () => {
-      (businessRepository.findById as ReturnType<typeof vi.fn>).mockResolvedValue(publishedBusiness);
-      (authRepository.findActiveOtp as ReturnType<typeof vi.fn>).mockResolvedValue({
-        id: 'otp_1',
-        codeHash: hashOtp('123456'),
-      });
       prismaMock.user.findUnique.mockResolvedValue(null);
       prismaMock.user.create.mockResolvedValue({
         id: 'user_new',
         email: 'guest@example.com',
         role: 'CUSTOMER',
       });
-      (reviewRepository.findByUserAndBusiness as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      (reviewRepository.findByUserAndTarget as ReturnType<typeof vi.fn>).mockResolvedValue(null);
       (reviewRepository.create as ReturnType<typeof vi.fn>).mockResolvedValue({
         id: 'review_1',
         rating: 5,
@@ -177,17 +127,17 @@ describe('guestReviewService', () => {
         'review-submitted-thanks',
         expect.objectContaining({ reviewId: 'review_1' }),
       );
-      expect(authRepository.consumeOtp).toHaveBeenCalledWith('otp_1');
+
+      // No OTP writes/reads should ever happen.
+      expect(authRepository.createOtp).not.toHaveBeenCalled();
+      expect(authRepository.findActiveOtp).not.toHaveBeenCalled();
+      expect(authRepository.consumeOtp).not.toHaveBeenCalled();
     });
 
     it('throws DuplicateReviewError if a review already exists', async () => {
       (businessRepository.findById as ReturnType<typeof vi.fn>).mockResolvedValue(publishedBusiness);
-      (authRepository.findActiveOtp as ReturnType<typeof vi.fn>).mockResolvedValue({
-        id: 'otp_1',
-        codeHash: hashOtp('123456'),
-      });
       prismaMock.user.findUnique.mockResolvedValue({ id: 'user_existing' });
-      (reviewRepository.findByUserAndBusiness as ReturnType<typeof vi.fn>).mockResolvedValue({
+      (reviewRepository.findByUserAndTarget as ReturnType<typeof vi.fn>).mockResolvedValue({
         id: 'review_existing',
       });
 

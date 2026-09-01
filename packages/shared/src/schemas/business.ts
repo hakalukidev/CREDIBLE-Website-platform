@@ -139,6 +139,10 @@ export type InviteCustomerInput = z.infer<typeof inviteCustomerSchema>;
  * Pre-signed upload request. Server returns a one-time PUT URL the client
  * uploads the file to directly, then persists the resulting `key` in the
  * business profile (logo/cover) or document upload.
+ *
+ * `size` is validated server-side per namespace:
+ *   - avatars / public: 5 MB
+ *   - documents: 20 MB
  */
 export const presignUploadSchema = z
   .object({
@@ -149,7 +153,7 @@ export const presignUploadSchema = z
       .number()
       .int()
       .positive()
-      .max(10 * 1024 * 1024, 'File too large (max 10 MB)'),
+      .max(20 * 1024 * 1024, 'File too large (max 20 MB)'),
   })
   .strict();
 

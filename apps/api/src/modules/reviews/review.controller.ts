@@ -60,6 +60,26 @@ export const reviewController = {
     }
   },
 
+  async listForProfessional(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { page, perPage, skip, take, sortBy, sortOrder } = normalizePagination(req.query);
+      const { minRating } = req.query as { minRating?: string };
+      const { items, total } = await reviewService.listForProfessional(
+        req.params.professionalId as string,
+        {
+          skip,
+          take,
+          sortBy: sortBy as 'createdAt' | 'rating' | 'helpfulCount' | undefined,
+          sortOrder,
+          minRating: minRating ? Number(minRating) : undefined,
+        },
+      );
+      res.json({ success: true, data: items, meta: buildPaginationMeta(total, page, perPage) });
+    } catch (e) {
+      next(e);
+    }
+  },
+
   async listMine(req: Request, res: Response, next: NextFunction) {
     try {
       const { page, perPage, skip, take } = normalizePagination(req.query);

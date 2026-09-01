@@ -1,20 +1,20 @@
 /**
- * Guest review submission — Phase 2.
+ * Guest review submission.
  *
- * Lets an unauthenticated visitor submit a review for a business via a
- * 2-step OTP flow:
- *   1. POST /reviews/submit-otp     — generates a 6-digit code, queues an email.
- *   2. POST /reviews/guest          — verifies the OTP, auto-provisions a
- *                                    CUSTOMER user, and creates the review.
+ * Lets an unauthenticated visitor submit a review for a business or
+ * professional without any OTP / verification round-trip:
+ *   1. POST /reviews/guest    — auto-provisions a CUSTOMER user (if needed)
+ *                              and creates the review.
  *
- * Critical: the duplicate-review guard (`@@unique([userId, businessId])`) is
- * preserved — we re-use `reviewService.create` after provisioning the user.
+ * Critical: the duplicate-review guard (`@@unique([userId, targetType, targetId])`)
+ * is preserved — we re-use `reviewService.create`'s shape after provisioning.
+ *
+ * (OTP verification was removed per product decision. Reviewers still provide
+ * an identifier (email or phone) so we can deduplicate across submissions
+ * from the same person.)
  */
 import { Prisma } from '@prisma/client';
 import { BadRequestError, NotFoundError } from '../../lib/errors/AppError';
-import { hashOtp, verifyOtp } from '@credible/shared/utils/crypto';
-import { env, isDev } from '../../config/env';
-import { authRepository } from '../auth/auth.repository';
 import { businessRepository } from '../businesses/business.repository';
 import { reviewRepository } from './review.repository';
 import { queues } from '../../lib/queue/queues';
@@ -22,7 +22,6 @@ import { prisma } from '../../lib/db/prisma';
 import { logger } from '../../lib/logger/logger';
 import { DuplicateReviewError } from '../../lib/errors/AppError';
 import type {
-  SubmitReviewOtpInput,
   VerifyReviewOtpInput,
 } from '@credible/shared';
 
@@ -34,94 +33,49 @@ function normalizeIdentifier(raw: string): { email?: string; phone?: string } {
 
 export const guestReviewService = {
   /**
-   * Step 1 — request a verification code.
-   * Identifies the reviewer by email OR phone. Returns `{ sent: true, devCode? }`.
-   * The dev code is only returned in development environments.
-   */
-  async requestOtp(input: SubmitReviewOtpInput) {
-    const business = await businessRepository.findById(input.businessId);
-    if (!business || business.deletedAt) throw new NotFoundError('Business');
-    if (business.status !== 'PUBLISHED') {
-      throw new BadRequestError('This business is not accepting reviews yet');
-    }
-
-    const identifier = normalizeIdentifier(input.identifier);
-    const code = String(
-      Math.floor(Math.random() * (10 ** env.OTP_LENGTH - 1)) + 10 ** (env.OTP_LENGTH - 1),
-    );
-    const codeHash = hashOtp(code);
-
-    await authRepository.createOtp({
-      email: identifier.email,
-      phone: identifier.phone,
-      codeHash,
-      purpose: 'review',
-      expiresAt: new Date(Date.now() + env.OTP_EXPIRES_IN_SECONDS * 1000),
-    });
-
-    // Queue an email. If no SMTP is configured the worker will log a warning.
-    await queues['send-email'].add('reviewOtp', {
-      template: 'reviewOtpRequested',
-      to: identifier.email ?? identifier.phone!,
-      vars: {
-        code,
-        expiresInMinutes: Math.round(env.OTP_EXPIRES_IN_SECONDS / 60),
-        businessName: business.displayName,
-      },
-    });
-
-    logger.info(
-      { businessId: business.id, hasEmail: Boolean(identifier.email) },
-      'Review OTP requested',
-    );
-
-    return {
-      sent: true,
-      // Only return the code in development for testing convenience.
-      devCode: isDev ? code : undefined,
-    };
-  },
-
-  /**
-   * Step 2 — verify the OTP and submit the review. Auto-provisions a
-   * CUSTOMER user if one doesn't already exist for this identifier.
+   * Submit a guest review for a business or professional. No OTP, no signup.
+   * The user is identified by email or phone — if no account exists for that
+   * identifier, we auto-provision a `CUSTOMER` user so the review is tied to
+   * a real `userId` (preserves the duplicate guard and rating aggregates).
    */
   async verifyAndSubmit(input: VerifyReviewOtpInput) {
-    const business = await businessRepository.findById(input.businessId);
-    if (!business || business.deletedAt) throw new NotFoundError('Business');
-    if (business.status !== 'PUBLISHED') {
-      throw new BadRequestError('This business is not accepting reviews yet');
+    const businessId = input.businessId;
+    const professionalId = input.professionalId;
+    const targetType: 'BUSINESS' | 'PROFESSIONAL' = businessId ? 'BUSINESS' : 'PROFESSIONAL';
+    const targetId = (businessId ?? professionalId)!;
+
+    if (targetType === 'BUSINESS') {
+      const business = await businessRepository.findById(targetId);
+      if (!business || business.deletedAt) throw new NotFoundError('Business');
+      if (business.status !== 'PUBLISHED') {
+        throw new BadRequestError('This business is not accepting reviews yet');
+      }
+    } else {
+      const professional = await prisma.professional.findUnique({ where: { id: targetId } });
+      if (!professional || professional.deletedAt) throw new NotFoundError('Professional');
+      if (professional.status !== 'PUBLISHED') {
+        throw new BadRequestError('This professional is not accepting reviews yet');
+      }
     }
 
     const identifier = normalizeIdentifier(input.identifier);
 
-    // 1) Verify OTP — reuse the same low-level routine used by auth.verifyOtp.
-    const otp = await authRepository.findActiveOtp(
-      identifier.email,
-      identifier.phone,
-      'review',
-    );
-    if (!otp) throw new BadRequestError('Verification code expired. Request a new one.', 'OTP_INVALID');
-
-    const valid = verifyOtp(input.code, otp.codeHash);
-    if (!valid) {
-      await authRepository.incrementOtpAttempts(otp.id);
-      throw new BadRequestError('Incorrect verification code', 'OTP_INVALID');
-    }
-    await authRepository.consumeOtp(otp.id);
-
-    // 2) Find or auto-provision a CUSTOMER user.
+    // 1) Find or auto-provision a CUSTOMER user for this identifier.
     const user = await this.findOrProvisionUser(identifier.email, identifier.phone);
 
-    // 3) Reuse reviewService.create's logic inline so we get the same
-    //    duplicate guard + side effects (rating recompute, notifications).
-    const existing = await reviewRepository.findByUserAndBusiness(user.id, input.businessId);
+    // 2) Reuse the existing duplicate guard + side effects.
+    const existing = await reviewRepository.findByUserAndTarget(user.id, {
+      type: targetType,
+      id: targetId,
+    });
     if (existing) throw new DuplicateReviewError();
 
     const editableUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // REVIEW_EDIT_WINDOW_HOURS
     try {
       const review = await reviewRepository.create({
-        business: { connect: { id: input.businessId } },
+        targetType,
+        business: targetType === 'BUSINESS' ? { connect: { id: targetId } } : undefined,
+        professional: targetType === 'PROFESSIONAL' ? { connect: { id: targetId } } : undefined,
         user: { connect: { id: user.id } },
         rating: input.rating,
         title: input.title,
@@ -130,8 +84,16 @@ export const guestReviewService = {
         status: 'PUBLISHED',
       });
 
-      await queues['recompute-business-rating'].add('recompute', { businessId: input.businessId });
+      await queues['recompute-business-rating'].add('recompute', {
+        businessId: targetType === 'BUSINESS' ? targetId : undefined,
+        professionalId: targetType === 'PROFESSIONAL' ? targetId : undefined,
+      });
       await queues['review-notification'].add('review-submitted-thanks', { reviewId: review.id });
+
+      logger.info(
+        { reviewId: review.id, targetType, targetId, userId: user.id },
+        'Guest review submitted (no OTP)',
+      );
 
       return review;
     } catch (err) {
@@ -143,12 +105,20 @@ export const guestReviewService = {
   },
 
   /**
-   * Pre-flight: has this email/phone already reviewed this business?
+   * Pre-flight: has this email/phone already reviewed this target?
    * Returns `{ hasReviewed: boolean; reviewDate?: string }`.
    */
-  async getReviewStatus(identifier: string, businessId: string) {
-    const business = await businessRepository.findById(businessId);
-    if (!business || business.deletedAt) throw new NotFoundError('Business');
+  async getReviewStatus(identifier: string, businessId?: string, professionalId?: string) {
+    if (!businessId && !professionalId) {
+      throw new BadRequestError('Either businessId or professionalId is required');
+    }
+    if (businessId) {
+      const business = await businessRepository.findById(businessId);
+      if (!business || business.deletedAt) throw new NotFoundError('Business');
+    } else if (professionalId) {
+      const professional = await prisma.professional.findUnique({ where: { id: professionalId } });
+      if (!professional || professional.deletedAt) throw new NotFoundError('Professional');
+    }
 
     const norm = normalizeIdentifier(identifier);
     const user = norm.email
@@ -159,7 +129,12 @@ export const guestReviewService = {
     if (!user) return { hasReviewed: false };
 
     const review = await prisma.review.findFirst({
-      where: { userId: user.id, businessId, deletedAt: null },
+      where: {
+        userId: user.id,
+        businessId,
+        professionalId,
+        deletedAt: null,
+      },
       orderBy: { createdAt: 'desc' },
     });
     if (!review) return { hasReviewed: false };

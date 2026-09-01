@@ -6,6 +6,7 @@ import { dirname } from 'node:path';
 import { authRouter } from '../modules/auth/auth.routes';
 import { businessRouter } from '../modules/businesses/business.routes';
 import { meRouter } from '../modules/businesses/me.routes';
+import { professionalRouter } from '../modules/professionals/professional.routes';
 import { reviewRouter } from '../modules/reviews/review.routes';
 import { verificationRouter } from '../modules/verification/verification.routes';
 import { adminRouter } from '../modules/admin/admin.routes';
@@ -20,6 +21,8 @@ import { billingRouter } from '../modules/admin/voucher.controller';
 import { publicApiRouter } from '../modules/public/public.routes';
 import { adminAnalyticsRouter } from '../modules/admin/analytics.routes';
 import { businessAnalyticsRouter } from '../modules/businesses/analytics.routes';
+import { adminExtendedRouter } from '../modules/admin-extended/admin-extended.routes';
+import { adminReviewsRouter } from '../modules/admin-reviews/admin-reviews.routes';
 import { env } from '../config/env';
 
 export function buildRouter(): Router {
@@ -57,6 +60,7 @@ router.get('/health', async (_req, res) => {
   // shape (`/businesses/me/profile`, `/businesses/me/reviews/...`).
   router.use('/businesses/me', meRouter);
   router.use('/businesses/me', businessAnalyticsRouter);
+  router.use('/professionals', professionalRouter);
   router.use('/categories', categoryRouter);
   router.use('/', reviewRouter); // /businesses/:id/reviews and /reviews/*
   router.use('/', contactRouter);
@@ -71,6 +75,11 @@ router.get('/health', async (_req, res) => {
   router.use('/admin', adminRouter);
   router.use('/admin', adminAnalyticsRouter);
   router.use('/admin/billing', billingRouter);
+  // Phase 5 — admin-extended module: users, businesses, professionals, payments,
+  // subscriptions, contact, audit, settings.
+  router.use('/admin', adminExtendedRouter);
+  // Phase 5 — review moderation queue (list, respond, resolve flag, force status).
+  router.use('/admin/reviews', adminReviewsRouter);
 
   router.use('/', publicVerificationRouter); // /verify/:hash (public)
 

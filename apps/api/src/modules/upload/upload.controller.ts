@@ -35,6 +35,7 @@ router.post(
         namespace: req.body.namespace,
         contentType: req.body.contentType,
         originalName: req.body.originalName,
+        size: req.body.size,
       });
       res.json({ success: true, data: result });
     } catch (e) {

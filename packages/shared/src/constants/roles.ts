@@ -1,4 +1,4 @@
-export const USER_ROLES = ['GUEST', 'CUSTOMER', 'BUSINESS', 'ADMIN'] as const;
+export const USER_ROLES = ['GUEST', 'CUSTOMER', 'BUSINESS', 'PROFESSIONAL', 'ADMIN'] as const;
 
 export const REVIEW_EDIT_WINDOW_HOURS = 24;
 export const REVIEW_MIN_RATING = 1;

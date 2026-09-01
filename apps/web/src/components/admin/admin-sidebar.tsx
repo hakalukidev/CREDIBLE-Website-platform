@@ -9,6 +9,13 @@ import {
   Banknote,
   LogOut,
   X,
+  Users,
+  Building2,
+  Stethoscope,
+  MessageSquare,
+  ScrollText,
+  BarChart3,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 import { useSession } from '@/lib/store/session';
 import { Button } from '@/components/ui/button';
@@ -27,7 +34,15 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/verification', label: 'Verification', icon: ShieldCheck },
+  { href: '/admin/reviews', label: 'Reviews', icon: Flag },
+  { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/businesses', label: 'Businesses', icon: Building2 },
+  { href: '/admin/professionals', label: 'Professionals', icon: Stethoscope },
+  { href: '/admin/contact', label: 'Contact', icon: MessageSquare },
   { href: '/admin/billing', label: 'Billing', icon: Banknote },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/admin/audit', label: 'Audit Log', icon: ScrollText },
+  { href: '/admin/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 export function AdminSidebar() {
@@ -74,9 +89,11 @@ export function AdminSidebar() {
         </div>
 
         <nav className="flex h-[calc(100%-4rem)] flex-col justify-between p-4">
-          <ul className="space-y-1">
+          <ul className="space-y-1 overflow-y-auto">
             {NAV_ITEMS.map((item) => {
-              const active = pathname === item.href || pathname?.startsWith(item.href + '/');
+              const active =
+                pathname === item.href ||
+                (item.href !== '/admin' && pathname?.startsWith(item.href + '/'));
               const Icon = item.icon;
               return (
                 <li key={item.href}>

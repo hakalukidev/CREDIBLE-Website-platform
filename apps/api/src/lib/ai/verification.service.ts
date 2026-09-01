@@ -1,11 +1,12 @@
 /**
  * AI Document Analysis — Phase 3.
  *
- * In production this would call GPT-4o / Claude-3 with the prompt template
- * described in the Phase 3 spec. For the current build we ship a deterministic
- * stub that returns plausible analysis based on file metadata. The stub is
- * deliberately structured so the LLM can be swapped in without touching
- * callers — the `analyzeApplication` function is the only public surface.
+ * When `OPENAI_API_KEY` is configured, this service calls the OpenAI
+ * Chat Completions endpoint (`gpt-4o` by default) with a vision-capable
+ * model and asks the LLM to summarise / flag the uploaded verification
+ * documents. When the key is missing — or the call fails for any reason —
+ * we fall back to a deterministic heuristic so the verification queue never
+ * breaks because of an external API outage.
  *
  * Per project policy, this service is **advisory only** — it never approves
  * or rejects applications on its own. Every result still requires admin
@@ -41,7 +42,40 @@ export interface AiDocumentInput {
   fileName?: string | null;
   mimeType: string;
   fileSize: number;
+  /** Optional public URL or signed download URL for the file. */
+  fileUrl?: string | null;
 }
+
+const SYSTEM_PROMPT = `You are an AI risk analyst for a trust & verification platform.
+You will be given a set of business / professional verification documents
+(IDs, trade licenses, tax certificates, proof of address, etc.).
+
+Analyse each document and produce:
+1. A list of extracted fields with confidence (0-100) — e.g. businessName,
+   registrationNumber, ownerName, address, tinNumber, issueDate, expiryDate.
+2. A list of risk flags (severity LOW / MEDIUM / HIGH). Flag things like:
+     - mismatched names between documents,
+     - expired or near-expiry dates,
+     - unclear or possibly-tampered images,
+     - missing required document types,
+     - inconsistent country / addresses.
+3. An overall confidence score (0-100) for the application.
+4. A suggested decision: "APPROVE" if everything looks legitimate,
+   "REJECT" only if you spot a high-severity fraud signal. Otherwise still
+   "APPROVE" — humans will review.
+5. A 2-4 sentence summary a human reviewer can skim.
+
+Respond with strict JSON matching this exact shape:
+{
+  "extractedFields": [{ "field": string, "value": string, "confidence": number }],
+  "flags": [{ "severity": "LOW" | "MEDIUM" | "HIGH", "message": string }],
+  "confidenceScore": number,
+  "suggestedDecision": "APPROVE" | "REJECT",
+  "summary": string
+}
+
+Do not include any prose outside the JSON. Do not wrap the JSON in
+markdown fences. The response must be valid JSON parseable by JSON.parse.`;
 
 /**
  * Heuristic stub. Looks at:
@@ -51,7 +85,7 @@ export interface AiDocumentInput {
  *
  * Returns a deterministic result for the same input.
  */
-function heuristicAnalysis(documents: AiDocumentInput[]): AiAnalysis {
+export function heuristicAnalysis(documents: AiDocumentInput[]): AiAnalysis {
   const extractedFields: AiExtractedField[] = [];
   const flags: AiFlag[] = [];
 
@@ -121,7 +155,9 @@ function heuristicAnalysis(documents: AiDocumentInput[]): AiAnalysis {
     });
   }
 
-  const baseConfidence = 80 - flags.filter((f) => f.severity === 'HIGH').length * 12 -
+  const baseConfidence =
+    80 -
+    flags.filter((f) => f.severity === 'HIGH').length * 12 -
     flags.filter((f) => f.severity === 'MEDIUM').length * 6 -
     flags.filter((f) => f.severity === 'LOW').length * 2;
   const confidenceScore = Math.max(20, Math.min(98, baseConfidence + extractedFields.length * 2));
@@ -145,9 +181,189 @@ function heuristicAnalysis(documents: AiDocumentInput[]): AiAnalysis {
   };
 }
 
+interface OpenAIMessageContent {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: { url: string };
+}
+
+interface OpenAIMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string | OpenAIMessageContent[];
+}
+
+interface OpenAIChatRequest {
+  model: string;
+  messages: OpenAIMessage[];
+  response_format?: { type: 'json_object' };
+  temperature?: number;
+  max_tokens?: number;
+}
+
+interface OpenAIChatResponse {
+  id: string;
+  choices: Array<{
+    message: { role: string; content: string };
+    finish_reason: string;
+  }>;
+  model: string;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+function buildUserMessage(documents: AiDocumentInput[]): OpenAIMessage {
+  const visionCapable = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+  const parts: OpenAIMessageContent[] = [];
+
+  const intro =
+    `Analyse the following ${documents.length} verification document(s).\n\n` +
+    'Document metadata:\n' +
+    documents
+      .map(
+        (d, i) =>
+          `  ${i + 1}. id=${d.id} type=${d.type} fileName="${d.fileName ?? ''}" ` +
+          `mimeType=${d.mimeType} size=${d.fileSize}`,
+      )
+      .join('\n') +
+    '\n\nIf image URLs are attached, inspect them. PDFs and other binary files ' +
+    'are described by their metadata only — note any concerns based on filename, ' +
+    'size, and declared type.';
+  parts.push({ type: 'text', text: intro });
+
+  for (const doc of documents) {
+    if (doc.fileUrl && visionCapable.has(doc.mimeType)) {
+      parts.push({ type: 'image_url', image_url: { url: doc.fileUrl } });
+    }
+  }
+
+  return { role: 'user', content: parts };
+}
+
+function clampConfidence(value: unknown): number {
+  const n = typeof value === 'number' && Number.isFinite(value) ? value : 70;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function parseAiContent(raw: string): AiAnalysis {
+  // Strip a defensive ```json ... ``` wrapper in case the model emits one
+  // despite the system prompt.
+  const stripped = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/```\s*$/i, '');
+  const parsed = JSON.parse(stripped) as Partial<AiAnalysis>;
+
+  const extractedFields: AiExtractedField[] = Array.isArray(parsed.extractedFields)
+    ? parsed.extractedFields
+        .filter((f) => typeof f === 'object' && f !== null)
+        .map((f) => {
+          const raw = f as unknown as Record<string, unknown>;
+          return {
+            field: typeof raw.field === 'string' ? raw.field : 'unknown',
+            value:
+              typeof raw.value === 'string'
+                ? raw.value
+                : raw.value == null
+                  ? ''
+                  : String(raw.value),
+            confidence: clampConfidence(raw.confidence),
+          };
+        })
+    : [];
+
+  const flags: AiFlag[] = Array.isArray(parsed.flags)
+    ? parsed.flags
+        .filter((f) => typeof f === 'object' && f !== null)
+        .map((f) => {
+          const raw = f as unknown as Record<string, unknown>;
+          const severity: AiFlag['severity'] =
+            raw.severity === 'HIGH' || raw.severity === 'MEDIUM' || raw.severity === 'LOW'
+              ? raw.severity
+              : 'LOW';
+          return {
+            severity,
+            message: typeof raw.message === 'string' ? raw.message : 'Flag (no message)',
+          };
+        })
+    : [];
+
+  const suggestedDecision: 'APPROVE' | 'REJECT' =
+    parsed.suggestedDecision === 'REJECT' ? 'REJECT' : 'APPROVE';
+
+  return {
+    extractedFields,
+    flags,
+    confidenceScore: clampConfidence(parsed.confidenceScore),
+    suggestedDecision,
+    summary:
+      typeof parsed.summary === 'string'
+        ? parsed.summary
+        : 'AI analysis completed without a textual summary.',
+    modelUsed: env.OPENAI_MODEL ?? 'gpt-4o',
+    rawResponse: parsed,
+  };
+}
+
+async function callOpenAI(documents: AiDocumentInput[]): Promise<AiAnalysis> {
+  const apiKey = env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+
+  const body: OpenAIChatRequest = {
+    model: env.OPENAI_MODEL ?? 'gpt-4o',
+    messages: [{ role: 'system', content: SYSTEM_PROMPT }, buildUserMessage(documents)],
+    response_format: { type: 'json_object' },
+    temperature: 0.2,
+    max_tokens: 1500,
+  };
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(
+      `OpenAI request failed with status ${res.status}: ${text.slice(0, 200)}`,
+    );
+  }
+
+  const json = (await res.json()) as OpenAIChatResponse;
+  const content = json.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error('OpenAI response contained no content');
+  }
+
+  const parsed = parseAiContent(content);
+  return {
+    ...parsed,
+    rawResponse: {
+      ...(typeof parsed.rawResponse === 'object' && parsed.rawResponse !== null
+        ? (parsed.rawResponse as Record<string, unknown>)
+        : {}),
+      openai: {
+        id: json.id,
+        model: json.model,
+        usage: json.usage,
+        finishReason: json.choices?.[0]?.finish_reason,
+      },
+    },
+  };
+}
+
 /**
- * Real entry point — would call the LLM provider if `OPENAI_API_KEY` were set.
- * Until then we fall back to the deterministic stub. The shape is identical.
+ * Public entry point. Calls OpenAI when `OPENAI_API_KEY` is set, falling back
+ * to the deterministic heuristic if the key is missing or the API call fails.
+ * The shape of the returned object is identical regardless of branch.
  */
 export async function analyzeApplication(
   documents: AiDocumentInput[],
@@ -160,10 +376,31 @@ export async function analyzeApplication(
     return heuristicAnalysis(documents);
   }
 
-  // Real LLM call would go here. We deliberately don't pull in an SDK at this
-  // stage so the deployment isn't gated on it. When you wire GPT-4o / Claude,
-  // replace this branch with an `openai`/`@anthropic-ai/sdk` call and return
-  // the parsed response. Keep the shape identical to `AiAnalysis`.
-  logger.warn('OPENAI_API_KEY is set but the live integration is not yet implemented; falling back to stub.');
-  return heuristicAnalysis(documents);
+  try {
+    const result = await callOpenAI(documents);
+    logger.info(
+      {
+        count: documents.length,
+        model: result.modelUsed,
+        confidence: result.confidenceScore,
+        flags: result.flags.length,
+        suggested: result.suggestedDecision,
+      },
+      'OpenAI analysis complete',
+    );
+    return result;
+  } catch (err) {
+    logger.error(
+      { err: err instanceof Error ? err.message : String(err) },
+      'OpenAI analysis failed — falling back to deterministic stub',
+    );
+    // Stamp the fallback so admins can see in the AIAnalysisResult row that
+    // the live path was attempted but failed.
+    const fallback = heuristicAnalysis(documents);
+    return {
+      ...fallback,
+      modelUsed: `${env.OPENAI_MODEL ?? 'gpt-4o'}-fallback`,
+      summary: `${fallback.summary} (OpenAI call failed: ${err instanceof Error ? err.message : 'unknown error'})`,
+    };
+  }
 }

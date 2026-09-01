@@ -22,6 +22,11 @@ export const qk = {
     search: (params: Record<string, unknown>) => ['business-search', params] as const,
     qrCode: () => ['businesses', 'me', 'qr'] as const,
   },
+  professionals: {
+    me: () => ['professionals', 'me'] as const,
+    profile: (slug: string) => ['professionals', 'profile', slug] as const,
+    search: (params: Record<string, unknown>) => ['professional-search', params] as const,
+  },
   categories: {
     list: () => ['categories', 'list'] as const,
   },

@@ -17,13 +17,17 @@ export const authService = {
 
     const passwordHash = await hashPassword(input.password);
 
+    // The shared schema constrains `role` to CUSTOMER | BUSINESS | PROFESSIONAL,
+    // so this assignment is type-safe. (Admins must be provisioned via seed.)
+    const role = input.role ?? 'CUSTOMER';
+
     const user = await authRepository.createUser({
       email: input.email,
       passwordHash,
       firstName: input.firstName,
       lastName: input.lastName,
       phone: input.phone,
-      role: input.role,
+      role,
     });
 
     const tokens = issueTokenPair({ id: user.id, email: user.email, role: user.role });

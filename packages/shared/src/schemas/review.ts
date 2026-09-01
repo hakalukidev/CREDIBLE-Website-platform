@@ -8,9 +8,14 @@ import {
   REVIEW_FLAG_REASONS,
 } from '../constants/roles';
 
-export const createReviewSchema = z
-  .object({
-    businessId: z.string().cuid(),
+// Base object so we can use .pick/.extend before adding refinements.
+const reviewTargetSchema = z.object({
+  businessId: z.string().cuid().optional(),
+  professionalId: z.string().cuid().optional(),
+});
+
+export const createReviewSchema = reviewTargetSchema
+  .extend({
     rating: z
       .number()
       .int()
@@ -23,11 +28,30 @@ export const createReviewSchema = z
       .min(REVIEW_MIN_CONTENT_LENGTH)
       .max(REVIEW_MAX_CONTENT_LENGTH),
   })
-  .strict();
+  .strict()
+  .refine((d) => Boolean(d.businessId ?? d.professionalId), {
+    message: 'Either businessId or professionalId is required',
+  });
 
 export type CreateReviewInput = z.infer<typeof createReviewSchema>;
 
-export const updateReviewSchema = createReviewSchema.pick({ title: true, content: true, rating: true });
+export const updateReviewSchema = reviewTargetSchema
+  .extend({
+    rating: z
+      .number()
+      .int()
+      .min(REVIEW_MIN_RATING)
+      .max(REVIEW_MAX_RATING)
+      .optional(),
+    title: z.string().trim().min(3).max(REVIEW_MAX_TITLE_LENGTH).optional(),
+    content: z
+      .string()
+      .trim()
+      .min(REVIEW_MIN_CONTENT_LENGTH)
+      .max(REVIEW_MAX_CONTENT_LENGTH)
+      .optional(),
+  })
+  .strict();
 
 export type UpdateReviewInput = z.infer<typeof updateReviewSchema>;
 
@@ -69,43 +93,44 @@ export type ListReviewsInput = z.infer<typeof listReviewsSchema>;
 // ----------------------------------------------------------------------------
 
 /**
- * Step 1 of the guest review flow: request an OTP for email or phone.
- * The reviewer provides their identifier and the business they want to review.
+ * Submit a guest review for a business or professional. If the user doesn't
+ * already exist, the server will auto-provision a `CUSTOMER` account.
+ *
+ * (OTP verification was removed per product decision — guests can post
+ * reviews without an email/phone round-trip. We still capture the identifier
+ * so duplicate detection across users works.)
  */
-export const submitReviewOtpSchema = z
-  .object({
-    businessId: z.string().cuid('Invalid business id'),
-    identifier: z
-      .string()
-      .trim()
-      .min(3)
-      .max(254)
-      .refine((v) => /@/.test(v) || /^\+?[0-9 ()-]{7,20}$/.test(v), {
-        message: 'Provide a valid email or phone number',
-      }),
-  })
-  .strict();
-
-export type SubmitReviewOtpInput = z.infer<typeof submitReviewOtpSchema>;
-
-/**
- * Step 2: verify the OTP and submit the review in one shot. If the user
- * doesn't already exist, the server will auto-provision a `CUSTOMER` account.
- */
-export const verifyReviewOtpSchema = submitReviewOtpSchema.extend({
-  code: z.string().trim().regex(/^[0-9]{4,8}$/, 'Invalid code'),
-  rating: z
-    .number()
-    .int()
-    .min(REVIEW_MIN_RATING, 'Rating must be at least 1')
-    .max(REVIEW_MAX_RATING, 'Rating must be at most 5'),
-  title: z.string().trim().min(3).max(REVIEW_MAX_TITLE_LENGTH).optional(),
-  content: z
+const guestReviewBaseSchema = z.object({
+  businessId: z.string().cuid('Invalid business id').optional(),
+  professionalId: z.string().cuid('Invalid professional id').optional(),
+  identifier: z
     .string()
     .trim()
-    .min(REVIEW_MIN_CONTENT_LENGTH)
-    .max(REVIEW_MAX_CONTENT_LENGTH),
+    .min(3)
+    .max(254)
+    .refine((v) => /@/.test(v) || /^\+?[0-9 ()-]{7,20}$/.test(v), {
+      message: 'Provide a valid email or phone number',
+    }),
 });
+
+export const verifyReviewOtpSchema = guestReviewBaseSchema
+  .extend({
+    rating: z
+      .number()
+      .int()
+      .min(REVIEW_MIN_RATING, 'Rating must be at least 1')
+      .max(REVIEW_MAX_RATING, 'Rating must be at most 5'),
+    title: z.string().trim().min(3).max(REVIEW_MAX_TITLE_LENGTH).optional(),
+    content: z
+      .string()
+      .trim()
+      .min(REVIEW_MIN_CONTENT_LENGTH)
+      .max(REVIEW_MAX_CONTENT_LENGTH),
+  })
+  .strict()
+  .refine((d) => Boolean(d.businessId ?? d.professionalId), {
+    message: 'Either businessId or professionalId is required',
+  });
 
 export type VerifyReviewOtpInput = z.infer<typeof verifyReviewOtpSchema>;
 

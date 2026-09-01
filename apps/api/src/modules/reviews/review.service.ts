@@ -17,21 +17,35 @@ import type {
 import { reviewRepository } from './review.repository';
 import { businessRepository } from '../businesses/business.repository';
 import { queues } from '../../lib/queue/queues';
+import { prisma } from '../../lib/db/prisma';
 
 export const reviewService = {
   async create(userId: string, input: CreateReviewInput) {
-    const business = await businessRepository.findById(input.businessId);
-    if (!business || business.deletedAt) throw new NotFoundError('Business');
+    const targetType = input.businessId ? 'BUSINESS' : 'PROFESSIONAL';
+    const targetId = (input.businessId ?? input.professionalId)!;
 
-    // CRITICAL rule: one review per user per business (enforced by DB unique index too)
-    const existing = await reviewRepository.findByUserAndBusiness(userId, input.businessId);
+    if (targetType === 'BUSINESS') {
+      const business = await businessRepository.findById(targetId);
+      if (!business || business.deletedAt) throw new NotFoundError('Business');
+    } else {
+      const professional = await prisma.professional.findUnique({ where: { id: targetId } });
+      if (!professional || professional.deletedAt) throw new NotFoundError('Professional');
+    }
+
+    // CRITICAL rule: one review per user per target (enforced by DB unique index too)
+    const existing = await reviewRepository.findByUserAndTarget(userId, {
+      type: targetType,
+      id: targetId,
+    });
     if (existing) throw new DuplicateReviewError();
 
     const editableUntil = new Date(Date.now() + REVIEW_EDIT_WINDOW_HOURS * 60 * 60 * 1000);
 
     try {
       const review = await reviewRepository.create({
-        business: { connect: { id: input.businessId } },
+        targetType,
+        business: targetType === 'BUSINESS' ? { connect: { id: targetId } } : undefined,
+        professional: targetType === 'PROFESSIONAL' ? { connect: { id: targetId } } : undefined,
         user: { connect: { id: userId } },
         rating: input.rating,
         title: input.title,
@@ -41,7 +55,13 @@ export const reviewService = {
       });
 
       // Recompute rating in background
-      await queues['recompute-business-rating'].add('recompute', { businessId: input.businessId });
+      if (targetType === 'BUSINESS') {
+        await queues['recompute-business-rating'].add('recompute', { businessId: targetId });
+      } else {
+        await queues['recompute-business-rating'].add('recompute', {
+          professionalId: targetId,
+        });
+      }
       // Notify the reviewer.
       await queues['review-notification'].add('review-submitted-thanks', { reviewId: review.id });
 
@@ -68,12 +88,10 @@ export const reviewService = {
   async getForViewer(userId: string, reviewId: string) {
     const review = await reviewRepository.findById(reviewId);
     if (!review || review.deletedAt) throw new NotFoundError('Review');
-    // Allow the reviewer (owner) or the business owner to view the detail.
+    // Allow the reviewer (owner) or the target owner (business/professional) to view the detail.
     if (review.userId !== userId) {
-      const business = await businessRepository.findById(review.businessId);
-      if (!business || business.ownerId !== userId) {
-        throw new ForbiddenError();
-      }
+      const owns = await this.targetOwnedBy(review, userId);
+      if (!owns) throw new ForbiddenError();
     }
     return review;
   },
@@ -85,21 +103,37 @@ export const reviewService = {
   ) {
     const review = await reviewRepository.findById(reviewId);
     if (!review || review.deletedAt) throw new NotFoundError('Review');
-    const business = await businessRepository.findById(review.businessId);
-    if (!business || business.ownerId !== ownerId) throw new ForbiddenError();
+    const owns = await this.targetOwnedBy(review, ownerId);
+    if (!owns) throw new ForbiddenError();
 
     const updated = await reviewRepository.update(reviewId, {
       responseContent: input.content,
       responseAt: new Date(),
     });
 
-    // Phase 2 — notify the original reviewer that the business replied.
+    // Phase 2 — notify the original reviewer that the owner replied.
     await queues['review-notification'].add('review-responded', {
       reviewId,
       responseContent: input.content,
     });
 
     return updated;
+  },
+
+  /**
+   * Returns true if `userId` owns the target of `review` (either the
+   * Business owner or the Professional owner).
+   */
+  async targetOwnedBy(review: { businessId: string | null; professionalId: string | null; targetType: 'BUSINESS' | 'PROFESSIONAL' }, userId: string): Promise<boolean> {
+    if (review.targetType === 'BUSINESS' && review.businessId) {
+      const business = await businessRepository.findById(review.businessId);
+      return Boolean(business && business.ownerId === userId);
+    }
+    if (review.targetType === 'PROFESSIONAL' && review.professionalId) {
+      const professional = await prisma.professional.findUnique({ where: { id: review.professionalId } });
+      return Boolean(professional && professional.ownerId === userId);
+    }
+    return false;
   },
 
   async flag(userId: string, reviewId: string, input: FlagReviewInput) {
@@ -139,6 +173,20 @@ export const reviewService = {
     if (!business || business.deletedAt) throw new NotFoundError('Business');
     return reviewRepository.listForBusiness({
       businessId,
+      skip: query.skip,
+      take: query.take,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder ?? 'desc',
+      minRating: query.minRating,
+      status: 'PUBLISHED',
+    });
+  },
+
+  async listForProfessional(professionalId: string, query: ListReviewsInput & { skip: number; take: number }) {
+    const professional = await prisma.professional.findUnique({ where: { id: professionalId } });
+    if (!professional || professional.deletedAt) throw new NotFoundError('Professional');
+    return reviewRepository.listForProfessional({
+      professionalId,
       skip: query.skip,
       take: query.take,
       sortBy: query.sortBy,

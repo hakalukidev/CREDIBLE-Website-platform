@@ -1,7 +1,7 @@
 /**
  * Verification service — Phase 3.
  *
- * Workflow:
+ * Workflow (works for both BUSINESS and PROFESSIONAL targets):
  *   apply()        → creates an application row in PENDING
  *   upload()       → appends a document record (storage + AI worker is queued)
  *   listDocs()     → documents attached to an application
@@ -11,7 +11,10 @@
  *   appeal()       → REJECTED → PENDING (re-enters queue)
  *   decide()       → admin approves or rejects an application
  *   revoke()       → admin revokes an issued badge
- *   eligibility()  → checks the current business's review count + rating
+ *   eligibility()  → checks the current business/professional's review count + rating
+ *
+ * Phase 5 — adds a `targetType: 'BUSINESS' | 'PROFESSIONAL'` discriminator
+ * via `VerificationApplication.professionalId` and `Badge.professionalId`.
  */
 import { prisma } from '../../lib/db/prisma';
 import { BadRequestError, ForbiddenError, NotFoundError, ConflictError } from '../../lib/errors/AppError';
@@ -32,13 +35,14 @@ import {
   VERIFICATION_MIN_DOCUMENTS,
   VERIFICATION_REVIEW_SLA_DAYS,
 } from '@credible/shared';
-import type { VerificationApplication, VerificationDocument, Business } from '@prisma/client';
+import type { VerificationApplication, VerificationDocument, Business, Professional } from '@prisma/client';
 import { verificationRepository } from './verification.repository';
 import { businessRepository } from '../businesses/business.repository';
 import { queues } from '../../lib/queue/queues';
 import { generateBadge } from '../../lib/badge/generator';
 import { logger } from '../../lib/logger/logger';
 import { env } from '../../config/env';
+import { audit } from '../../lib/audit/log';
 
 const ALLOWED_TRANSITIONS: Record<VerificationStatus, VerificationStatus[]> = {
   NOT_STARTED: ['PENDING'],
@@ -54,6 +58,46 @@ function canTransition(from: VerificationStatus, to: VerificationStatus): boolea
   return ALLOWED_TRANSITIONS[from]?.includes(to) ?? false;
 }
 
+/**
+ * Resolve whether the given user owns the application's target (Business or
+ * Professional). Returns false for both branches if neither matches.
+ */
+async function isOwner(
+  app: Pick<ApplicationWithDocs, 'businessId' | 'professionalId'>,
+  userId: string,
+): Promise<boolean> {
+  if (app.businessId) {
+    const b = await businessRepository.findById(app.businessId);
+    return Boolean(b && b.ownerId === userId);
+  }
+  if (app.professionalId) {
+    const p = await prisma.professional.findUnique({ where: { id: app.professionalId } });
+    return Boolean(p && p.ownerId === userId);
+  }
+  return false;
+}
+
+/**
+ * Returns the owner's contact email when the current user owns the
+ * application's target, otherwise null.
+ */
+async function resolveOwnerEmail(
+  app: Pick<ApplicationWithDocs, 'businessId' | 'professionalId'>,
+  userId: string,
+): Promise<string | null> {
+  if (app.businessId) {
+    const b = await businessRepository.findById(app.businessId);
+    if (!b || b.ownerId !== userId) return null;
+    return b.email ?? null;
+  }
+  if (app.professionalId) {
+    const p = await prisma.professional.findUnique({ where: { id: app.professionalId } });
+    if (!p || p.ownerId !== userId) return null;
+    return p.email ?? null;
+  }
+  return null;
+}
+
 async function logStatus(
   applicationId: string,
   status: VerificationStatus,
@@ -67,7 +111,8 @@ async function logStatus(
 
 export type ApplicationWithDocs = VerificationApplication & {
   documents: VerificationDocument[];
-  business: Business;
+  business: Business | null;
+  professional: Professional | null;
   statusHistory: { id: string; status: VerificationStatus; note: string | null; createdAt: Date; createdBy: string | null }[];
   aiAnalysis: {
     extractedFields: unknown;
@@ -84,7 +129,10 @@ export const verificationService = {
   // -------------------------------------------------------------------------
   // Eligibility
   // -------------------------------------------------------------------------
-  async eligibility(businessId: string) {
+  async eligibility(businessId: string, targetType: 'BUSINESS' | 'PROFESSIONAL' = 'BUSINESS') {
+    if (targetType === 'PROFESSIONAL') {
+      return this.eligibilityForProfessional(businessId);
+    }
     const business = await businessRepository.findById(businessId);
     if (!business) throw new NotFoundError('Business');
 
@@ -114,14 +162,74 @@ export const verificationService = {
     };
   },
 
+  async eligibilityForProfessional(professionalId: string) {
+    const professional = await prisma.professional.findUnique({ where: { id: professionalId } });
+    if (!professional) throw new NotFoundError('Professional');
+
+    const reviewCount = await prisma.review.count({
+      where: { professionalId, status: 'PUBLISHED', deletedAt: null },
+    });
+    const avgRating = professional.ratingAverage ? Number(professional.ratingAverage) : 0;
+    const subscription = await prisma.subscription.findFirst({
+      where: { professionalId, status: { in: ['ACTIVE', 'TRIALING'] } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      eligible:
+        reviewCount >= 5 &&
+        avgRating >= 4.0 &&
+        Boolean(subscription && subscription.plan !== 'FREE'),
+      checks: {
+        reviewCount: { actual: reviewCount, required: 5, passed: reviewCount >= 5 },
+        avgRating: { actual: avgRating, required: 4.0, passed: avgRating >= 4.0 },
+        plan: {
+          plan: subscription?.plan ?? 'FREE',
+          passed: Boolean(subscription && subscription.plan !== 'FREE'),
+        },
+      },
+      alreadyVerified: professional.verificationStatus === 'APPROVED',
+    };
+  },
+
   // -------------------------------------------------------------------------
   // Apply / upload / submit / cancel / appeal
   // -------------------------------------------------------------------------
   async apply(
     ownerId: string,
     businessId: string,
-    input: { level: VerificationLevel; type: 'BASIC' | 'PREMIUM' },
+    input: { level: VerificationLevel; type: 'BASIC' | 'PREMIUM'; targetType?: 'BUSINESS' | 'PROFESSIONAL' },
   ): Promise<ApplicationWithDocs> {
+    const targetType = input.targetType ?? 'BUSINESS';
+    if (targetType === 'PROFESSIONAL') {
+      const professional = await prisma.professional.findUnique({ where: { id: businessId } });
+      if (!professional) throw new NotFoundError('Professional');
+      if (professional.ownerId !== ownerId) throw new ForbiddenError();
+      if (professional.verificationStatus === 'APPROVED') {
+        throw new ConflictError('Professional is already verified', 'ALREADY_VERIFIED');
+      }
+      if (!canTransition(professional.verificationStatus, 'PENDING')) {
+        throw new BadRequestError(`Cannot start verification from ${professional.verificationStatus}`);
+      }
+
+      const application = await prisma.verificationApplication.create({
+        data: {
+          professionalId: businessId,
+          level: input.level,
+          type: input.type,
+          status: 'PENDING',
+          appliedAt: new Date(),
+        },
+      });
+
+      await prisma.professional.update({
+        where: { id: businessId },
+        data: { verificationStatus: 'PENDING' },
+      });
+      await logStatus(application.id, 'PENDING', 'Application created', ownerId);
+      return this.getApplication(application.id);
+    }
+
     const business = await businessRepository.findById(businessId);
     if (!business) throw new NotFoundError('Business');
     if (business.ownerId !== ownerId) throw new ForbiddenError();
@@ -148,7 +256,25 @@ export const verificationService = {
     return this.getApplication(application.id);
   },
 
-  async status(businessId: string) {
+  async status(businessId: string, targetType: 'BUSINESS' | 'PROFESSIONAL' = 'BUSINESS') {
+    if (targetType === 'PROFESSIONAL') {
+      const professional = await prisma.professional.findUnique({ where: { id: businessId } });
+      if (!professional) throw new NotFoundError('Professional');
+      const latest = await prisma.verificationApplication.findFirst({
+        where: { professionalId: businessId },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          status: true,
+          appliedAt: true,
+          submittedAt: true,
+          reviewedAt: true,
+          level: true,
+          estimatedReviewAt: true,
+        },
+      });
+      return { status: professional.verificationStatus, application: latest };
+    }
     const business = await businessRepository.findById(businessId);
     if (!business) throw new NotFoundError('Business');
     const latest = await prisma.verificationApplication.findFirst({
@@ -176,6 +302,7 @@ export const verificationService = {
       include: {
         documents: { orderBy: { uploadedAt: 'asc' } },
         business: true,
+        professional: true,
         statusHistory: { orderBy: { createdAt: 'asc' } },
         aiAnalysis: true,
       },
@@ -184,9 +311,9 @@ export const verificationService = {
     return app as ApplicationWithDocs;
   },
 
-  async listMyApplications(businessId: string) {
+  async listMyApplications(businessId: string, targetType: 'BUSINESS' | 'PROFESSIONAL' = 'BUSINESS') {
     return prisma.verificationApplication.findMany({
-      where: { businessId },
+      where: targetType === 'PROFESSIONAL' ? { professionalId: businessId } : { businessId },
       orderBy: { createdAt: 'desc' },
       include: { documents: { select: { id: true, type: true, status: true } } },
     });
@@ -196,9 +323,15 @@ export const verificationService = {
     businessId: string,
     applicationId: string,
     doc: DocInput,
+    targetType: 'BUSINESS' | 'PROFESSIONAL' = 'BUSINESS',
   ): Promise<VerificationDocument> {
     const app = await this.getApplication(applicationId);
-    if (app.businessId !== businessId) throw new ForbiddenError('Not your application');
+    if (targetType === 'BUSINESS' && app.businessId !== businessId) {
+      throw new ForbiddenError('Not your application');
+    }
+    if (targetType === 'PROFESSIONAL' && app.professionalId !== businessId) {
+      throw new ForbiddenError('Not your application');
+    }
     if (!['PENDING', 'DOCUMENTS_UPLOADED'].includes(app.status)) {
       throw new BadRequestError(`Cannot upload to ${app.status} application`);
     }
@@ -209,7 +342,7 @@ export const verificationService = {
 
     const created = await prisma.verificationDocument.create({
       data: {
-        businessId,
+        ...(targetType === 'BUSINESS' ? { businessId } : { professionalId: businessId }),
         applicationId,
         type: doc.type,
         status: 'UPLOADED',
@@ -227,9 +360,16 @@ export const verificationService = {
         where: { id: applicationId },
         data: { status: 'DOCUMENTS_UPLOADED' },
       });
-      await businessRepository.update(businessId, {
-        verificationStatus: 'DOCUMENTS_UPLOADED',
-      });
+      if (targetType === 'BUSINESS') {
+        await businessRepository.update(businessId, {
+          verificationStatus: 'DOCUMENTS_UPLOADED',
+        });
+      } else {
+        await prisma.professional.update({
+          where: { id: businessId },
+          data: { verificationStatus: 'DOCUMENTS_UPLOADED' },
+        });
+      }
       await logStatus(applicationId, 'DOCUMENTS_UPLOADED', 'First document uploaded');
     }
 
@@ -239,18 +379,37 @@ export const verificationService = {
     return created;
   },
 
-  async listDocuments(applicationId: string, businessId: string): Promise<VerificationDocument[]> {
+  async listDocuments(
+    applicationId: string,
+    businessId: string,
+    targetType: 'BUSINESS' | 'PROFESSIONAL' = 'BUSINESS',
+  ): Promise<VerificationDocument[]> {
     const app = await this.getApplication(applicationId);
-    if (app.businessId !== businessId) throw new ForbiddenError('Not your application');
+    if (targetType === 'BUSINESS' && app.businessId !== businessId) {
+      throw new ForbiddenError('Not your application');
+    }
+    if (targetType === 'PROFESSIONAL' && app.professionalId !== businessId) {
+      throw new ForbiddenError('Not your application');
+    }
     return prisma.verificationDocument.findMany({
       where: { applicationId },
       orderBy: { uploadedAt: 'asc' },
     });
   },
 
-  async deleteDocument(applicationId: string, documentId: string, businessId: string) {
+  async deleteDocument(
+    applicationId: string,
+    documentId: string,
+    businessId: string,
+    targetType: 'BUSINESS' | 'PROFESSIONAL' = 'BUSINESS',
+  ) {
     const app = await this.getApplication(applicationId);
-    if (app.businessId !== businessId) throw new ForbiddenError('Not your application');
+    if (targetType === 'BUSINESS' && app.businessId !== businessId) {
+      throw new ForbiddenError('Not your application');
+    }
+    if (targetType === 'PROFESSIONAL' && app.professionalId !== businessId) {
+      throw new ForbiddenError('Not your application');
+    }
     if (!['PENDING', 'DOCUMENTS_UPLOADED'].includes(app.status)) {
       throw new BadRequestError(`Cannot delete documents from ${app.status} application`);
     }
@@ -268,8 +427,8 @@ export const verificationService = {
     input: SubmitVerificationInput,
   ): Promise<ApplicationWithDocs> {
     const app = await this.getApplication(applicationId);
-    const business = await businessRepository.findById(app.businessId);
-    if (!business || business.ownerId !== ownerId) throw new ForbiddenError();
+    const ownerEmail = await resolveOwnerEmail(app, ownerId);
+    if (ownerEmail === null) throw new ForbiddenError();
 
     if (!['PENDING', 'DOCUMENTS_UPLOADED'].includes(app.status)) {
       throw new BadRequestError(`Cannot submit from ${app.status}`);
@@ -293,14 +452,21 @@ export const verificationService = {
         additionalNotes: input.additionalNotes,
       },
     });
-    await businessRepository.update(app.businessId, { verificationStatus: 'AUTO_CHECKING' });
+    if (app.businessId) {
+      await businessRepository.update(app.businessId, { verificationStatus: 'AUTO_CHECKING' });
+    } else if (app.professionalId) {
+      await prisma.professional.update({
+        where: { id: app.professionalId },
+        data: { verificationStatus: 'AUTO_CHECKING' },
+      });
+    }
     await logStatus(applicationId, 'DOCUMENTS_UPLOADED', 'Submitted for review', ownerId);
     await logStatus(applicationId, 'AUTO_CHECKING', 'AI analysis started');
 
     // Run application-level analysis asynchronously.
     await queues['analyze-application'].add('analyze-application', { applicationId });
     // Notify the applicant.
-    if (business.email) {
+    if (ownerEmail) {
       await queues['verification-notification'].add('verification-status-changed', {
         applicationId,
         status: 'SUBMITTED',
@@ -315,8 +481,7 @@ export const verificationService = {
     _input?: CancelApplicationInput,
   ): Promise<ApplicationWithDocs> {
     const app = await this.getApplication(applicationId);
-    const business = await businessRepository.findById(app.businessId);
-    if (!business || business.ownerId !== ownerId) throw new ForbiddenError();
+    if (!(await isOwner(app, ownerId))) throw new ForbiddenError();
     if (!['PENDING', 'DOCUMENTS_UPLOADED', 'AUTO_CHECKING'].includes(app.status)) {
       throw new BadRequestError(`Cannot cancel a ${app.status} application`);
     }
@@ -325,7 +490,14 @@ export const verificationService = {
       where: { id: applicationId },
       data: { status: 'REJECTED', rejectionReason: 'Cancelled by applicant' },
     });
-    await businessRepository.update(app.businessId, { verificationStatus: 'REJECTED' });
+    if (app.businessId) {
+      await businessRepository.update(app.businessId, { verificationStatus: 'REJECTED' });
+    } else if (app.professionalId) {
+      await prisma.professional.update({
+        where: { id: app.professionalId },
+        data: { verificationStatus: 'REJECTED' },
+      });
+    }
     await logStatus(applicationId, 'REJECTED', 'Cancelled by applicant', ownerId);
     return this.getApplication(applicationId);
   },
@@ -336,8 +508,7 @@ export const verificationService = {
     input: AppealVerificationInput,
   ): Promise<ApplicationWithDocs> {
     const app = await this.getApplication(applicationId);
-    const business = await businessRepository.findById(app.businessId);
-    if (!business || business.ownerId !== ownerId) throw new ForbiddenError();
+    if (!(await isOwner(app, ownerId))) throw new ForbiddenError();
     if (app.status !== 'REJECTED') {
       throw new BadRequestError('Only rejected applications can be appealed');
     }
@@ -346,7 +517,14 @@ export const verificationService = {
       where: { id: applicationId },
       data: { status: 'PENDING', rejectionReason: null },
     });
-    await businessRepository.update(app.businessId, { verificationStatus: 'PENDING' });
+    if (app.businessId) {
+      await businessRepository.update(app.businessId, { verificationStatus: 'PENDING' });
+    } else if (app.professionalId) {
+      await prisma.professional.update({
+        where: { id: app.professionalId },
+        data: { verificationStatus: 'PENDING' },
+      });
+    }
     await logStatus(applicationId, 'PENDING', `Appeal: ${input.reason}`, ownerId);
     return this.getApplication(applicationId);
   },
@@ -356,6 +534,7 @@ export const verificationService = {
   // -------------------------------------------------------------------------
   async listApplicationsForAdmin(filter: {
     status?: VerificationStatus;
+    targetType?: 'BUSINESS' | 'PROFESSIONAL';
     dateFrom?: Date;
     dateTo?: Date;
     search?: string;
@@ -371,15 +550,31 @@ export const verificationService = {
       };
     }
     if (filter.search) {
-      where.business = {
-        OR: [
-          { displayName: { contains: filter.search, mode: 'insensitive' } },
-          { legalName: { contains: filter.search, mode: 'insensitive' } },
-          { owner: { firstName: { contains: filter.search, mode: 'insensitive' } } },
-          { owner: { lastName: { contains: filter.search, mode: 'insensitive' } } },
-        ],
-      };
+      where.OR = [
+        {
+          business: {
+            OR: [
+              { displayName: { contains: filter.search, mode: 'insensitive' } },
+              { legalName: { contains: filter.search, mode: 'insensitive' } },
+              { owner: { firstName: { contains: filter.search, mode: 'insensitive' } } },
+              { owner: { lastName: { contains: filter.search, mode: 'insensitive' } } },
+            ],
+          },
+        },
+        {
+          professional: {
+            OR: [
+              { displayName: { contains: filter.search, mode: 'insensitive' } },
+              { profession: { contains: filter.search, mode: 'insensitive' } },
+              { owner: { firstName: { contains: filter.search, mode: 'insensitive' } } },
+              { owner: { lastName: { contains: filter.search, mode: 'insensitive' } } },
+            ],
+          },
+        },
+      ];
     }
+    if (filter.targetType === 'BUSINESS') where.businessId = { not: null };
+    if (filter.targetType === 'PROFESSIONAL') where.professionalId = { not: null };
     const skip = (filter.page - 1) * filter.perPage;
     const [items, total] = await prisma.$transaction([
       prisma.verificationApplication.findMany({
@@ -389,6 +584,7 @@ export const verificationService = {
         take: filter.perPage,
         include: {
           business: { select: { id: true, displayName: true, slug: true, ownerId: true } },
+          professional: { select: { id: true, displayName: true, slug: true, ownerId: true } },
           documents: { select: { id: true, type: true, status: true } },
         },
       }),
@@ -445,64 +641,118 @@ export const verificationService = {
       const badgeLevel: VerificationLevel =
         (decision.badgeType as VerificationLevel) ?? app.level;
 
-      // Issue the canonical Badge row.
-      const business = app.business;
       const verificationUrl = `${env.WEB_URL}/verify/${badgeId}`;
-      await prisma.badge.upsert({
-        where: { businessId: business.id },
-        create: {
-          businessId: business.id,
-          badgeId,
-          type: badgeLevel,
-          verificationUrl,
-        },
-        update: {
-          badgeId,
-          type: badgeLevel,
-          verificationUrl,
-          isActive: true,
-          revokedAt: null,
-          revocationReason: null,
-          issuedAt: new Date(),
-        },
-      });
 
-      await prisma.verificationApplication.update({
-        where: { id: applicationId },
-        data: {
-          status: 'APPROVED',
-          reviewerId: adminId,
-          reviewedAt: new Date(),
-          rejectionReason: null,
-        },
-      });
-      await businessRepository.update(business.id, {
-        verificationStatus: 'APPROVED',
-        verificationLevel: badgeLevel,
-        verifiedAt: new Date(),
-        badgeHash: badgeId,
-        badgeIssuedAt: new Date(),
-        verificationUrl,
-      });
-      await logStatus(applicationId, 'APPROVED', decision.notes ?? 'Approved', adminId);
-      await prisma.auditLog.create({
-        data: {
+      if (app.businessId) {
+        const business = app.business!;
+        await prisma.badge.upsert({
+          where: { businessId: business.id },
+          create: {
+            businessId: business.id,
+            badgeId,
+            type: badgeLevel,
+            verificationUrl,
+          },
+          update: {
+            badgeId,
+            type: badgeLevel,
+            verificationUrl,
+            isActive: true,
+            revokedAt: null,
+            revocationReason: null,
+            issuedAt: new Date(),
+          },
+        });
+        await prisma.verificationApplication.update({
+          where: { id: applicationId },
+          data: {
+            status: 'APPROVED',
+            reviewerId: adminId,
+            reviewedAt: new Date(),
+            rejectionReason: null,
+          },
+        });
+        await businessRepository.update(business.id, {
+          verificationStatus: 'APPROVED',
+          verificationLevel: badgeLevel,
+          verifiedAt: new Date(),
+          badgeHash: badgeId,
+          badgeIssuedAt: new Date(),
+          verificationUrl,
+        });
+        await logStatus(applicationId, 'APPROVED', decision.notes ?? 'Approved', adminId);
+        await audit({
           actorId: adminId,
           action: 'verification.approved',
           target: business.id,
-          meta: { applicationId, level: badgeLevel },
-        },
-      });
-
-      // Generate the SVG badge + queue notification.
-      await queues['generate-badge'].add('issue', {
-        businessId: business.id,
-        badgeHash: badgeId,
-      });
-      await queues['verification-notification'].add('verification-status-changed', {
-        applicationId,
-        status: 'APPROVED',
-      });
+          meta: { applicationId, level: badgeLevel, targetType: 'BUSINESS' },
+        });
+        await queues['generate-badge'].add('issue', {
+          businessId: business.id,
+          badgeHash: badgeId,
+        });
+        await queues['verification-notification'].add('verification-status-changed', {
+          applicationId,
+          status: 'APPROVED',
+        });
+      } else if (app.professionalId) {
+        const professional = app.professional!;
+        await prisma.badge.upsert({
+          where: { professionalId: professional.id },
+          create: {
+            professionalId: professional.id,
+            badgeId,
+            type: badgeLevel,
+            verificationUrl,
+          },
+          update: {
+            badgeId,
+            type: badgeLevel,
+            verificationUrl,
+            isActive: true,
+            revokedAt: null,
+            revocationReason: null,
+            issuedAt: new Date(),
+          },
+        });
+        await prisma.verificationApplication.update({
+          where: { id: applicationId },
+          data: {
+            status: 'APPROVED',
+            reviewerId: adminId,
+            reviewedAt: new Date(),
+            rejectionReason: null,
+          },
+        });
+        await prisma.professional.update({
+          where: { id: professional.id },
+          data: {
+            verificationStatus: 'APPROVED',
+            verificationLevel: badgeLevel,
+            verifiedAt: new Date(),
+            badgeHash: badgeId,
+            badgeIssuedAt: new Date(),
+            verificationUrl,
+          },
+        });
+        await logStatus(applicationId, 'APPROVED', decision.notes ?? 'Approved', adminId);
+        await audit({
+          actorId: adminId,
+          action: 'verification.approved',
+          target: professional.id,
+          meta: { applicationId, level: badgeLevel, targetType: 'PROFESSIONAL' },
+        });
+        await queues['generate-badge'].add('issue', {
+          professionalId: professional.id,
+          badgeHash: badgeId,
+        });
+        await queues['verification-notification'].add('verification-status-changed', {
+          applicationId,
+          status: 'APPROVED',
+        });
+      } else {
+        throw new BadRequestError('Application has no associated business or professional');
+      }
     } else {
       await prisma.verificationApplication.update({
         where: { id: applicationId },
@@ -513,14 +763,23 @@ export const verificationService = {
           rejectionReason: decision.reason ?? 'Not provided',
         },
       });
-      await businessRepository.update(app.businessId, { verificationStatus: 'REJECTED' });
+      if (app.businessId) {
+        await businessRepository.update(app.businessId, { verificationStatus: 'REJECTED' });
+      } else if (app.professionalId) {
+        await prisma.professional.update({
+          where: { id: app.professionalId },
+          data: { verificationStatus: 'REJECTED' },
+        });
+      }
       await logStatus(applicationId, 'REJECTED', decision.reason ?? 'Rejected', adminId);
-      await prisma.auditLog.create({
-        data: {
-          actorId: adminId,
-          action: 'verification.rejected',
-          target: app.businessId,
-          meta: { applicationId, reason: decision.reason },
+      await audit({
+        actorId: adminId,
+        action: 'verification.rejected',
+        target: app.businessId ?? app.professionalId ?? applicationId,
+        meta: {
+          applicationId,
+          reason: decision.reason,
+          targetType: app.businessId ? 'BUSINESS' : 'PROFESSIONAL',
         },
       });
       await queues['verification-notification'].add('verification-status-changed', {
@@ -531,38 +790,76 @@ export const verificationService = {
     return this.getApplication(applicationId);
   },
 
-  async revoke(adminId: string, businessId: string, reason: string) {
-    const business = await businessRepository.findById(businessId);
+  async revoke(
+    adminId: string,
+    targetId: string,
+    reason: string,
+    targetType: 'BUSINESS' | 'PROFESSIONAL' = 'BUSINESS',
+  ) {
+    if (targetType === 'PROFESSIONAL') {
+      const professional = await prisma.professional.findUnique({ where: { id: targetId } });
+      if (!professional) throw new NotFoundError('Professional');
+      if (professional.verificationStatus !== 'APPROVED') {
+        throw new BadRequestError('Professional is not currently verified');
+      }
+
+      await prisma.badge.updateMany({
+        where: { professionalId: targetId },
+        data: {
+          isActive: false,
+          revokedAt: new Date(),
+          revocationReason: reason,
+        },
+      });
+      await prisma.professional.update({
+        where: { id: targetId },
+        data: {
+          verificationStatus: 'REJECTED',
+          verificationLevel: 'NONE',
+          verifiedAt: null,
+          badgeHash: null,
+          badgeIssuedAt: null,
+        },
+      });
+      await audit({
+        actorId: adminId,
+        action: 'badge.revoked',
+        target: targetId,
+        meta: { reason, targetType: 'PROFESSIONAL' },
+      });
+      logger.info({ professionalId: targetId }, 'Badge revoked — owner notified');
+      return { revoked: true };
+    }
+
+    const business = await businessRepository.findById(targetId);
     if (!business) throw new NotFoundError('Business');
     if (business.verificationStatus !== 'APPROVED') {
       throw new BadRequestError('Business is not currently verified');
     }
 
     await prisma.badge.updateMany({
-      where: { businessId },
+      where: { businessId: targetId },
       data: {
         isActive: false,
         revokedAt: new Date(),
         revocationReason: reason,
       },
     });
-    await businessRepository.update(businessId, {
+    await businessRepository.update(targetId, {
       verificationStatus: 'REJECTED',
       verificationLevel: 'NONE',
       verifiedAt: null,
       badgeHash: null,
       badgeIssuedAt: null,
     });
-    await prisma.auditLog.create({
-      data: {
-        actorId: adminId,
-        action: 'badge.revoked',
-        target: businessId,
-        meta: { reason },
-      },
+    await audit({
+      actorId: adminId,
+      action: 'badge.revoked',
+      target: targetId,
+      meta: { reason, targetType: 'BUSINESS' },
     });
     if (business.email) {
-      logger.info({ businessId }, 'Badge revoked — owner notified');
+      logger.info({ businessId: targetId }, 'Badge revoked — owner notified');
     }
     return { revoked: true };
   },

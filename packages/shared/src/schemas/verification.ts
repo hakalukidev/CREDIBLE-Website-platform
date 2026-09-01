@@ -76,6 +76,7 @@ export const adminApplicationListSchema = z
     status: z
       .enum(['PENDING', 'DOCUMENTS_UPLOADED', 'AUTO_CHECKING', 'HUMAN_REVIEW_REQUIRED', 'APPROVED', 'REJECTED'])
       .optional(),
+    targetType: z.enum(['BUSINESS', 'PROFESSIONAL']).optional(),
     dateFrom: z.coerce.date().optional(),
     dateTo: z.coerce.date().optional(),
     search: z.string().trim().max(200).optional(),

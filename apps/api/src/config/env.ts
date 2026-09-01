@@ -34,6 +34,12 @@ const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_BUCKET: z.string().default('credible-documents'),
   S3_PUBLIC_BUCKET: z.string().default('credible-public'),
+  /**
+   * Custom public domain for the public bucket (e.g. R2 public dev URL,
+   * CloudFront distribution, or a CDN URL). When set, public objects are
+   * served from this base instead of the raw S3/R2 endpoint.
+   */
+  S3_PUBLIC_BUCKET_URL: z.string().url().optional(),
 
   // OAuth
   GOOGLE_CLIENT_ID: z.string().optional(),

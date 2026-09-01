@@ -33,12 +33,17 @@ if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
       {
         clientID: env.GOOGLE_CLIENT_ID,
         clientSecret: env.GOOGLE_CLIENT_SECRET,
-        callbackURL: env.GOOGLE_CALLBACK_URL,
-      },
-      async (_access, _refresh, profile, done) => {
+        callbackURL: env.GOOGLE_CALLBACK_URL ?? `${env.API_URL}${env.API_PREFIX}/auth/google/callback`,
+      } as ConstructorParameters<typeof GoogleStrategy>[0],
+      async (
+        _access: string,
+        _refresh: string,
+        profile: { id?: string; emails?: { value: string }[]; name?: { givenName?: string; familyName?: string }; photos?: { value: string }[] },
+        done: (err: Error | null, user?: unknown) => void,
+      ) => {
         const email = profile.emails?.[0]?.value;
         if (!email) return done(new Error('Google account has no email'));
-        const providerUserId = profile.id;
+        const providerUserId = profile.id ?? '';
         const existing = await prisma.user.findUnique({ where: { email } });
         let user = existing;
         if (!user) {
@@ -68,12 +73,12 @@ if (env.FACEBOOK_CLIENT_ID && env.FACEBOOK_CLIENT_SECRET) {
       {
         clientID: env.FACEBOOK_CLIENT_ID,
         clientSecret: env.FACEBOOK_CLIENT_SECRET,
-        callbackURL: env.FACEBOOK_CALLBACK_URL,
+        callbackURL: env.FACEBOOK_CALLBACK_URL ?? `${env.API_URL}${env.API_PREFIX}/auth/facebook/callback`,
         profileFields: ['id', 'emails', 'name', 'picture.type(large)'],
       },
-      async (_access, _refresh, profile, done) => {
+      async (_access: string, _refresh: string, profile: { id?: string; emails?: { value: string }[]; name?: { givenName?: string; familyName?: string }; photos?: { value: string }[] }, done: (err: Error | null, user?: unknown) => void) => {
         const email = profile.emails?.[0]?.value ?? `${profile.id}@facebook.local`;
-        const providerUserId = profile.id;
+        const providerUserId = profile.id ?? '';
         const existing = await prisma.user.findUnique({ where: { email } });
         let user = existing;
         if (!user) {

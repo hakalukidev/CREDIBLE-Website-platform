@@ -97,10 +97,24 @@ export function SiteHeader() {
                   <p className="text-xs text-muted-foreground">{session.user.email}</p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {(session.user.role === 'BUSINESS' || session.user.role === 'ADMIN') && (
+                {session.user.role === 'ADMIN' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">
+                      <LayoutDashboard className="h-4 w-4" /> Admin
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {session.user.role === 'BUSINESS' && (
                   <DropdownMenuItem asChild>
                     <Link href="/business/dashboard">
-                      <LayoutDashboard className="h-4 w-4" /> Dashboard
+                      <LayoutDashboard className="h-4 w-4" /> Business dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {session.user.role === 'PROFESSIONAL' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/professional/dashboard">
+                      <LayoutDashboard className="h-4 w-4" /> Professional dashboard
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -121,7 +135,7 @@ export function SiteHeader() {
                 <Link href="/login">Sign in</Link>
               </Button>
               <Button asChild size="sm">
-                <Link href="/register-business">Claim your business</Link>
+                <Link href="/register">Get started</Link>
               </Button>
             </>
           )}

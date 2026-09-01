@@ -19,7 +19,13 @@ enum UserRole {
   GUEST
   CUSTOMER
   BUSINESS
+  PROFESSIONAL
   ADMIN
+}
+
+enum ReviewTargetType {
+  BUSINESS
+  PROFESSIONAL
 }
 
 enum UserStatus {
@@ -30,6 +36,14 @@ enum UserStatus {
 }
 
 enum BusinessStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  SUSPENDED
+  CLOSED
+}
+
+enum ProfessionalStatus {
   DRAFT
   PENDING
   PUBLISHED
@@ -167,9 +181,11 @@ model User {
   providers       OAuthAccount[]
   // Relations
   business        Business?
+  professional    Professional?
   reviews         Review[]
   flags           ReviewFlag[]     @relation("FlagAuthor")
   contactRequests ContactRequest[] @relation("ContactRequester")
+  reviewAdminResponses Review[]    @relation("ReviewAdminResponder")
   subscriptions   Subscription[]
   payments        Payment[]
   paymentMethods  PaymentMethod[]
@@ -219,22 +235,23 @@ model OtpToken {
 }
 
 model Category {
-  id              String     @id @default(cuid())
-  slug            String     @unique
+  id              String         @id @default(cuid())
+  slug            String         @unique
   name            String
-  description     String?    @db.Text
+  description     String?        @db.Text
   icon            String?
   parentId        String?
-  parent          Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children        Category[] @relation("CategoryTree")
+  parent          Category?      @relation("CategoryTree", fields: [parentId], references: [id])
+  children        Category[]     @relation("CategoryTree")
   businesses      Business[]
+  professionals   Professional[]
   // SEO
   metaTitle       String?
-  metaDescription String?    @db.Text
-  isActive        Boolean    @default(true)
-  order           Int        @default(0)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  metaDescription String?        @db.Text
+  isActive        Boolean        @default(true)
+  order           Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   @@index([parentId])
   @@index([isActive])
@@ -312,41 +329,125 @@ model Business {
   @@index([createdAt])
 }
 
+model Professional {
+  id                       String                    @id @default(cuid())
+  ownerId                  String                    @unique
+  owner                    User                      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  slug                     String                    @unique
+  // Identity
+  title                    String? // e.g. "Dr.", "Adv.", "Md."
+  displayName              String // e.g. "Dr. Jane Smith"
+  headline                 String?
+  bio                      String?                   @db.Text
+  // Media
+  avatar                   String?
+  coverImage               String?
+  // Contact
+  email                    String?
+  phone                    String?
+  website                  String?
+  // Location
+  city                     String?
+  state                    String?
+  country                  String?                   @default("BD")
+  // Service
+  profession               String // "Doctor", "Lawyer", "Architect", etc.
+  specialties              String[]
+  yearsOfExperience        Int?
+  languages                String[]
+  // Status & verification
+  status                   ProfessionalStatus        @default(DRAFT)
+  verificationStatus       VerificationStatus        @default(NOT_STARTED)
+  verificationLevel        VerificationLevel         @default(NONE)
+  verifiedAt               DateTime?
+  // Aggregates
+  ratingAverage            Decimal?                  @db.Decimal(3, 2)
+  ratingCount              Int                       @default(0)
+  // Badge (legacy denormalised; primary lives in `Badge`)
+  badgeHash                String?                   @unique
+  badgeIssuedAt            DateTime?
+  verificationUrl          String?
+  badge                    Badge?
+  // SEO
+  metaTitle                String?
+  metaDescription          String?                   @db.Text
+  // Relations
+  categoryId               String?
+  category                 Category?                 @relation(fields: [categoryId], references: [id])
+  reviews                  Review[]
+  documents                VerificationDocument[]
+  verificationApplications VerificationApplication[]
+  subscriptions            Subscription[]
+  payments                 Payment[]
+  invoices                 Invoice[]
+  voucherRedemptions       VoucherRedemption[]
+  reviewInvitations        ReviewInvitation[]
+  // Timestamps
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  publishedAt              DateTime?
+  deletedAt                DateTime?
+
+  @@index([status])
+  @@index([verificationStatus])
+  @@index([categoryId])
+  @@index([city])
+  @@index([ratingAverage])
+  @@index([createdAt])
+  @@index([profession])
+}
+
 model Review {
-  id                 String       @id @default(cuid())
-  businessId         String
-  business           Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  id                 String           @id @default(cuid())
+  businessId         String?
+  business           Business?        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  // Target discriminator — a review targets exactly one of Business or Professional.
+  targetType         ReviewTargetType @default(BUSINESS)
+  professionalId     String?
+  professional       Professional?    @relation(fields: [professionalId], references: [id], onDelete: Cascade)
   userId             String
-  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   rating             Int // 1..5
   title              String?
-  content            String       @db.Text
+  content            String           @db.Text
   // Engagement
-  helpfulCount       Int          @default(0)
-  reportCount        Int          @default(0)
+  helpfulCount       Int              @default(0)
+  reportCount        Int              @default(0)
   // Moderation
-  status             ReviewStatus @default(PUBLISHED)
-  isVerifiedPurchase Boolean      @default(false)
-  // Response from business
-  responseContent    String?      @db.Text
+  status             ReviewStatus     @default(PUBLISHED)
+  isVerifiedPurchase Boolean          @default(false)
+  // Response from owner
+  responseContent    String?          @db.Text
   responseAt         DateTime?
   // Edit window
   editableUntil      DateTime?
   editedAt           DateTime?
+  // Phase 5 — admin moderation response (separate from owner `responseContent`).
+  adminResponse      String?          @db.Text
+  adminRespondedAt   DateTime?
+  adminRespondedById String?
+  adminRespondedBy   User?            @relation("ReviewAdminResponder", fields: [adminRespondedById], references: [id])
   // Relations
   flags              ReviewFlag[]
   // Timestamps
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
   deletedAt          DateTime?
 
-  // CRITICAL: One review per user per business
-  @@unique([userId, businessId])
+  // CRITICAL: One review per user per target. The target columns are nullable
+  // (legacy rows pre-migration kept `businessId NOT NULL`) but exactly one of
+  // them is set per row. We index on both for query performance.
+  @@unique([userId, targetType, businessId])
+  @@unique([userId, targetType, professionalId])
   @@index([businessId, status])
   @@index([businessId, createdAt])
   @@index([businessId, rating])
+  @@index([professionalId, status])
+  @@index([professionalId, createdAt])
+  @@index([professionalId, rating])
   @@index([userId, createdAt])
   @@index([status])
+  @@index([targetType])
 }
 
 model ReviewFlag {
@@ -368,8 +469,10 @@ model ReviewFlag {
 
 model VerificationApplication {
   id                String                     @id @default(cuid())
-  businessId        String
-  business          Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId        String?
+  business          Business?                  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  professionalId    String?
+  professional      Professional?              @relation(fields: [professionalId], references: [id], onDelete: Cascade)
   status            VerificationStatus         @default(PENDING)
   level             VerificationLevel          @default(BASIC)
   // AI extraction
@@ -395,6 +498,7 @@ model VerificationApplication {
   updatedAt         DateTime                   @updatedAt
 
   @@index([businessId])
+  @@index([professionalId])
   @@index([status])
   @@index([createdAt])
 }
@@ -406,8 +510,10 @@ enum VerificationType {
 
 model VerificationDocument {
   id              String                   @id @default(cuid())
-  businessId      String
-  business        Business                 @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId      String?
+  business        Business?                @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  professionalId  String?
+  professional    Professional?            @relation(fields: [professionalId], references: [id], onDelete: Cascade)
   applicationId   String?
   application     VerificationApplication? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   type            DocumentType
@@ -431,6 +537,7 @@ model VerificationDocument {
   updatedAt       DateTime                 @updatedAt
 
   @@index([businessId])
+  @@index([professionalId])
   @@index([applicationId])
   @@index([status])
 }
@@ -471,8 +578,10 @@ model AIAnalysisResult {
 model Badge {
   id               String            @id @default(cuid())
   badgeId          String            @unique // e.g. CRED-XXXXXXXX
-  businessId       String            @unique
-  business         Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId       String?           @unique
+  business         Business?         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  professionalId   String?           @unique
+  professional     Professional?     @relation(fields: [professionalId], references: [id], onDelete: Cascade)
   type             VerificationLevel @default(BASIC)
   imageUrl         String? // S3 URL for badge SVG/PNG
   verificationUrl  String // public URL of the verify page
@@ -535,6 +644,8 @@ model Subscription {
   usage                 SubscriptionUsage[]
   invoices              Invoice[]
   voucherRedemptions    VoucherRedemption[]
+  professional          Professional?       @relation(fields: [professionalId], references: [id])
+  professionalId        String?
 
   @@index([userId])
   @@index([businessId])
@@ -565,6 +676,8 @@ model Payment {
   refundReason   String?            @db.Text
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
+  professional   Professional?      @relation(fields: [professionalId], references: [id])
+  professionalId String?
 
   @@index([userId])
   @@index([businessId])
@@ -611,6 +724,8 @@ model Invoice {
   notes          String?       @db.Text
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+  professional   Professional? @relation(fields: [professionalId], references: [id])
+  professionalId String?
 
   @@index([businessId])
   @@index([subscriptionId])
@@ -651,6 +766,8 @@ model VoucherRedemption {
   discountApplied Decimal       @db.Decimal(10, 2)
   redeemedAt      DateTime      @default(now())
   createdAt       DateTime      @default(now())
+  professional    Professional? @relation(fields: [professionalId], references: [id])
+  professionalId  String?
 
   @@index([voucherId])
   @@index([businessId])
@@ -790,20 +907,22 @@ model VisitLog {
 }
 
 model ReviewInvitation {
-  id            String    @id @default(cuid())
-  businessId    String
-  business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customerEmail String?
-  customerPhone String?
-  channel       String // 'email' | 'sms' | 'link'
-  token         String    @unique
-  status        String    @default("PENDING") // PENDING|OPENED|SUBMITTED|EXPIRED
-  sentAt        DateTime?
-  openedAt      DateTime?
-  submittedAt   DateTime?
-  expiresAt     DateTime
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String        @id @default(cuid())
+  businessId     String
+  business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerEmail  String?
+  customerPhone  String?
+  channel        String // 'email' | 'sms' | 'link'
+  token          String        @unique
+  status         String        @default("PENDING") // PENDING|OPENED|SUBMITTED|EXPIRED
+  sentAt         DateTime?
+  openedAt       DateTime?
+  submittedAt    DateTime?
+  expiresAt      DateTime
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  professional   Professional? @relation(fields: [professionalId], references: [id])
+  professionalId String?
 
   @@index([businessId, createdAt])
   @@index([businessId, status])

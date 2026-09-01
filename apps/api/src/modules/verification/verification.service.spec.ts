@@ -22,6 +22,10 @@ vi.mock('../../lib/db/prisma', () => {
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    professional: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
     review: { count: vi.fn() },
     subscription: { findFirst: vi.fn() },
     badge: {

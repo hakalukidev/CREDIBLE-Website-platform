@@ -47,33 +47,83 @@ const aiWorker = buildWorker('ai-verification', async (job) => {
 });
 
 const badgeWorker = buildWorker('badge-generation', async (job) => {
-  const { businessId, badgeHash } = job.data as { businessId: string; badgeHash: string };
-  logger.info({ businessId, badgeHash }, 'Generating badge');
-  const business = await businessRepository.findById(businessId);
-  if (!business) return;
-  const badge = await generateBadge({
-    displayName: business.displayName,
-    badgeHash,
-    level: business.verificationLevel,
-  });
-  await prisma.verificationDocument.create({
-    data: {
-      businessId: business.id,
-      type: 'OTHER',
-      status: 'APPROVED',
-      fileKey: badge.key,
-      fileUrl: badge.url,
-      mimeType: badge.mimeType,
-      fileSize: badge.size,
-      originalName: `badge-${badgeHash}.svg`,
-      encrypted: false,
-    },
-  });
+  const { businessId, professionalId, badgeHash } = job.data as {
+    businessId?: string;
+    professionalId?: string;
+    badgeHash: string;
+  };
+  logger.info({ businessId, professionalId, badgeHash }, 'Generating badge');
+
+  if (businessId) {
+    const business = await businessRepository.findById(businessId);
+    if (!business) return;
+    const badge = await generateBadge({
+      displayName: business.displayName,
+      badgeHash,
+      level: business.verificationLevel,
+    });
+    await prisma.verificationDocument.create({
+      data: {
+        businessId: business.id,
+        type: 'OTHER',
+        status: 'APPROVED',
+        fileKey: badge.key,
+        fileUrl: badge.url,
+        mimeType: badge.mimeType,
+        fileSize: badge.size,
+        originalName: `badge-${badgeHash}.svg`,
+        encrypted: false,
+      },
+    });
+    return;
+  }
+
+  if (professionalId) {
+    const professional = await prisma.professional.findUnique({ where: { id: professionalId } });
+    if (!professional) return;
+    const badge = await generateBadge({
+      displayName: professional.displayName,
+      badgeHash,
+      level: professional.verificationLevel,
+    });
+    await prisma.verificationDocument.create({
+      data: {
+        professionalId: professional.id,
+        type: 'OTHER',
+        status: 'APPROVED',
+        fileKey: badge.key,
+        fileUrl: badge.url,
+        mimeType: badge.mimeType,
+        fileSize: badge.size,
+        originalName: `badge-${badgeHash}.svg`,
+        encrypted: false,
+      },
+    });
+  }
 });
 
 const ratingWorker = buildWorker('rating-recompute', async (job) => {
-  const { businessId } = job.data as { businessId: string };
-  await businessRepository.recomputeRating(businessId);
+  const data = job.data as { businessId?: string; professionalId?: string };
+  if (data.businessId) {
+    await businessRepository.recomputeRating(data.businessId);
+  } else if (data.professionalId) {
+    const agg = await prisma.review.aggregate({
+      where: {
+        professionalId: data.professionalId,
+        status: 'PUBLISHED',
+        deletedAt: null,
+      },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+    await prisma.professional.update({
+      where: { id: data.professionalId },
+      data: {
+        ratingAverage: agg._avg.rating ?? null,
+        ratingCount: agg._count._all,
+      },
+    });
+  }
 });
 
 const ipnWorker = buildWorker('payment-ipn', async (job) => {

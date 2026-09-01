@@ -20,6 +20,12 @@ router.get(
   validate(listReviewsSchema, 'query'),
   reviewController.listForBusiness,
 );
+router.get(
+  '/professionals/:professionalId/reviews',
+  authOptional,
+  validate(listReviewsSchema, 'query'),
+  reviewController.listForProfessional,
+);
 
 // Authenticated operations
 router.post(

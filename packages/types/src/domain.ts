@@ -3,11 +3,15 @@
  * without importing the Prisma client.
  */
 
-export type UserRole = 'GUEST' | 'CUSTOMER' | 'BUSINESS' | 'ADMIN';
+export type UserRole = 'GUEST' | 'CUSTOMER' | 'BUSINESS' | 'PROFESSIONAL' | 'ADMIN';
+
+export type ReviewTargetType = 'BUSINESS' | 'PROFESSIONAL';
 
 export type UserStatus = 'ACTIVE' | 'SUSPENDED' | 'PENDING_VERIFICATION' | 'DELETED';
 
 export type BusinessStatus = 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'SUSPENDED' | 'CLOSED';
+
+export type ProfessionalStatus = 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'SUSPENDED' | 'CLOSED';
 
 export type VerificationStatus =
   | 'NOT_STARTED'
@@ -135,6 +139,19 @@ export interface PublicBusiness {
   slug: string;
   displayName: string;
   logo?: string;
+  city?: string;
+  ratingAverage?: number;
+  ratingCount: number;
+  verificationLevel: VerificationLevel;
+  isVerified: boolean;
+}
+
+export interface PublicProfessional {
+  id: string;
+  slug: string;
+  displayName: string;
+  profession: string;
+  avatar?: string;
   city?: string;
   ratingAverage?: number;
   ratingCount: number;

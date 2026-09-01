@@ -13,6 +13,9 @@ import { prisma } from '../../lib/db/prisma';
 import { Prisma } from '@prisma/client';
 import { analyzeApplication, type AiAnalysis } from '../../lib/ai/verification.service';
 import { logger } from '../../lib/logger/logger';
+import { storage } from '../../lib/storage/s3';
+
+const VISION_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 export interface RunAnalysisResult {
   analysis: AiAnalysis;
@@ -41,15 +44,34 @@ export async function runAnalysisForApplication(applicationId: string): Promise<
   });
   if (!app) throw new Error(`Application ${applicationId} not found`);
 
-  const analysis = await analyzeApplication(
-    app.documents.map((d) => ({
-      id: d.id,
-      type: d.type,
-      fileName: d.originalName,
-      mimeType: d.mimeType,
-      fileSize: d.fileSize,
-    })),
+  // For vision-capable documents we generate a short-lived signed download
+  // URL so the LLM can actually look at the image. PDFs and other binary
+  // formats fall back to metadata-only analysis.
+  const docInputs = await Promise.all(
+    app.documents.map(async (d) => {
+      let fileUrl: string | null = null;
+      if (VISION_MIME.has(d.mimeType)) {
+        try {
+          fileUrl = await storage.presignedDownloadUrl(d.fileKey, undefined, 600);
+        } catch (err) {
+          logger.warn(
+            { err: err instanceof Error ? err.message : String(err), docId: d.id },
+            'Could not presign document for AI — falling back to metadata-only',
+          );
+        }
+      }
+      return {
+        id: d.id,
+        type: d.type,
+        fileName: d.originalName,
+        mimeType: d.mimeType,
+        fileSize: d.fileSize,
+        fileUrl,
+      };
+    }),
   );
+
+  const analysis = await analyzeApplication(docInputs);
 
   await prisma.aIAnalysisResult.upsert({
     where: { applicationId },

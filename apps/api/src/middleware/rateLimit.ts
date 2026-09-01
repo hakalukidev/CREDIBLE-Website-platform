@@ -41,26 +41,10 @@ export const uploadRateLimit = rateLimit({
 });
 
 /**
- * Phase 2 — Rate limiters for the guest OTP review flow.
- * - reviewOtpRateLimit: 5 requests / 10 minutes / IP. Applied to
- *   `POST /reviews/submit-otp`.
+ * Rate limiters for the guest review flow.
  * - reviewSubmissionRateLimit: 10 reviews / hour / IP. Defense-in-depth on
  *   top of the duplicate-review guard.
  */
-export const reviewOtpRateLimit = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    error: {
-      code: 'OTP_RATE_LIMITED',
-      message: 'Too many verification code requests. Please wait a few minutes.',
-    },
-  },
-});
-
 export const reviewSubmissionRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,

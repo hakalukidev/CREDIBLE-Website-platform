@@ -21,6 +21,7 @@ import {
   Lock,
   Users,
   Building2,
+  Briefcase,
   ArrowRight,
   Loader2,
   CheckCircle2,
@@ -53,7 +54,16 @@ export function RegisterForm() {
     onSuccess: (data) => {
       setSession(data);
       toast.success('Welcome to Credible!');
-      router.push(data.user.role === 'BUSINESS' ? '/business/dashboard' : '/');
+      const role = data.user.role;
+      const dest =
+        role === 'ADMIN'
+          ? '/admin'
+          : role === 'BUSINESS'
+            ? '/business/dashboard'
+            : role === 'PROFESSIONAL'
+              ? '/professional/dashboard'
+              : '/';
+      router.push(dest);
     },
     onError: (err) => toast.error(extractError(err).message),
   });
@@ -150,9 +160,9 @@ export function RegisterForm() {
 
           {/* Role Selection */}
           <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <label
-                className={`cursor-pointer rounded-lg border-2 p-4 text-center transition-all hover:border-primary/50 ${selectedRole === 'CUSTOMER'
+                className={`cursor-pointer rounded-lg border-2 p-3 sm:p-4 text-center transition-all hover:border-primary/50 ${selectedRole === 'CUSTOMER'
                     ? 'border-primary bg-primary/5 shadow-sm'
                     : 'border-muted bg-muted/30 hover:bg-muted/50'
                   }`}
@@ -165,14 +175,17 @@ export function RegisterForm() {
                 />
                 <Users className={`h-5 w-5 mx-auto mb-1.5 ${selectedRole === 'CUSTOMER' ? 'text-primary' : 'text-muted-foreground'
                   }`} />
-                <div className={`text-sm font-medium ${selectedRole === 'CUSTOMER' ? 'text-primary' : ''
+                <div className={`text-xs sm:text-sm font-medium ${selectedRole === 'CUSTOMER' ? 'text-primary' : ''
                   }`}>
-                  Customer/Reviewer
+                  Customer
+                </div>
+                <div className="hidden sm:block text-[11px] text-muted-foreground mt-0.5">
+                  Find &amp; review
                 </div>
               </label>
 
               <label
-                className={`cursor-pointer rounded-lg border-2 p-4 text-center transition-all hover:border-primary/50 ${selectedRole === 'BUSINESS'
+                className={`cursor-pointer rounded-lg border-2 p-3 sm:p-4 text-center transition-all hover:border-primary/50 ${selectedRole === 'BUSINESS'
                     ? 'border-primary bg-primary/5 shadow-sm'
                     : 'border-muted bg-muted/30 hover:bg-muted/50'
                   }`}
@@ -185,9 +198,35 @@ export function RegisterForm() {
                 />
                 <Building2 className={`h-5 w-5 mx-auto mb-1.5 ${selectedRole === 'BUSINESS' ? 'text-primary' : 'text-muted-foreground'
                   }`} />
-                <div className={`text-sm font-medium ${selectedRole === 'BUSINESS' ? 'text-primary' : ''
+                <div className={`text-xs sm:text-sm font-medium ${selectedRole === 'BUSINESS' ? 'text-primary' : ''
                   }`}>
                   Business
+                </div>
+                <div className="hidden sm:block text-[11px] text-muted-foreground mt-0.5">
+                  List your company
+                </div>
+              </label>
+
+              <label
+                className={`cursor-pointer rounded-lg border-2 p-3 sm:p-4 text-center transition-all hover:border-primary/50 ${selectedRole === 'PROFESSIONAL'
+                    ? 'border-primary bg-primary/5 shadow-sm'
+                    : 'border-muted bg-muted/30 hover:bg-muted/50'
+                  }`}
+              >
+                <input
+                  type="radio"
+                  value="PROFESSIONAL"
+                  {...register('role')}
+                  className="sr-only"
+                />
+                <Briefcase className={`h-5 w-5 mx-auto mb-1.5 ${selectedRole === 'PROFESSIONAL' ? 'text-primary' : 'text-muted-foreground'
+                  }`} />
+                <div className={`text-xs sm:text-sm font-medium ${selectedRole === 'PROFESSIONAL' ? 'text-primary' : ''
+                  }`}>
+                  Professional
+                </div>
+                <div className="hidden sm:block text-[11px] text-muted-foreground mt-0.5">
+                  Solo practitioner
                 </div>
               </label>
             </div>

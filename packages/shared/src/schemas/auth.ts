@@ -24,7 +24,7 @@ export const registerSchema = z
     firstName: z.string().trim().min(1).max(80).optional(),
     lastName: z.string().trim().min(1).max(80).optional(),
     phone: phoneSchema,
-    role: z.enum(['CUSTOMER', 'BUSINESS']).default('CUSTOMER'),
+    role: z.enum(['CUSTOMER', 'BUSINESS', 'PROFESSIONAL']).default('CUSTOMER'),
     acceptTerms: z.literal(true, {
       errorMap: () => ({ message: 'You must accept the terms' }),
     }),

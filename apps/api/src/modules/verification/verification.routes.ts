@@ -1,13 +1,10 @@
 /**
- * Verification routes — Phase 3.
+ * Verification routes — Phase 3 / Phase 5.
  *
- * All `/businesses/:businessId/verification/*` routes are wrapped with
- *   authRequired → ensureActiveUser → requireRole('BUSINESS')
- * The ownership check (business.ownerId === req.user.id) is enforced inside
- * each controller via `assertOwnsBusiness` for routes that mutate state.
- *
- * Admin routes are mounted under `/admin/verification/*` with the standard
- * admin guard chain.
+ * Business-facing routes are mounted under `/businesses/:businessId/verification/*`
+ * with the BUSINESS guard. The professional mirror is mounted under
+ * `/professionals/:professionalId/verification/*` with the PROFESSIONAL guard.
+ * The admin surface is under `/admin/verification/*` with the ADMIN guard.
  */
 import { Router } from 'express';
 import {
@@ -27,6 +24,7 @@ import { verificationController } from './verification.controller';
 const router = Router();
 
 const businessGuard = [authRequired, ensureActiveUser, requireRole('BUSINESS')] as const;
+const professionalGuard = [authRequired, ensureActiveUser, requireRole('PROFESSIONAL')] as const;
 const adminGuard = [authRequired, ensureActiveUser, requireRole('ADMIN')] as const;
 
 // ----------------------------------------------------------------------------
@@ -117,6 +115,87 @@ router.get(
 );
 
 // ----------------------------------------------------------------------------
+// Professional-facing verification mirror (Phase 5)
+// ----------------------------------------------------------------------------
+
+router.get(
+  '/professionals/:professionalId/verification/eligibility',
+  ...professionalGuard,
+  verificationController.proEligibility,
+);
+
+router.post(
+  '/professionals/:professionalId/verification/apply',
+  ...professionalGuard,
+  validate(startVerificationSchema),
+  verificationController.proApply,
+);
+
+router.get(
+  '/professionals/:professionalId/verification',
+  ...professionalGuard,
+  verificationController.proStatus,
+);
+
+router.get(
+  '/professionals/:professionalId/verification/applications',
+  ...professionalGuard,
+  verificationController.proListMine,
+);
+
+router.get(
+  '/professionals/:professionalId/verification/applications/:applicationId',
+  ...professionalGuard,
+  verificationController.proGetApplication,
+);
+
+router.post(
+  '/professionals/:professionalId/verification/applications/:applicationId/documents',
+  ...professionalGuard,
+  validate(addVerificationDocumentSchema),
+  verificationController.proAddDocument,
+);
+
+router.get(
+  '/professionals/:professionalId/verification/applications/:applicationId/documents',
+  ...professionalGuard,
+  verificationController.proListDocuments,
+);
+
+router.delete(
+  '/professionals/:professionalId/verification/applications/:applicationId/documents/:documentId',
+  ...professionalGuard,
+  verificationController.proDeleteDocument,
+);
+
+router.post(
+  '/professionals/:professionalId/verification/applications/:applicationId/submit',
+  ...professionalGuard,
+  validate(submitVerificationSchema),
+  verificationController.proSubmit,
+);
+
+router.post(
+  '/professionals/:professionalId/verification/applications/:applicationId/cancel',
+  ...professionalGuard,
+  validate(cancelApplicationSchema),
+  verificationController.proCancel,
+);
+
+router.post(
+  '/professionals/:professionalId/verification/applications/:applicationId/appeal',
+  ...professionalGuard,
+  validate(appealVerificationSchema),
+  verificationController.proAppeal,
+);
+
+router.get(
+  '/professionals/:professionalId/verification/badge',
+  ...professionalGuard,
+  verificationController.proBadge,
+);
+
+// ----------------------------------------------------------------------------
 // Admin verification dashboard
 // ----------------------------------------------------------------------------
 
@@ -145,6 +224,12 @@ router.get(
   verificationController.adminAiAnalysis,
 );
 
+router.get(
+  '/admin/verification/applications/:applicationId/documents/:documentId',
+  ...adminGuard,
+  verificationController.adminGetDocument,
+);
+
 router.post(
   '/admin/verification/applications/:applicationId/decide',
   ...adminGuard,
@@ -157,6 +242,21 @@ router.post(
   ...adminGuard,
   validate(revokeBadgeSchema),
   verificationController.adminRevoke,
+);
+
+router.post(
+  '/admin/verification/professionals/:professionalId/revoke',
+  ...adminGuard,
+  validate(revokeBadgeSchema),
+  verificationController.adminRevokeProfessional,
+);
+
+// Flat document lookup — useful when the admin links to a document from a
+// notification or from the audit log.
+router.get(
+  '/admin/verification/documents/:documentId',
+  ...adminGuard,
+  verificationController.adminGetDocumentFlat,
 );
 
 export { router as verificationRouter };
