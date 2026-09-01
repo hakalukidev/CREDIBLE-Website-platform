@@ -67,7 +67,7 @@ export function startOAuthPopup(
 
     function handler(event: MessageEvent) {
       if (!event.data || typeof event.data !== 'object') return;
-      const data = event.data as { type?: string; tokens?: { accessToken: string; refreshToken: string }; user?: { id: string; email: string; role: UserRole }; message?: string };
+      const data = event.data as { type?: string; tokens?: { accessToken: string; refreshToken: string; expiresIn: number }; user?: { id: string; email: string; role: UserRole }; message?: string };
 
       if (data.type === 'credible:oauth') {
         cleanup();
@@ -79,6 +79,7 @@ export function startOAuthPopup(
           tokens: {
             accessToken: data.tokens.accessToken,
             refreshToken: data.tokens.refreshToken,
+            expiresIn: data.tokens.expiresIn,
           },
           user: {
             id: data.user.id,

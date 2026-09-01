@@ -38,7 +38,7 @@ export default function AdminProfessionalDetailPage() {
       <header>
         <h1 className="text-2xl font-bold tracking-tight">{p.displayName}</h1>
         <p className="text-sm text-muted-foreground">
-          <Link href={`/professional/${p.slug}`} className="underline" target="_blank">
+          <Link href={`/p/${p.slug}`} className="underline" target="_blank">
             View public profile →
           </Link>
         </p>

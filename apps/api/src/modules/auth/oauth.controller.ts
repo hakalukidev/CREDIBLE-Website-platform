@@ -42,7 +42,7 @@ export const oauthController = {
         res
           .status(200)
           .type('html')
-          .send(buildSuccessPage(tokens.accessToken, tokens.refreshToken, user));
+          .send(buildSuccessPage(tokens.accessToken, tokens.refreshToken, tokens.expiresIn, user));
       } catch (err) {
         logger.error({ err, provider }, 'OAuth callback failed');
         res
@@ -57,11 +57,13 @@ export const oauthController = {
 interface TokenPairLike {
   accessToken: string;
   refreshToken: string;
+  expiresIn: number;
 }
 
 function buildSuccessPage(
   accessToken: string,
   refreshToken: string,
+  expiresIn: number,
   user: { id: string; email: string; role: UserRole },
 ): string {
   // The opener receives the tokens and persists them. We deliberately use
@@ -70,7 +72,7 @@ function buildSuccessPage(
   // it's our WEB_URL, but that breaks for `localhost` development.
   const payload = JSON.stringify({
     type: 'credible:oauth',
-    tokens: { accessToken, refreshToken },
+    tokens: { accessToken, refreshToken, expiresIn },
     user: { id: user.id, email: user.email, role: user.role },
   });
   return `<!doctype html>
