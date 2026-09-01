@@ -7,7 +7,7 @@ import { MapPin } from 'lucide-react';
 import { VerifiedBadge } from '@/components/verification/verified-badge';
 import { StarRating } from '@/components/reviews/star-rating';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -111,9 +111,12 @@ export function BusinessCard({
   const ratingNum = typeof rating === 'string' ? parseFloat(rating) : (rating ?? 0);
 
   const cardContent = (
-    <div
+    <Link
+      href={`/business/${slug}`}
+      onClick={onClick}
+      aria-label={`View profile of ${name}`}
       className={cn(
-        'group flex h-full w-full flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg',
+        'group flex h-full w-full flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         onClick ? 'cursor-pointer' : '',
         className,
       )}
@@ -206,15 +209,18 @@ export function BusinessCard({
         </div>
       </div>
 
-      {/* CTA button */}
+      {/* CTA — visual cue only; the entire card is the link */}
       <div className="px-4 pb-4">
-        <Button asChild variant="outline" className="w-full" size="sm">
-          <Link href={`/business/${slug}`} onClick={onClick ? (e) => { e.preventDefault(); onClick(); } : undefined}>
-            View Profile
-          </Link>
-        </Button>
+        <span
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'sm' }),
+            'pointer-events-none w-full',
+          )}
+        >
+          View Profile
+        </span>
       </div>
-    </div>
+    </Link>
   );
 
   return cardContent;

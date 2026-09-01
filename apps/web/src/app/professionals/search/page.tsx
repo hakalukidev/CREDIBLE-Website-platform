@@ -21,7 +21,7 @@ interface ProfessionalListItem {
   avatar?: string | null;
   city?: string | null;
   country?: string | null;
-  ratingAverage: number;
+  ratingAverage: number | string | null;
   ratingCount: number;
   verified: boolean;
 }
@@ -160,7 +160,7 @@ export default function ProfessionalsSearchPage() {
                       <span className="inline-flex items-center gap-1">
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                         <span className="font-medium">
-                          {p.ratingAverage ? p.ratingAverage.toFixed(1) : '—'}
+                          {p.ratingAverage != null ? Number(p.ratingAverage).toFixed(1) : '—'}
                         </span>
                         <span className="text-muted-foreground">({p.ratingCount})</span>
                       </span>

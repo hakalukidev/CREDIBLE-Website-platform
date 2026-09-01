@@ -16,6 +16,7 @@ import {
   ScrollText,
   BarChart3,
   Settings as SettingsIcon,
+  Flag,
 } from 'lucide-react';
 import { useSession } from '@/lib/store/session';
 import { Button } from '@/components/ui/button';
@@ -28,9 +29,9 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-// NOTE: a "Reviews" entry (/admin/reviews) was removed — that page doesn't
-// exist yet, even though the API already supports flagged-review moderation
-// (GET/POST /admin/reviews/...). Add it back once the page is built.
+// NOTE: "Reviews" (/admin/reviews) is wired here because the API supports
+// flagged-review moderation (GET/POST /admin/reviews/...). The route file
+// lives at apps/web/src/app/admin/(protected)/reviews/page.tsx.
 const NAV_ITEMS: NavItem[] = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/verification', label: 'Verification', icon: ShieldCheck },

@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { apiClient, extractError } from '@/lib/api/client';
 import { useSession } from '@/lib/store/session';
 import { useOAuthLogin, getOAuthProviders } from '@/lib/api/oauth';
-import { Mail, Lock, ArrowRight, Loader2, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, ShieldCheck, EyeOff, Eye } from 'lucide-react';
 import type { AuthSession, UserRole } from '@credible/types';
 
 /** Returns the URL a freshly-logged-in user should land on, by role. */
@@ -46,6 +46,7 @@ export function LoginForm({ adminOnly = false, title, subtitle }: LoginFormProps
   const setSession = useSession((s) => s.setSession);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [providers, setProviders] = useState<{ google: boolean; facebook: boolean }>({
     google: false,
     facebook: false,
@@ -84,7 +85,7 @@ export function LoginForm({ adminOnly = false, title, subtitle }: LoginFormProps
       toast.success(adminOnly ? 'Welcome back, admin.' : 'Welcome back!');
       const target = adminOnly ? '/admin' : homeForRole(data.user.role as UserRole);
       const next = search.get('next');
-      router.push(next ?? target);
+      router.push((next ?? target) as any);
     },
     onError: (err) => toast.error(extractError(err).message),
   });
@@ -100,7 +101,7 @@ export function LoginForm({ adminOnly = false, title, subtitle }: LoginFormProps
       toast.success('Welcome!');
       const target = adminOnly ? '/admin' : homeForRole(session.user.role as UserRole);
       const next = search.get('next');
-      router.push(next ?? target);
+      router.push((next ?? target) as any);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Social sign-in failed';
       toast.error(message);
