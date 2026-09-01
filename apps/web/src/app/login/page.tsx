@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { LoginForm } from '@/features/auth/login-form';
 import { Building2, Shield, Star } from 'lucide-react';
+import { Suspense } from 'react';
 
 export const metadata = {
   title: 'Sign in | Credible',
@@ -13,7 +14,9 @@ export default function LoginPage() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md space-y-6">
         {/* Form */}
-        <LoginForm />
+        <Suspense fallback={null}>
+          <LoginForm />
+        </Suspense>
 
         {/* Footer */}
         <div className="text-center space-y-3">

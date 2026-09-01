@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { LoginForm } from '@/features/auth/login-form';
 import { ChevronLeft, ShieldCheck } from 'lucide-react';
+import { Suspense } from 'react';
 
 export const metadata = {
   title: 'Admin sign-in | Credible',
@@ -20,7 +21,9 @@ export default function AdminLoginPage() {
             Restricted area
           </p>
         </div>
-        <LoginForm adminOnly />
+        <Suspense fallback={null}>
+          <LoginForm adminOnly />
+        </Suspense>
         <p className="text-center text-sm text-muted-foreground">
           <Link
             href="/login"
