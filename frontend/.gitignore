@@ -1,0 +1,154 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+coverage/
+*.lcov
+.nyc_output/
+
+# Next.js
+.next/
+out/
+build/
+dist/
+.turbo/
+
+# Production
+*.tgz
+*.tar.gz
+*.zip
+
+# Environment - CRITICAL: never commit secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+.env.development
+.env.production
+.env.staging
+# Allow .env.example to be committed (template only, no real secrets)
+!.env.example
+
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+secrets/
+secrets.json
+secrets.yaml
+secrets.yml
+*.secret
+*.secrets
+credentials/
+credentials.json
+credentials.yaml
+credentials.yml
+
+# API keys and tokens
+**/api-keys.json
+**/api-keys.yaml
+**/service-account*.json
+**/gcp-key.json
+**/aws-credentials
+**/.aws/credentials
+**/.aws/config
+**/.ssh/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.mdb
+dump.sql
+*.sql.gz
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor / IDE
+.vscode/
+!.vscode/settings.json.example
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Prisma
+prisma/migrations/dev/
+prisma/dev.db
+prisma/dev.db-journal
+prisma/.env
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+.cache/
+.eslintcache
+.history/
+
+# Local uploads and temp
+uploads/
+tmp/
+temp/
+public/uploads/
+!public/uploads/.gitkeep
+
+# Build outputs
+*.tsbuildinfo
+.next/
+.swc/
+.cache/
+.parcel-cache/
+
+# Testing artifacts
+coverage/
+junit.xml
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Vercel
+.vercel/
+
+# Netlify
+.netlify/
+
+# Certificates and keystores
+*.jks
+*.keystore
+keystore/
+certificates/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
