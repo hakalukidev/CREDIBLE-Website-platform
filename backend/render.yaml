@@ -6,7 +6,7 @@ databases:
 services:
   - type: redis
     name: credible-redis
-    plan: starter
+    plan: free
     ipAllowList: []
 
   - type: web
