@@ -86,10 +86,6 @@ services:
         sync: false
       - key: OPENAI_API_KEY
         sync: false
-      - key: SSLCZ_STORE_ID
-        sync: false
-      - key: INVOICE_VAT_RATE
-        value: '0.05'
       - key: LOG_LEVEL
         value: info
 
