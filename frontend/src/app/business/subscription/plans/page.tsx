@@ -1,14 +1,14 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlanCard } from '@/components/billing/plan-card';
 import { useCurrentSubscription, usePlans } from '@/features/billing/subscription-hooks';
 import { Loader2 } from 'lucide-react';
 
-export default function PlansPage() {
+function PlansPageInner() {
   const router = useRouter();
   const search = useSearchParams();
   const [cycle, setCycle] = useState<'MONTHLY' | 'YEARLY'>(
@@ -71,5 +71,13 @@ export default function PlansPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function PlansPage() {
+  return (
+    <Suspense fallback={null}>
+      <PlansPageInner />
+    </Suspense>
   );
 }

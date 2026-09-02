@@ -2,11 +2,12 @@
 
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessPageInner() {
   const search = useSearchParams();
   const tranId = search.get('tran_id');
   const gateway = search.get('gateway');
@@ -43,5 +44,13 @@ export default function PaymentSuccessPage() {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={null}>
+      <PaymentSuccessPageInner />
+    </Suspense>
   );
 }

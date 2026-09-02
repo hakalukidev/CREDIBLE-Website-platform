@@ -2,11 +2,12 @@
 
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 
-export default function PaymentFailedPage() {
+function PaymentFailedPageInner() {
   const search = useSearchParams();
   const tranId = search.get('tran_id');
   const reason = search.get('reason');
@@ -43,5 +44,13 @@ export default function PaymentFailedPage() {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+export default function PaymentFailedPage() {
+  return (
+    <Suspense fallback={null}>
+      <PaymentFailedPageInner />
+    </Suspense>
   );
 }

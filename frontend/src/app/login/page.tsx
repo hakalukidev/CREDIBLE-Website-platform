@@ -1,4 +1,5 @@
 // app/login/page.tsx
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { LoginForm } from '@/features/auth/login-form';
 import { Building2, Shield, Star } from 'lucide-react';
@@ -12,8 +13,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md space-y-6">
-        {/* Form */}
-        <LoginForm />
+        {/* Form — useSearchParams() inside LoginForm requires a Suspense boundary. */}
+        <Suspense fallback={null}>
+          <LoginForm />
+        </Suspense>
 
         {/* Footer */}
         <div className="text-center space-y-3">

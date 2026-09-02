@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { VoucherInput } from '@/components/billing/voucher-input';
@@ -9,7 +9,7 @@ import { usePlans, useSubscribe } from '@/features/billing/subscription-hooks';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import type { PaymentGateway, SubscriptionPlan, BillingCycle } from '@/features/billing/types';
 
-export default function CheckoutPage() {
+function CheckoutPageInner() {
   const router = useRouter();
   const search = useSearchParams();
   const planId = search.get('plan') as SubscriptionPlan | null;
@@ -134,6 +134,17 @@ export default function CheckoutPage() {
         <a href="/business/subscription/plans">Back to plans</a>
       </Button>
     </div>
+  );
+}
+
+// useSearchParams() requires a Suspense boundary above it for static
+// generation in Next.js 15+/16. The wrapper provides that boundary
+// without forcing the inner component to be a server component.
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={null}>
+      <CheckoutPageInner />
+    </Suspense>
   );
 }
 
