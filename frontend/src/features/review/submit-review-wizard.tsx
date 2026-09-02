@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
 import { qk } from '@/lib/api/query-keys';
 import { REVIEW_EDIT_WINDOW_HOURS } from '@credible/shared';
 import { useCurrentUser } from '@/lib/hooks/use-current-user';
@@ -105,12 +105,11 @@ export function SubmitReviewWizard({ businessId, businessName }: SubmitReviewWiz
 
   // Initial gate — ask for the reviewer's email/phone up-front so we can
   // detect duplicates without consuming an OTP.
-  return <IdentifierGate onSubmit={setIdentifier} error={status ? extractError({}) : undefined} />;
+  return <IdentifierGate onSubmit={setIdentifier} />;
 }
 
 interface IdentifierGateProps {
   onSubmit: (id: string) => void;
-  error?: { code: string; message: string };
 }
 
 function IdentifierGate({ onSubmit }: IdentifierGateProps) {
@@ -118,9 +117,7 @@ function IdentifierGate({ onSubmit }: IdentifierGateProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Write a review of {''}
-          {/* businessName is provided in parent props; here we just describe the gate */}
-        </CardTitle>
+        <CardTitle>Write a review</CardTitle>
         <CardDescription>
           Enter your email or phone so we can prevent duplicate reviews and send you
           a one-time verification code.

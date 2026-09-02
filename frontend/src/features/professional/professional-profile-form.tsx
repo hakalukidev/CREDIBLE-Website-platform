@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input, Textarea } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { FriendlyError, friendlyMessage } from '@/components/ui/friendly-error';
 import { qk } from '@/lib/api/query-keys';
 import {
   createProfessionalSchema,
@@ -82,13 +83,7 @@ export function ProfessionalProfileForm() {
   }
 
   if (error && !notFound) {
-    return (
-      <Card>
-        <CardContent className="pt-6 text-sm text-destructive">
-          {extractError(error).message}
-        </CardContent>
-      </Card>
-    );
+    return <FriendlyError kind="profile" />;
   }
 
   return <EditProfessionalProfile />;
@@ -135,7 +130,7 @@ function CreateProfessionalForm() {
       qc.invalidateQueries({ queryKey: qk.professionals.me() });
     },
     onError: (err) => {
-      toast.error(extractError(err).message);
+      toast.error(friendlyMessage(err, 'profile'));
     },
   });
 
@@ -279,7 +274,7 @@ function EditProfessionalProfile() {
       qc.invalidateQueries({ queryKey: qk.professionals.me() });
     },
     onError: (err) => {
-      toast.error(extractError(err).message);
+      toast.error(friendlyMessage(err, 'profile'));
     },
   });
 

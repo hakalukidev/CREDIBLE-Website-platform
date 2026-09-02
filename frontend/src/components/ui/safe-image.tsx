@@ -3,6 +3,7 @@
 import Image, { type ImageProps } from 'next/image';
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { isAllowedImageHost } from '@/lib/image-hosts';
 
 type SafeImageProps = Omit<ImageProps, 'src' | 'alt' | 'onError'> & {
   src: string | null | undefined;
@@ -12,30 +13,6 @@ type SafeImageProps = Omit<ImageProps, 'src' | 'alt' | 'onError'> & {
   imgClassName?: string;
   onError?: () => void;
 };
-
-/**
- * Set of hostnames (or wildcard suffixes) that `next/image` is allowed to
- * optimize. KEEP IN SYNC with `images.remotePatterns` in `next.config.ts`.
- *
- * Wildcards are matched as `*.suffix`. A bare hostname is matched exactly.
- */
-const ALLOWED_HOSTS: readonly string[] = [
-  'amazonaws.com',
-  'r2.cloudflarestorage.com',
-  'r2.dev',
-  'googleusercontent.com',
-  'graph.facebook.com',
-  'cdn.credible.com',
-  'localhost',
-];
-
-function isAllowedHost(hostname: string): boolean {
-  for (const allowed of ALLOWED_HOSTS) {
-    if (hostname === allowed) return true;
-    if (hostname.endsWith(`.${allowed}`)) return true;
-  }
-  return false;
-}
 
 /**
  * SafeImage — a drop-in replacement for `next/image` that never crashes on
@@ -81,7 +58,6 @@ export function SafeImage({
     }
   }, [src]);
 
-  // Empty / invalid source — render fallback (or nothing).
   if (!src || !parsed) {
     return fallback ?? null;
   }
@@ -91,14 +67,12 @@ export function SafeImage({
     onError?.();
   };
 
-  // After an actual load failure, render the fallback and stop trying.
   if (errored) {
     return fallback ?? null;
   }
 
   const useNextImage =
-    (!parsed.isAbsolute || (parsed.protocol === 'https' && isAllowedHost(parsed.url.hostname))) &&
-    // next/image refuses non-http(s) sources too.
+    (!parsed.isAbsolute || (parsed.protocol === 'https' && isAllowedImageHost(parsed.url.hostname))) &&
     (parsed.protocol === 'http' || parsed.protocol === 'https');
 
   if (useNextImage) {

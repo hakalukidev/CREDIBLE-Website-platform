@@ -8,6 +8,7 @@ import { Input, Textarea } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RatingInput } from '@/components/reviews/star-rating';
 import { apiClient, extractError } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 import {
   REVIEW_MAX_CONTENT_LENGTH,
   REVIEW_MIN_CONTENT_LENGTH,
@@ -52,11 +53,11 @@ export function GuestReviewWizard({
       setStage('done');
     },
     onError: (err) => {
-      const { code, message } = extractError(err);
+      const { code } = extractError(err);
       if (code === 'DUPLICATE_REVIEW') {
         toast.error('You have already reviewed this business.');
       } else {
-        toast.error(message);
+        toast.error(friendlyMessage(err, 'generic'));
       }
     },
   });

@@ -12,7 +12,8 @@ import { Input, Textarea } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 import {
   DOCUMENT_TYPES,
   DOCUMENT_TYPE_LABELS,
@@ -120,7 +121,7 @@ function ChooseLevelStep({
       toast.success('Application created');
       onApplied(app);
     } catch (err) {
-      toast.error(extractError(err).message);
+      toast.error(friendlyMessage(err, 'verification'));
     }
   });
 
@@ -323,7 +324,7 @@ function UploadStep({
       setProgress(100);
       toast.success(`${file.name} uploaded`);
     } catch (err) {
-      toast.error(extractError(err).message);
+      toast.error(friendlyMessage(err, 'verification'));
     } finally {
       setTimeout(() => setProgress(null), 1500);
     }
@@ -479,7 +480,7 @@ function ReviewStep({
       toast.success('Application submitted — review started');
       onSubmit();
     } catch (err) {
-      toast.error(extractError(err).message);
+      toast.error(friendlyMessage(err, 'verification'));
     }
   });
 

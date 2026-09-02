@@ -16,7 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/input';
 import { appealVerificationSchema } from '@credible/shared';
-import { useAppealApplication, extractError } from './verification-hooks';
+import { useAppealApplication } from './verification-hooks';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 
 interface Props {
   businessId: string;
@@ -41,7 +42,7 @@ export function AppealForm({ businessId, applicationId, open, onOpenChange }: Pr
       onOpenChange(false);
       form.reset();
     } catch (err) {
-      toast.error(extractError(err).message);
+      toast.error(friendlyMessage(err, 'verification'));
     }
   });
 

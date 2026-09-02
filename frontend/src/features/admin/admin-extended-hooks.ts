@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 import { qk } from '@/lib/api/query-keys';
 
 // ----------------------------------------------------------------------------
@@ -161,7 +162,7 @@ export function useUpdateUser() {
       qc.invalidateQueries({ queryKey: ['admin', 'users'] });
       qc.invalidateQueries({ queryKey: ['admin', 'user', vars.id] });
     },
-    onError: (err) => toast.error(extractError(err).message),
+    onError: (err) => toast.error(friendlyMessage(err, 'admin')),
   });
 }
 
@@ -280,7 +281,7 @@ export function useRefundPayment() {
       qc.invalidateQueries({ queryKey: ['admin', 'payments'] });
       qc.invalidateQueries({ queryKey: ['admin', 'payment', vars.id] });
     },
-    onError: (err) => toast.error(extractError(err).message),
+    onError: (err) => toast.error(friendlyMessage(err, 'admin')),
   });
 }
 
@@ -334,7 +335,7 @@ export function useCancelSubscription() {
       qc.invalidateQueries({ queryKey: ['admin', 'subscriptions'] });
       qc.invalidateQueries({ queryKey: ['admin', 'subscription', vars.id] });
     },
-    onError: (err) => toast.error(extractError(err).message),
+    onError: (err) => toast.error(friendlyMessage(err, 'admin')),
   });
 }
 
@@ -358,7 +359,7 @@ export function useOverrideSubscription() {
       qc.invalidateQueries({ queryKey: ['admin', 'subscriptions'] });
       qc.invalidateQueries({ queryKey: ['admin', 'subscription', vars.id] });
     },
-    onError: (err) => toast.error(extractError(err).message),
+    onError: (err) => toast.error(friendlyMessage(err, 'admin')),
   });
 }
 
@@ -402,7 +403,7 @@ export function useUpdateContactRequest() {
       toast.success('Saved');
       qc.invalidateQueries({ queryKey: ['admin', 'contact-requests'] });
     },
-    onError: (err) => toast.error(extractError(err).message),
+    onError: (err) => toast.error(friendlyMessage(err, 'admin')),
   });
 }
 
@@ -457,6 +458,6 @@ export function useUpdateSetting() {
       toast.success('Setting saved');
       qc.invalidateQueries({ queryKey: ['admin', 'settings'] });
     },
-    onError: (err) => toast.error(extractError(err).message),
+    onError: (err) => toast.error(friendlyMessage(err, 'admin')),
   });
 }

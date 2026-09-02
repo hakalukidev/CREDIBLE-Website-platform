@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { IMAGE_HOST_PATTERNS } from './src/lib/image-hosts';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -19,15 +20,18 @@ const nextConfig: NextConfig = {
   ],
   images: {
     formats: ['image/avif', 'image/webp'],
-    remotePatterns: [
-      { protocol: 'https', hostname: '**.amazonaws.com' },
-      { protocol: 'https', hostname: '**.r2.cloudflarestorage.com' },
-      { protocol: 'https', hostname: '**.r2.dev' },
-      { protocol: 'https', hostname: 'pub-f7f98658bcc54ebaaa03def302a263a1.r2.dev' },
-      { protocol: 'https', hostname: '**.googleusercontent.com' },
-      { protocol: 'https', hostname: 'graph.facebook.com' },
-      { protocol: 'https', hostname: 'cdn.credible.com' },
-    ],
+    // Built from `IMAGE_HOST_PATTERNS` so this list stays in lock-step with
+    // the runtime allowlist in `src/components/ui/safe-image.tsx`. See
+    // `src/lib/image-hosts.ts` for the canonical list and rationale.
+    remotePatterns: IMAGE_HOST_PATTERNS.map((pattern) => ({
+      protocol: 'https',
+      hostname:
+        pattern.kind === 'exact'
+          ? pattern.host
+          : // wildcard suffix is stored as `.foo` for the runtime matcher,
+            // but Next expects `**.foo` to match any depth of subdomain.
+            `**${pattern.suffix}`,
+    })),
   },
   async headers() {
     return [

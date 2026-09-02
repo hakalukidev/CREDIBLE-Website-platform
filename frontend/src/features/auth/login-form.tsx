@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 import { useSession } from '@/lib/store/session';
 import { useOAuthLogin, getOAuthProviders } from '@/lib/api/oauth';
 import { Mail, Lock, ArrowRight, Loader2, ShieldCheck, EyeOff, Eye } from 'lucide-react';
@@ -87,7 +88,7 @@ export function LoginForm({ adminOnly = false, title, subtitle }: LoginFormProps
       const next = search.get('next');
       router.push((next ?? target) as any);
     },
-    onError: (err) => toast.error(extractError(err).message),
+    onError: (err) => toast.error(friendlyMessage(err, 'login')),
   });
 
   async function handleOAuth(provider: 'google' | 'facebook') {

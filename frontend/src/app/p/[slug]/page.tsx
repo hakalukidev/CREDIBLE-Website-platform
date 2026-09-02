@@ -7,7 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SafeImage } from '@/components/ui/safe-image';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { FriendlyError } from '@/components/ui/friendly-error';
 import { qk } from '@/lib/api/query-keys';
 import { ReviewItem, type ReviewItemModel } from '@/components/business/review-item';
 import { Star, MapPin, Globe, Mail, Phone, Briefcase, Award } from 'lucide-react';
@@ -83,11 +84,7 @@ export default function PublicProfessionalPage({
   if (isError || !professional) {
     return (
       <div className="container-wide py-16">
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            {extractError(error ?? new Error('Professional not found')).message}
-          </CardContent>
-        </Card>
+        <FriendlyError kind="professional" className="max-w-xl mx-auto" />
       </div>
     );
   }

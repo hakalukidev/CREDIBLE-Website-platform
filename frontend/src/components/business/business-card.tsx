@@ -15,6 +15,8 @@ export interface BusinessCardProps {
   id: string;
   slug: string;
   name: string;
+  /** Short marketing line shown under the business name. Takes priority over `description`. */
+  tagline?: string | null;
   description?: string | null;
   coverImage?: string | null;
   logo?: string | null;
@@ -83,6 +85,7 @@ export function BusinessCard({
   id,
   slug,
   name,
+  tagline,
   description,
   coverImage,
   logo,
@@ -175,9 +178,13 @@ export function BusinessCard({
         {/* Business name — truncate to 1 line */}
         <h3 className="truncate text-base font-semibold leading-tight">{name}</h3>
 
-        {/* Description — always reserve 2 lines for consistency */}
+        {/* Tagline (preferred) or description — always reserve 2 lines for consistency */}
         <div className="min-h-[2.5rem]">
-          {showDescription && description ? (
+          {showDescription && tagline ? (
+            <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+              {tagline}
+            </p>
+          ) : showDescription && description ? (
             <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
               {description}
             </p>

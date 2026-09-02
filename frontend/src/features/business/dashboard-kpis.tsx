@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Star, MessageSquare, Users, ShieldCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { FriendlyError } from '@/components/ui/friendly-error';
 import { qk } from '@/lib/api/query-keys';
 
 export function DashboardKpis() {
@@ -31,13 +32,7 @@ export function DashboardKpis() {
   }
 
   if (isError) {
-    return (
-      <Card>
-        <CardContent className="pt-6 text-sm text-destructive">
-          {extractError(error).message}
-        </CardContent>
-      </Card>
-    );
+    return <FriendlyError kind="kpis" />;
   }
 
   const cards = [

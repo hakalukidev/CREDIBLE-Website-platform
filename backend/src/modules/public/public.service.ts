@@ -8,6 +8,7 @@ export interface PublicBusinessSummary {
   slug: string;
   name: string;
   description?: string;
+  tagline?: string;
   logo?: string;
   category?: string;
   city?: string;
@@ -16,6 +17,7 @@ export interface PublicBusinessSummary {
   verificationLevel: string;
   averageRating: number;
   totalReviews: number;
+  gallery?: string[];
   profileUrl: string;
   verificationUrl?: string;
 }
@@ -34,7 +36,9 @@ export async function resolveBusiness(slugOrId: string) {
       slug: true,
       displayName: true,
       description: true,
+      tagline: true,
       logo: true,
+      gallery: true,
       city: true,
       country: true,
       ratingAverage: true,
@@ -51,11 +55,17 @@ export async function resolveBusiness(slugOrId: string) {
 
 export function toSummary(b: Awaited<ReturnType<typeof resolveBusiness>>): PublicBusinessSummary {
   const isVerified = b.verificationStatus === 'APPROVED' && b.verificationLevel !== 'NONE';
+  // `gallery` is stored as JSONB (string[]). Coerce defensively — bad data
+  // from older rows shouldn't crash the public surface.
+  const gallery = Array.isArray(b.gallery)
+    ? (b.gallery as unknown[]).filter((u): u is string => typeof u === 'string').slice(0, 6)
+    : undefined;
   return {
     id: b.id,
     slug: b.slug,
     name: b.displayName,
     description: b.description ?? undefined,
+    tagline: b.tagline ?? undefined,
     logo: b.logo ?? undefined,
     category: b.category?.name,
     city: b.city ?? undefined,
@@ -64,6 +74,7 @@ export function toSummary(b: Awaited<ReturnType<typeof resolveBusiness>>): Publi
     verificationLevel: b.verificationLevel,
     averageRating: Number(b.ratingAverage ?? 0),
     totalReviews: b.ratingCount,
+    gallery: gallery && gallery.length > 0 ? gallery : undefined,
     profileUrl: `${SITE_URL}/business/${b.slug}`,
     verificationUrl: b.badgeHash ? `${SITE_URL}/verify/${b.badgeHash}` : undefined,
   };

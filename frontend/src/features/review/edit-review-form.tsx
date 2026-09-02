@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input, Textarea } from '@/components/ui/input';
 import { RatingInput } from '@/components/reviews/star-rating';
 import { apiClient, extractError } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 import { qk } from '@/lib/api/query-keys';
 import {
   REVIEW_EDIT_WINDOW_HOURS,
@@ -80,11 +81,11 @@ export function EditReviewForm({
       onSuccess?.();
     },
     onError: (err) => {
-      const { code, message } = extractError(err);
+      const { code } = extractError(err);
       if (code === 'EDIT_WINDOW_CLOSED') {
         toast.error(`The ${REVIEW_EDIT_WINDOW_HOURS}-hour edit window has closed.`);
       } else {
-        toast.error(message);
+        toast.error(friendlyMessage(err, 'review-edit'));
       }
     },
   });
@@ -109,8 +110,10 @@ export function EditReviewForm({
           <CardTitle>Edit review</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-destructive">
-            {isError ? extractError(error).message : 'Review not found.'}
+          <p className="text-sm text-muted-foreground">
+            {isError
+              ? friendlyMessage(error, 'review-edit')
+              : 'Review not found.'}
           </p>
         </CardContent>
       </Card>

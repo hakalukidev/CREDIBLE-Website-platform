@@ -1,61 +1,17 @@
 import Link from 'next/link';
-import { Search, ShieldCheck, BadgeCheck, Star, Users, Building2 } from 'lucide-react';
+import { Search, ShieldCheck, BadgeCheck, Star, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { VerifiedBadge } from '@/components/verification/verified-badge';
-import { StarRating } from '@/components/reviews/star-rating';
-import { BusinessCard } from '@/components/business/business-card';
+import { FeaturedBusinesses } from '@/features/home/featured-businesses';
+import { HeroPreviewCard } from '@/features/home/hero-preview-card';
 import {
   organizationSchema,
   websiteSchemaWithSearchAction,
   webApplicationSchema,
 } from '@/lib/seo/structured-data';
 
-const FEATURED = [
-  {
-    id: 'demo-1',
-    slug: 'bluebell-cafe-dhaka',
-    name: 'Bluebell Cafe Dhaka',
-    description: 'A cosy cafe serving specialty coffee, fresh pastries, and light meals in the heart of Gulshan.',
-    coverImage: null,
-    logo: null,
-    rating: 4.7,
-    reviewCount: 312,
-    badgeType: 'CERTIFIED' as const,
-    location: { city: 'Dhaka', state: null, country: 'Bangladesh' },
-    category: 'Restaurants & Food',
-    establishedYear: 2019,
-  },
-  {
-    id: 'demo-2',
-    slug: 'hossain-and-associates',
-    name: 'Hossain & Associates',
-    description: 'Full-service law firm specialising in corporate, IP, and commercial litigation across Bangladesh.',
-    coverImage: null,
-    logo: null,
-    rating: 4.5,
-    reviewCount: 128,
-    badgeType: 'BASIC' as const,
-    location: { city: 'Chattogram', state: null, country: 'Bangladesh' },
-    category: 'Legal Services',
-    establishedYear: 2015,
-  },
-  {
-    id: 'demo-3',
-    slug: 'medex-clinic',
-    name: 'MedEx Clinic',
-    description: 'Modern diagnostic and outpatient clinic with experienced physicians and state-of-the-art equipment.',
-    coverImage: null,
-    logo: null,
-    rating: 4.9,
-    reviewCount: 540,
-    badgeType: 'PREMIUM' as const,
-    location: { city: 'Dhaka', state: null, country: 'Bangladesh' },
-    category: 'Healthcare',
-    establishedYear: 2017,
-  },
-];
+const FEATURED_LIMIT = 4;
 
 export default function HomePage() {
   // Aggregator-level JSON-LD: this is the single most important block for
@@ -82,10 +38,11 @@ export default function HomePage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-              Trusted by 12,000+ verified businesses
+              Trusted review platform
             </div>
             <h1 className="mt-4 text-4xl md:text-5xl font-bold tracking-tight">
-              Find trusted businesses.<br />
+              Find trusted businesses.
+              <br />
               <span className="text-primary">Verified.</span>
             </h1>
             <p className="mt-4 max-w-prose text-muted-foreground">
@@ -115,45 +72,11 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right visual: a credible "profile card" preview */}
-          <Card className="overflow-hidden">
-            <div className="h-24 bg-gradient-to-r from-primary to-success" />
-            <CardContent className="pt-0 -mt-10">
-              <div className="flex items-end gap-4">
-                <div className="h-20 w-20 rounded-lg border-4 border-card bg-muted flex items-center justify-center">
-                  <Building2 className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <div className="pb-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold">Bluebell Cafe Dhaka</h3>
-                    <VerifiedBadge level="CERTIFIED" size="sm" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">Gulshan 2 · Dhaka</p>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-3">
-                <StarRating value={4.7} />
-                <span className="text-sm font-medium">4.7</span>
-                <span className="text-xs text-muted-foreground">312 reviews</span>
-              </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
-                <div className="rounded-md border bg-card p-2">
-                  <p className="font-bold text-lg">98%</p>
-                  <p className="text-muted-foreground">Trust score</p>
-                </div>
-                <div className="rounded-md border bg-card p-2">
-                  <p className="font-bold text-lg">3 yrs</p>
-                  <p className="text-muted-foreground">Verified</p>
-                </div>
-                <div className="rounded-md border bg-card p-2">
-                  <p className="font-bold text-lg">24h</p>
-                  <p className="text-muted-foreground">Response</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Right visual: a credible "profile card" preview.
+              Everything shown here comes from the live database — never hard-coded.
+              Uses the same in-flight request cache as FeaturedBusinesses, so the two
+              share a single network round-trip despite being separate components. */}
+          <HeroPreviewCard limit={FEATURED_LIMIT} />
         </div>
       </section>
 
@@ -186,19 +109,22 @@ export default function HomePage() {
         ))}
       </section>
 
-      {/* FEATURED */}
+      {/* FEATURED — all data sourced from the database */}
       <section className="container-wide pb-16">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold tracking-tight">Featured verified businesses</h2>
-          <Link href="/search" className="text-sm text-primary hover:underline">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">
+              Featured verified businesses
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Highest-rated verified businesses, straight from our directory.
+            </p>
+          </div>
+          <Link href="/search" className="text-sm text-primary hover:underline whitespace-nowrap">
             See all →
           </Link>
         </div>
-        <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {FEATURED.map((b) => (
-            <BusinessCard key={b.id} {...b} />
-          ))}
-        </div>
+        <FeaturedBusinesses limit={FEATURED_LIMIT} />
       </section>
 
       {/* CTA for businesses */}

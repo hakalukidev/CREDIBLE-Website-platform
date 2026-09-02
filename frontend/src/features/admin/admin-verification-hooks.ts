@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 import { qk } from '@/lib/api/query-keys';
 import type {
   AiAnalysis,
@@ -131,7 +132,7 @@ export function useDecideApplication(applicationId: string) {
       qc.invalidateQueries({ queryKey: qk.verification.adminStats() });
     },
     onError: (err) => {
-      toast.error(extractError(err).message);
+      toast.error(friendlyMessage(err, 'admin'));
     },
   });
 }
@@ -158,7 +159,7 @@ export function useRevokeBadge() {
       qc.invalidateQueries({ queryKey: ['businesses', 'me'] });
     },
     onError: (err) => {
-      toast.error(extractError(err).message);
+      toast.error(friendlyMessage(err, 'admin'));
     },
   });
 }

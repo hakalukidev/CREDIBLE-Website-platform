@@ -5,7 +5,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/input';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 import { qk } from '@/lib/api/query-keys';
 import { REVIEW_MAX_CONTENT_LENGTH, REVIEW_MIN_CONTENT_LENGTH } from '@credible/shared';
 
@@ -41,7 +42,7 @@ export function ReviewResponseForm({
       onSuccess?.();
     },
     onError: (err) => {
-      toast.error(extractError(err).message);
+      toast.error(friendlyMessage(err, 'generic'));
     },
   });
 

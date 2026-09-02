@@ -7,7 +7,8 @@ import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { FriendlyError } from '@/components/ui/friendly-error';
 import { qk } from '@/lib/api/query-keys';
 import { ReviewItem, type ReviewItemModel } from '@/components/business/review-item';
 import { ReviewResponseForm } from '@/components/business/review-response-form';
@@ -49,11 +50,7 @@ export default function BusinessReviewDetailPage({ params }: PageProps) {
       </header>
 
       {isLoading && <Skeleton className="h-40" />}
-      {isError && (
-        <Card>
-          <CardContent className="pt-6 text-sm text-destructive">{extractError(error).message}</CardContent>
-        </Card>
-      )}
+      {isError && <FriendlyError kind="review-edit" className="max-w-xl" />}
       {data && (
         <>
           <ReviewItem

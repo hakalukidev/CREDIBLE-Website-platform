@@ -16,10 +16,11 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Always log — both dev and prod — so debugging deployed issues is
-    // possible from the browser DevTools console.
-    // eslint-disable-next-line no-console
-    console.error('App error', error);
+    // Dev-only — keep production console output clean.
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.error('App error', error);
+    }
   }, [error]);
 
   return (

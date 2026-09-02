@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input, Textarea } from '@/components/ui/input';
 import { RatingInput } from '@/components/reviews/star-rating';
 import { apiClient, extractError } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 import { qk } from '@/lib/api/query-keys';
 import {
   REVIEW_MAX_CONTENT_LENGTH,
@@ -46,11 +47,11 @@ export function ReviewForm({ businessId, onSubmitted }: ReviewFormProps) {
       onSubmitted?.();
     },
     onError: (err) => {
-      const { code, message } = extractError(err);
+      const { code } = extractError(err);
       if (code === 'DUPLICATE_REVIEW') {
         toast.error('You already reviewed this business');
       } else {
-        toast.error(message);
+        toast.error(friendlyMessage(err, 'generic'));
       }
     },
   });

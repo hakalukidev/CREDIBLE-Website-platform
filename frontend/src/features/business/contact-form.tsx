@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input, Textarea } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 
 interface ContactFormProps {
   businessId: string;
@@ -28,7 +29,7 @@ export function ContactForm({ businessId, businessName }: ContactFormProps) {
       setForm({ name: '', email: '', phone: '', message: '' });
       setOpen(false);
     },
-    onError: (err) => toast.error(extractError(err).message),
+    onError: (err) => toast.error(friendlyMessage(err, 'generic')),
   });
 
   if (!open) {

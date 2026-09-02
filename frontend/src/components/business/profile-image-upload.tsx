@@ -4,7 +4,8 @@ import { useCallback, useRef, useState, type ChangeEvent, type DragEvent } from 
 import { Camera, Loader2, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 import { cn } from '@/lib/utils';
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
@@ -101,7 +102,7 @@ export function ProfileImageUpload({
       } catch (err) {
         URL.revokeObjectURL(localUrl);
         setPreview(value ?? null);
-        toast.error(extractError(err).message || 'Upload failed');
+        toast.error(friendlyMessage(err, 'upload'));
       } finally {
         setUploading(false);
       }

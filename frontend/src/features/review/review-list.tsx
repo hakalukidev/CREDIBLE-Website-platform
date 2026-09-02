@@ -5,7 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { FriendlyError } from '@/components/ui/friendly-error';
 import { qk } from '@/lib/api/query-keys';
 import { ReviewItem, type ReviewItemModel } from '@/components/business/review-item';
 
@@ -39,7 +40,7 @@ export function ReviewList({ businessId }: ReviewListProps) {
   }
 
   if (isError) {
-    return <p className="text-sm text-destructive">{extractError(error).message}</p>;
+    return <FriendlyError kind="reviews" variant="inline" />;
   }
 
   if (!data || data.data.length === 0) {

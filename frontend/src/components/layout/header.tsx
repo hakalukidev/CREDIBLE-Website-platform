@@ -3,7 +3,17 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { LogOut, Menu, Search, User2, LayoutDashboard, X } from 'lucide-react';
+import {
+  LogOut,
+  Menu,
+  Search,
+  User2,
+  LayoutDashboard,
+  X,
+  Building2,
+  Stethoscope,
+  ChevronDown,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SafeImage } from '@/components/ui/safe-image';
@@ -16,22 +26,84 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { useSession } from '@/lib/store/session';
+import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
   { href: '/search', label: 'Browse' },
   { href: '/categories', label: 'Categories' },
   { href: '/about', label: 'About' },
-  { href: '/for-business', label: 'For Business' },
   { href: '/widgets', label: 'Widgets' },
   { href: '/api-docs', label: 'API' },
 ];
+
+const FOR_BUSINESS_OPTIONS = [
+  {
+    href: '/for-business',
+    icon: Building2,
+    title: 'For Business',
+    body: 'Get your business verified, earn trust badges, and grow with public reviews.',
+    cta: 'List your business',
+  },
+  {
+    href: '/for-professionals',
+    icon: Stethoscope,
+    title: 'For Professionals',
+    body: 'Showcase your expertise, collect verified reviews, and attract the right clients.',
+    cta: 'List your profile',
+  },
+];
+
+function ForBusinessMenu({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <div
+      className={cn(
+        'grid gap-3 sm:w-[520px]',
+        'grid-cols-1 sm:grid-cols-2',
+      )}
+    >
+      {FOR_BUSINESS_OPTIONS.map(({ href, icon: Icon, title, body, cta }) => (
+        <Link
+          key={href}
+          href={href as never}
+          onClick={onNavigate}
+          className="group flex flex-col gap-2 rounded-lg border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <div className="flex items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Icon className="h-5 w-5" aria-hidden />
+            </span>
+            <p className="font-semibold text-foreground">{title}</p>
+          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">{body}</p>
+          <p className="mt-auto text-xs font-medium text-primary group-hover:underline">
+            {cta} →
+          </p>
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 export function SiteHeader() {
   const router = useRouter();
   const session = useSession((s) => s.session);
   const clear = useSession((s) => s.clear);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [forBusinessOpen, setForBusinessOpen] = useState(false);
 
   const initials = (session?.user.firstName ?? session?.user.email ?? '?')
     .trim()
@@ -65,6 +137,35 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
+
+          {/* "For Business" — hover popover with two options */}
+          <Popover open={forBusinessOpen} onOpenChange={setForBusinessOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                aria-haspopup="dialog"
+                aria-expanded={forBusinessOpen}
+                onMouseEnter={() => {
+                  if (!forBusinessOpen) setForBusinessOpen(true);
+                }}
+              >
+                For Business
+                <ChevronDown className="h-3 w-3" aria-hidden />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              sideOffset={10}
+              className="w-auto p-4"
+              onMouseEnter={() => {
+                if (!forBusinessOpen) setForBusinessOpen(true);
+              }}
+              onMouseLeave={() => setForBusinessOpen(false)}
+            >
+              <ForBusinessMenu onNavigate={() => setForBusinessOpen(false)} />
+            </PopoverContent>
+          </Popover>
         </nav>
 
         <form
@@ -184,6 +285,27 @@ export function SiteHeader() {
                 {link.label}
               </Link>
             ))}
+
+            {/* Mobile "For Business" — opens a dialog */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="py-2 text-left text-sm text-muted-foreground hover:text-foreground"
+                >
+                  For Business
+                </button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Get listed on Credible</DialogTitle>
+                  <DialogDescription>
+                    Pick the path that matches you — businesses and professionals each get their own workflow.
+                  </DialogDescription>
+                </DialogHeader>
+                <ForBusinessMenu onNavigate={() => setMobileOpen(false)} />
+              </DialogContent>
+            </Dialog>
           </nav>
         </div>
       )}

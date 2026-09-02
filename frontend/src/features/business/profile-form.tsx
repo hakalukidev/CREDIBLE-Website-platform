@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input, Textarea } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { FriendlyError, friendlyMessage } from '@/components/ui/friendly-error';
 import { qk } from '@/lib/api/query-keys';
 import {
   BUSINESS_DAYS,
@@ -63,13 +64,7 @@ export function ProfileForm() {
   }
 
   if (profileError && !noBusiness) {
-    return (
-      <Card>
-        <CardContent className="pt-6 text-sm text-destructive">
-          {extractError(profileError).message}
-        </CardContent>
-      </Card>
-    );
+    return <FriendlyError kind="profile" />;
   }
 
   return <EditBusinessProfile />;
@@ -122,7 +117,7 @@ function CreateBusinessForm() {
       qc.invalidateQueries({ queryKey: qk.businesses.me() });
     },
     onError: (err) => {
-      toast.error(extractError(err).message);
+      toast.error(friendlyMessage(err, 'profile'));
     },
   });
 
@@ -277,7 +272,7 @@ function EditBusinessProfile() {
       qc.invalidateQueries({ queryKey: ['businesses'] });
     },
     onError: (err) => {
-      toast.error(extractError(err).message);
+      toast.error(friendlyMessage(err, 'profile'));
     },
   });
 

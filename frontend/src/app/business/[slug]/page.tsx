@@ -12,6 +12,8 @@ import { VerifiedBadge } from '@/components/verification/verified-badge';
 import { ReviewList } from '@/features/review/review-list';
 import { ReviewForm } from '@/features/review/review-form';
 import { ContactForm } from '@/features/business/contact-form';
+import { GalleryCarousel } from '@/components/business/gallery-carousel';
+import { HoursCard } from '@/components/business/hours-card';
 import { businessMetadata } from '@/lib/seo/metadata';
 import {
   businessSchema,
@@ -19,6 +21,7 @@ import {
   reviewSchema,
   reviewListSchema,
 } from '@/lib/seo/structured-data';
+import type { BusinessHoursJson } from '@/types/business';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -71,9 +74,12 @@ interface BusinessDto {
   slug: string;
   legalName: string;
   displayName: string;
+  tagline?: string;
   description?: string;
   logo?: string;
   coverImage?: string;
+  /** At most 6 photo URLs. Backend stores as JSONB. */
+  gallery?: string[] | null;
   email?: string;
   phone?: string;
   website?: string;
@@ -85,7 +91,7 @@ interface BusinessDto {
   postalCode?: string;
   latitude?: number;
   longitude?: number;
-  hoursJson?: unknown;
+  hoursJson?: BusinessHoursJson;
   priceRange?: string;
   ratingAverage?: string;
   ratingCount: number;
@@ -204,6 +210,11 @@ export default async function BusinessProfilePage({ params }: PageProps) {
                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{business.displayName}</h1>
                 {isVerified && <VerifiedBadge level={business.verificationLevel} size="lg" />}
               </div>
+              {business.tagline && (
+                <p className="mt-2 max-w-2xl text-base text-primary-foreground/90">
+                  {business.tagline}
+                </p>
+              )}
               {business.category && (
                 <Badge variant="secondary" className="mt-2">{business.category.name}</Badge>
               )}
@@ -230,6 +241,16 @@ export default async function BusinessProfilePage({ params }: PageProps) {
           </div>
         </div>
       </div>
+
+      {business.gallery && business.gallery.length > 0 && (
+        <div className="container-wide -mt-6 md:-mt-8">
+          <GalleryCarousel
+            images={business.gallery}
+            alt={business.displayName}
+            className="shadow-lg"
+          />
+        </div>
+      )}
 
       <div className="container-wide py-8 grid gap-6 md:grid-cols-[1fr_320px]">
         <Tabs defaultValue="overview">
@@ -260,6 +281,8 @@ export default async function BusinessProfilePage({ params }: PageProps) {
         </Tabs>
 
         <aside className="space-y-4">
+          <HoursCard hours={business.hoursJson ?? undefined} />
+
           <Card>
             <CardContent className="pt-6 space-y-3 text-sm">
               <h3 className="font-semibold">Contact</h3>

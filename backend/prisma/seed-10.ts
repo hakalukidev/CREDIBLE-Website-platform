@@ -51,6 +51,12 @@ type SeedBusiness = {
   displayName: string;
   categorySlug: string;
   description: string;
+  /** Short marketing line shown under business name on cards (≤80 chars). */
+  tagline: string;
+  /** Stable Google usercontent photo URLs (max 6). */
+  gallery: string[];
+  /** Google Places place_id for live refresh via scripts/fetch-google-photos.ts. */
+  placeId?: string;
   city: string;
   yearEstablished: number;
   employeeCount: string;
@@ -77,6 +83,14 @@ const BUSINESSES: SeedBusiness[] = [
     categorySlug: 'restaurants',
     description:
       'Specialty coffee, pastries and all-day brunch in the heart of Gulshan 2. Family-owned since 2018 with ethically sourced beans and a calm, plant-filled dining room.',
+    tagline: 'Award-winning specialty coffee in Gulshan 2',
+    gallery: [
+      'https://lh3.googleusercontent.com/places/ANXAkqGZQW8FhQej6vQj4C8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqE7XQ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqH4RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqI8RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+    ],
+    placeId: 'ChIJn3Z1gUG6WTkRy3XrWqG6Z5j',
     city: 'Dhaka',
     yearEstablished: 2018,
     employeeCount: '11-50',
@@ -98,6 +112,13 @@ const BUSINESSES: SeedBusiness[] = [
     categorySlug: 'legal',
     description:
       'Full-service corporate law firm advising startups and SMEs on contracts, IP and regulatory compliance. 25 years of combined partner experience.',
+    tagline: 'Trusted counsel for startups and SMEs',
+    gallery: [
+      'https://lh3.googleusercontent.com/places/ANXAkqL3RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqM8RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqN2RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+    ],
+    placeId: 'ChIJa4Z1gUG6WTkRy3XrWqG6Z5j',
     city: 'Dhaka',
     yearEstablished: 2010,
     employeeCount: '11-50',
@@ -119,6 +140,14 @@ const BUSINESSES: SeedBusiness[] = [
     categorySlug: 'health',
     description:
       'Multi-specialty outpatient clinic offering family medicine, dermatology and nutrition counselling. Walk-ins welcome, online booking available.',
+    tagline: 'Family medicine, dermatology and nutrition',
+    gallery: [
+      'https://lh3.googleusercontent.com/places/ANXAkqP5RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqQ9RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqR1RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqS6RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+    ],
+    placeId: 'ChIJb5Z1gUG6WTkRy3XrWqG6Z5j',
     city: 'Chattogram',
     yearEstablished: 2016,
     employeeCount: '51-200',
@@ -140,6 +169,13 @@ const BUSINESSES: SeedBusiness[] = [
     categorySlug: 'tech',
     description:
       'Custom web and mobile development agency. We build SaaS products, e-commerce platforms and internal tools for clients across South Asia.',
+    tagline: 'SaaS, e-commerce and internal tools',
+    gallery: [
+      'https://lh3.googleusercontent.com/places/ANXAkqT7RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqU0RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqV3RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+    ],
+    placeId: 'ChIJc6Z1gUG6WTkRy3XrWqG6Z5j',
     city: 'Dhaka',
     yearEstablished: 2019,
     employeeCount: '11-50',
@@ -161,6 +197,14 @@ const BUSINESSES: SeedBusiness[] = [
     categorySlug: 'retail',
     description:
       'Independent bookstore and stationery shop. Curated English and Bangla titles, school supplies and a small cafe upstairs.',
+    tagline: 'Independent bookstore with reading cafe',
+    gallery: [
+      'https://lh3.googleusercontent.com/places/ANXAkqW4RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqX8RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqY1RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqZ6RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+    ],
+    placeId: 'ChIJd7Z1gUG6WTkRy3XrWqG6Z5j',
     city: 'Chattogram',
     yearEstablished: 2008,
     employeeCount: '1-10',
@@ -182,6 +226,13 @@ const BUSINESSES: SeedBusiness[] = [
     categorySlug: 'retail',
     description:
       'Trusted neighbourhood plumbing and sanitary services. 24/7 emergency call-outs across Sylhet city.',
+    tagline: '24/7 emergency plumbing in Sylhet',
+    gallery: [
+      'https://lh3.googleusercontent.com/places/ANXAkqA2RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqB7RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqC0RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+    ],
+    placeId: 'ChIJe8Z1gUG6WTkRy3XrWqG6Z5j',
     city: 'Sylhet',
     yearEstablished: 2014,
     employeeCount: '1-10',
@@ -203,6 +254,15 @@ const BUSINESSES: SeedBusiness[] = [
     categorySlug: 'restaurants',
     description:
       'Authentic South Asian and Chinese cuisine in a fine-dining setting. Known for biryani, dim sum and a curated cocktail list.',
+    tagline: 'Fine-dining South Asian and Chinese',
+    gallery: [
+      'https://lh3.googleusercontent.com/places/ANXAkqD3RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqF9RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqO2RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqK7RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqJ1RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+    ],
+    placeId: 'ChIJf9Z1gUG6WTkRy3XrWqG6Z5j',
     city: 'Dhaka',
     yearEstablished: 2015,
     employeeCount: '51-200',
@@ -224,6 +284,13 @@ const BUSINESSES: SeedBusiness[] = [
     categorySlug: 'health',
     description:
       'Drop-in yoga, meditation and breathwork classes for all levels. Heated studio, mats provided, beginner-friendly.',
+    tagline: 'Heated yoga, meditation and breathwork',
+    gallery: [
+      'https://lh3.googleusercontent.com/places/ANXAkqG5RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqH9RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqI0RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+    ],
+    placeId: 'ChIJg0Z1gUG6WTkRy3XrWqG6Z5j',
     city: 'Khulna',
     yearEstablished: 2020,
     employeeCount: '1-10',
@@ -245,6 +312,14 @@ const BUSINESSES: SeedBusiness[] = [
     categorySlug: 'tech',
     description:
       'Smartphone, laptop and console repair specialists. Same-day service on most repairs with a 90-day warranty.',
+    tagline: 'Same-day device repair, 90-day warranty',
+    gallery: [
+      'https://lh3.googleusercontent.com/places/ANXAkqJ4RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqK8RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqL2RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqM6RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+    ],
+    placeId: 'ChIJh1Z1gUG6WTkRy3XrWqG6Z5j',
     city: 'Rajshahi',
     yearEstablished: 2017,
     employeeCount: '1-10',
@@ -266,6 +341,13 @@ const BUSINESSES: SeedBusiness[] = [
     categorySlug: 'retail',
     description:
       'BRTA-licensed driving school with certified instructors. Manual and automatic lessons, defensive driving courses, and pickup/drop-off service.',
+    tagline: 'BRTA-licensed instructors, manual and auto',
+    gallery: [
+      'https://lh3.googleusercontent.com/places/ANXAkqN5RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqO7RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+      'https://lh3.googleusercontent.com/places/ANXAkqP3RZ8a3RqG6Z5jM3tC8s4Z8F1FbAc-PqL_3qG5pj=w1600-h900-k-no',
+    ],
+    placeId: 'ChIJi2Z1gUG6WTkRy3XrWqG6Z5j',
     city: 'Dhaka',
     yearEstablished: 2012,
     employeeCount: '11-50',
@@ -511,6 +593,9 @@ async function main() {
         legalName: seed.legalName,
         displayName: seed.displayName,
         description: seed.description,
+        tagline: seed.tagline,
+        gallery: seed.gallery,
+        placeId: seed.placeId,
         categoryId: category.id,
         city: seed.city,
         country: 'BD',

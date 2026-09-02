@@ -59,6 +59,12 @@ export const updateBusinessSchema = createBusinessSchema.partial().extend({
   hoursJson: z.record(z.object({ open: z.string(), close: z.string() })).optional(),
   metaTitle: z.string().trim().max(160).optional(),
   metaDescription: z.string().trim().max(320).optional(),
+  tagline: z.string().trim().max(120).optional(),
+  gallery: z
+    .array(z.string().trim().url().max(2048))
+    .max(6, 'Gallery accepts at most 6 photos')
+    .optional(),
+  placeId: z.string().trim().min(1).max(255).optional(),
 });
 
 export type UpdateBusinessInput = z.infer<typeof updateBusinessSchema>;
@@ -119,6 +125,12 @@ export const businessProfileUpdateSchema = createBusinessSchema
     hoursJson: businessHoursJsonSchema.optional(),
     metaTitle: z.string().trim().max(160).optional(),
     metaDescription: z.string().trim().max(320).optional(),
+    tagline: z.string().trim().max(120).optional(),
+    gallery: z
+      .array(z.string().trim().url().max(2048))
+      .max(6, 'Gallery accepts at most 6 photos')
+      .optional(),
+    placeId: z.string().trim().min(1).max(255).optional(),
     categoryIds: z.array(z.string().cuid('Invalid category id')).max(8).optional(),
   })
   .strict();

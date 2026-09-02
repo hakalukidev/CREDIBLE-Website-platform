@@ -22,10 +22,11 @@ export class SearchResultsBoundary extends Component<
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // Always log — both dev and prod — so debugging is possible from
-    // the browser DevTools console.
-    // eslint-disable-next-line no-console
-    console.error('[search-fallback] SearchResults crashed:', error, info);
+    // Dev-only — production should not leak raw error info to the console.
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.error('[search-fallback] SearchResults crashed:', error, info);
+    }
   }
 
   render() {

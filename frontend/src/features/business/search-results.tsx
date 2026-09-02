@@ -6,7 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { BusinessCard, BusinessCardSkeleton } from '@/components/business/business-card';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { FriendlyError } from '@/components/ui/friendly-error';
+import { normalizeFeaturedItems } from '@/features/home/use-featured-businesses';
 
 const PER_PAGE = 8;
 
@@ -14,6 +16,7 @@ interface ResultItem {
   id: string;
   slug: string;
   displayName: string;
+  tagline?: string | null;
   description?: string | null;
   coverImage?: string | null;
   logo: string | null;
@@ -36,36 +39,11 @@ interface Props {
   initial?: { q?: string; category?: string; city?: string; verified?: string };
 }
 
-/** Coerce an arbitrary response payload into a safe ResultItem list. */
+/** Parse a `/businesses/search` response — items come from the shared normalizer, meta is parsed locally since search-results is the only caller that needs it. */
 function normalizeItems(raw: unknown): { items: ResultItem[]; meta: SearchResponse['meta'] | undefined } {
+  const items = normalizeFeaturedItems(raw);
   if (!raw || typeof raw !== 'object') return { items: [], meta: undefined };
-  const obj = raw as { data?: unknown; meta?: unknown };
-  const arr = Array.isArray(obj.data) ? (obj.data as unknown[]) : [];
-  const items: ResultItem[] = [];
-  for (const entry of arr) {
-    if (!entry || typeof entry !== 'object') continue;
-    const e = entry as Record<string, unknown>;
-    if (typeof e.id !== 'string' || typeof e.slug !== 'string') continue;
-    items.push({
-      id: e.id,
-      slug: e.slug,
-      displayName: typeof e.displayName === 'string' ? e.displayName : 'Untitled business',
-      description: typeof e.description === 'string' ? e.description : null,
-      coverImage: typeof e.coverImage === 'string' ? e.coverImage : null,
-      logo: typeof e.logo === 'string' ? e.logo : null,
-      city: typeof e.city === 'string' ? e.city : null,
-      state: typeof e.state === 'string' ? e.state : null,
-      country: typeof e.country === 'string' ? e.country : null,
-      ratingAverage: typeof e.ratingAverage === 'string' ? e.ratingAverage : null,
-      ratingCount: typeof e.ratingCount === 'number' ? e.ratingCount : 0,
-      verificationLevel: ((): ResultItem['verificationLevel'] => {
-        const v = e.verificationLevel;
-        return v === 'BASIC' || v === 'CERTIFIED' || v === 'PREMIUM' ? v : 'NONE';
-      })(),
-      category: typeof e.category === 'string' ? e.category : null,
-      yearEstablished: typeof e.yearEstablished === 'number' ? e.yearEstablished : null,
-    });
-  }
+  const obj = raw as { meta?: unknown };
   let meta: SearchResponse['meta'] | undefined;
   if (obj.meta && typeof obj.meta === 'object') {
     const m = obj.meta as Record<string, unknown>;
@@ -125,7 +103,7 @@ export function SearchResults({ initial = {} }: Props) {
       })
       .catch((err) => {
         if (cancelled || seq !== requestSeq.current) return;
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
           // eslint-disable-next-line no-console
           console.error('[search] fetch failed:', err);
         }
@@ -179,7 +157,7 @@ export function SearchResults({ initial = {} }: Props) {
       )}
 
       {isError && (
-        <p className="text-sm text-destructive">Failed to load: {extractError(error).message}</p>
+        <FriendlyError kind="businesses" />
       )}
 
       {!isLoading && items.length === 0 && (
@@ -199,6 +177,7 @@ export function SearchResults({ initial = {} }: Props) {
                 id={b.id}
                 slug={b.slug}
                 name={b.displayName}
+                tagline={b.tagline}
                 description={b.description}
                 coverImage={b.coverImage}
                 logo={b.logo}

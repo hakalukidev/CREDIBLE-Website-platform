@@ -16,6 +16,7 @@ export function SiteFooter() {
             <li><Link href={{ pathname: '/search' }} className="hover:text-foreground">Browse</Link></li>
             <li><Link href={{ pathname: '/categories' }} className="hover:text-foreground">Categories</Link></li>
             <li><Link href={{ pathname: '/for-business' }} className="hover:text-foreground">For business</Link></li>
+            <li><Link href={{ pathname: '/for-professionals' }} className="hover:text-foreground">For professionals</Link></li>
           </ul>
         </div>
         <div>

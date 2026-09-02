@@ -5,7 +5,8 @@ import { Upload, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { SafeImage } from '@/components/ui/safe-image';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 
 interface ImageUploadProps {
   value?: string | null;
@@ -80,7 +81,7 @@ export function ImageUpload({
         onChange(publicUrl);
         toast.success(`${label} uploaded`);
       } catch (err) {
-        toast.error(extractError(err).message);
+        toast.error(friendlyMessage(err, 'upload'));
       } finally {
         setUploading(false);
       }

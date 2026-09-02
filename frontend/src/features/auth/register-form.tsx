@@ -13,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 import { useSession } from '@/lib/store/session';
 import {
   User,
@@ -65,7 +66,7 @@ export function RegisterForm() {
               : '/';
       router.push(dest);
     },
-    onError: (err) => toast.error(extractError(err).message),
+    onError: (err) => toast.error(friendlyMessage(err, 'register')),
   });
 
   return (

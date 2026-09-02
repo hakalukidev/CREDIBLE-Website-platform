@@ -19,6 +19,7 @@ import { subscriptionRouter } from '../modules/subscriptions/subscriptions.route
 import { categoryRouter } from '../modules/categories/categories.routes';
 import { billingRouter } from '../modules/admin/voucher.controller';
 import { publicApiRouter } from '../modules/public/public.routes';
+import { publicPlansRouter } from '../modules/public/plans.routes';
 import { adminAnalyticsRouter } from '../modules/admin/analytics.routes';
 import { businessAnalyticsRouter } from '../modules/businesses/analytics.routes';
 import { adminExtendedRouter } from '../modules/admin-extended/admin-extended.routes';
@@ -85,6 +86,9 @@ router.get('/health', async (_req, res) => {
 
   // Phase 5 — public REST API for third-party widgets and integrations.
   router.use('/', publicApiRouter);
+
+  // Public marketing data — subscription plans (no auth).
+  router.use('/', publicPlansRouter);
 
   // OpenAPI spec — served as a static asset for docs tooling.
   // __dirname is src/routes in dev (tsx, unbundled) but dist/ in production

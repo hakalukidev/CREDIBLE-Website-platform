@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { StarRating } from '@/components/reviews/star-rating';
-import { apiClient, extractError } from '@/lib/api/client';
+import { FriendlyError } from '@/components/ui/friendly-error';
+import { apiClient } from '@/lib/api/client';
 import { formatRelative } from '@credible/shared';
 
 interface UserReview {
@@ -19,7 +20,7 @@ interface UserReview {
 }
 
 export default function AccountReviewsPage() {
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['reviews', 'mine'],
     queryFn: async () => {
       const res = await apiClient.get<{ success: true; data: UserReview[] }>(`/reviews/me`);
@@ -37,11 +38,7 @@ export default function AccountReviewsPage() {
       </header>
 
       {isLoading && <Skeleton className="h-32" />}
-      {isError && (
-        <Card>
-          <CardContent className="pt-6 text-sm text-destructive">{extractError(error).message}</CardContent>
-        </Card>
-      )}
+      {isError && <FriendlyError kind="reviews" className="max-w-xl" />}
       {data && data.data.length === 0 && (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">

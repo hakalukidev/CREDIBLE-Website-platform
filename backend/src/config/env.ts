@@ -45,6 +45,8 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_CALLBACK_URL: z.string().default('http://localhost:4000/api/v1/auth/google/callback'),
+  // Google Places API (classic). Optional — without it, places/photo helpers throw clearly.
+  GOOGLE_PLACES_API_KEY: z.string().optional(),
   FACEBOOK_CLIENT_ID: z.string().optional(),
   FACEBOOK_CLIENT_SECRET: z.string().optional(),
   FACEBOOK_CALLBACK_URL: z

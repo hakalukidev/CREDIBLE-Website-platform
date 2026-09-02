@@ -265,6 +265,9 @@ model Business {
   legalName                String
   displayName              String
   description              String?                   @db.Text
+  tagline                  String?                   @db.VarChar(120)
+  gallery                  Json?
+  placeId                  String?                   @db.VarChar(255) @unique
   logo                     String?
   coverImage               String?
   email                    String?

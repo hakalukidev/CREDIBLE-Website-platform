@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { FriendlyError } from '@/components/ui/friendly-error';
 import { ReviewItem, type ReviewItemModel } from '@/components/business/review-item';
 import { ReviewResponseForm } from '@/components/business/review-response-form';
 import { ReportReviewModal } from '@/components/business/report-review-modal';
@@ -130,11 +131,7 @@ export default function ProfessionalReviewsPage() {
       )}
 
       {isError && (
-        <Card>
-          <CardContent className="pt-6 text-sm text-destructive">
-            {extractError(error).message}
-          </CardContent>
-        </Card>
+        <FriendlyError kind="reviews" className="max-w-xl" />
       )}
 
       {data && data.data.length === 0 && (

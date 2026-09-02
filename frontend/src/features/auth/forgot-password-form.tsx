@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiClient, extractError } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 
 /**
  * Forgot password form. Posts the email to the existing OTP endpoint
@@ -38,7 +39,7 @@ export function ForgotPasswordForm() {
       setSubmitted(true);
       toast.success('If that email is registered, a reset code is on the way.');
     },
-    onError: (err) => toast.error(extractError(err).message),
+    onError: (err) => toast.error(friendlyMessage(err, 'forgot-password')),
   });
 
   if (submitted) {

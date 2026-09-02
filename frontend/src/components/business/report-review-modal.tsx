@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { apiClient, extractError } from '@/lib/api/client';
+import { friendlyMessage } from '@/components/ui/friendly-error';
 import { REVIEW_FLAG_REASONS } from '@credible/shared';
 import { qk } from '@/lib/api/query-keys';
 
@@ -53,11 +54,11 @@ export function ReportReviewModal({
       setNotes('');
     },
     onError: (err) => {
-      const { code, message } = extractError(err);
+      const { code } = extractError(err);
       if (code === 'DUPLICATE_FLAG') {
         toast.error('You have already reported this review.');
       } else {
-        toast.error(message);
+        toast.error(friendlyMessage(err, 'generic'));
       }
     },
   });
