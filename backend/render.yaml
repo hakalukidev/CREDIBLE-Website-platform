@@ -88,18 +88,6 @@ services:
         sync: false
       - key: SSLCZ_STORE_ID
         sync: false
-      - key: SSLCZ_STORE_PASSWORD
-        sync: false
-      - key: SSLCZ_SANDBOX
-        value: 'true'
-      - key: SSLCZ_SUCCESS_URL
-        sync: false
-      - key: SSLCZ_FAIL_URL
-        sync: false
-      - key: SSLCZ_CANCEL_URL
-        sync: false
-      - key: SSLCZ_IPN_URL
-        sync: false
       - key: INVOICE_VAT_RATE
         value: '0.05'
       - key: LOG_LEVEL
