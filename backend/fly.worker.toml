@@ -1,0 +1,30 @@
+# Fly.io config for the Credible background worker.
+# Same Dockerfile as the API, but runs `dist/workers/index.js`
+# (BullMQ consumers for email, AI verification, badge generation,
+# rating recompute, payment IPN, review moderation, notifications).
+#
+# Deploy from backend/ with:
+#   fly deploy --config fly.worker.toml
+
+app            = "credible-worker"
+primary_region = "sin"
+kill_signal    = "SIGINT"
+kill_timeout   = "10s"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV  = "production"
+  LOG_LEVEL = "info"
+
+[processes]
+  worker = "node dist/workers/index.js"
+
+# No [[services]] block — this is a private background worker.
+# Workers do not consume public traffic. Fly still runs health
+# checks internally; machines auto-stop on free tier when idle.
+
+# Run Prisma migrations before each new release is promoted.
+[release]
+  command = "npx prisma migrate deploy"
