@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -38,29 +36,111 @@ interface Props {
   initial?: { q?: string; category?: string; city?: string; verified?: string };
 }
 
+/** Coerce an arbitrary response payload into a safe ResultItem list. */
+function normalizeItems(raw: unknown): { items: ResultItem[]; meta: SearchResponse['meta'] | undefined } {
+  if (!raw || typeof raw !== 'object') return { items: [], meta: undefined };
+  const obj = raw as { data?: unknown; meta?: unknown };
+  const arr = Array.isArray(obj.data) ? (obj.data as unknown[]) : [];
+  const items: ResultItem[] = [];
+  for (const entry of arr) {
+    if (!entry || typeof entry !== 'object') continue;
+    const e = entry as Record<string, unknown>;
+    if (typeof e.id !== 'string' || typeof e.slug !== 'string') continue;
+    items.push({
+      id: e.id,
+      slug: e.slug,
+      displayName: typeof e.displayName === 'string' ? e.displayName : 'Untitled business',
+      description: typeof e.description === 'string' ? e.description : null,
+      coverImage: typeof e.coverImage === 'string' ? e.coverImage : null,
+      logo: typeof e.logo === 'string' ? e.logo : null,
+      city: typeof e.city === 'string' ? e.city : null,
+      state: typeof e.state === 'string' ? e.state : null,
+      country: typeof e.country === 'string' ? e.country : null,
+      ratingAverage: typeof e.ratingAverage === 'string' ? e.ratingAverage : null,
+      ratingCount: typeof e.ratingCount === 'number' ? e.ratingCount : 0,
+      verificationLevel: ((): ResultItem['verificationLevel'] => {
+        const v = e.verificationLevel;
+        return v === 'BASIC' || v === 'CERTIFIED' || v === 'PREMIUM' ? v : 'NONE';
+      })(),
+      category: typeof e.category === 'string' ? e.category : null,
+      yearEstablished: typeof e.yearEstablished === 'number' ? e.yearEstablished : null,
+    });
+  }
+  let meta: SearchResponse['meta'] | undefined;
+  if (obj.meta && typeof obj.meta === 'object') {
+    const m = obj.meta as Record<string, unknown>;
+    if (
+      typeof m.page === 'number' &&
+      typeof m.perPage === 'number' &&
+      typeof m.total === 'number' &&
+      typeof m.totalPages === 'number'
+    ) {
+      meta = { page: m.page, perPage: m.perPage, total: m.total, totalPages: m.totalPages };
+    }
+  }
+  return { items, meta };
+}
+
 export function SearchResults({ initial = {} }: Props) {
   const [q, setQ] = useState(initial.q ?? '');
   const [verifiedOnly, setVerifiedOnly] = useState(initial.verified === 'true');
   const [city, setCity] = useState(initial.city ?? '');
   const [page, setPage] = useState(1);
+  const [data, setData] = useState<unknown>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
   const topRef = useRef<HTMLDivElement>(null);
+  // Track the latest request so out-of-order responses don't overwrite fresher ones.
+  const requestSeq = useRef(0);
 
-  const params = new URLSearchParams();
-  if (q) params.set('q', q);
-  if (city) params.set('city', city);
-  if (verifiedOnly) params.set('verifiedOnly', 'true');
-  params.set('page', String(page));
-  params.set('perPage', String(PER_PAGE));
+  // Build a stable query string from the current filters. We use this as
+  // the dependency array for the fetch effect, and also in the URL itself
+  // for easy sharing / debugging.
+  const queryString = (() => {
+    const sp = new URLSearchParams();
+    if (q) sp.set('q', q);
+    if (city) sp.set('city', city);
+    if (verifiedOnly) sp.set('verifiedOnly', 'true');
+    sp.set('page', String(page));
+    sp.set('perPage', String(PER_PAGE));
+    return sp.toString();
+  })();
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['business-search', params.toString()],
-    queryFn: async () => {
-      const res = await apiClient.get<SearchResponse>(
-        `/businesses/search?${params.toString()}`,
-      );
-      return res.data;
-    },
-  });
+  // Fetch whenever the query string changes. We intentionally use plain
+  // fetch + useState here instead of @tanstack/react-query's `useQuery`
+  // because of a known Turbopack + @tanstack/query-core 5.102.x bundling
+  // bug that causes `resolveQueryValue` to be `undefined` at runtime,
+  // crashing the component before the cards can render.
+  useEffect(() => {
+    const seq = ++requestSeq.current;
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+
+    apiClient
+      .get<unknown>(`/businesses/search?${queryString}`)
+      .then((res) => {
+        if (cancelled || seq !== requestSeq.current) return;
+        setData(res.data);
+      })
+      .catch((err) => {
+        if (cancelled || seq !== requestSeq.current) return;
+        if (typeof window !== 'undefined') {
+          // eslint-disable-next-line no-console
+          console.error('[search] fetch failed:', err);
+        }
+        setError(err);
+        setData(undefined);
+      })
+      .finally(() => {
+        if (cancelled || seq !== requestSeq.current) return;
+        setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [queryString]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -72,8 +152,9 @@ export function SearchResults({ initial = {} }: Props) {
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [page]);
 
-  const items = data?.data ?? [];
-  const meta = data?.meta;
+  // Always derive a safe shape — never trust the backend response.
+  const { items, meta } = normalizeItems(data);
+  const isError = error != null;
 
   return (
     <>

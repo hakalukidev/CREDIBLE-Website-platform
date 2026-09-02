@@ -16,11 +16,10 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Hand off to whatever error reporter you wire up (Sentry etc).
-    if (process.env.NODE_ENV === 'production') {
-      // eslint-disable-next-line no-console
-      console.error('App error', error);
-    }
+    // Always log — both dev and prod — so debugging deployed issues is
+    // possible from the browser DevTools console.
+    // eslint-disable-next-line no-console
+    console.error('App error', error);
   }, [error]);
 
   return (

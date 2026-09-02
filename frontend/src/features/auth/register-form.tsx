@@ -179,9 +179,6 @@ export function RegisterForm() {
                   }`}>
                   Customer
                 </div>
-                <div className="hidden sm:block text-[11px] text-muted-foreground mt-0.5">
-                  Find &amp; review
-                </div>
               </label>
 
               <label
@@ -202,9 +199,6 @@ export function RegisterForm() {
                   }`}>
                   Business
                 </div>
-                <div className="hidden sm:block text-[11px] text-muted-foreground mt-0.5">
-                  List your company
-                </div>
               </label>
 
               <label
@@ -224,9 +218,6 @@ export function RegisterForm() {
                 <div className={`text-xs sm:text-sm font-medium ${selectedRole === 'PROFESSIONAL' ? 'text-primary' : ''
                   }`}>
                   Professional
-                </div>
-                <div className="hidden sm:block text-[11px] text-muted-foreground mt-0.5">
-                  Solo practitioner
                 </div>
               </label>
             </div>

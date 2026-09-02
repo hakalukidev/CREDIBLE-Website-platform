@@ -1,15 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SafeImage } from '@/components/ui/safe-image';
 import { apiClient } from '@/lib/api/client';
-import { qk } from '@/lib/api/query-keys';
 import { Search as SearchIcon, Star, MapPin } from 'lucide-react';
 
 interface ProfessionalListItem {
@@ -38,27 +36,62 @@ export default function ProfessionalsSearchPage() {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [page, setPage] = useState(1);
 
-  const params: Record<string, string | number | boolean> = { page, perPage: 20 };
-  if (q.trim()) params.q = q.trim();
-  if (city.trim()) params.city = city.trim();
-  if (profession.trim()) params.profession = profession.trim();
-  if (verifiedOnly) params.verifiedOnly = true;
-
-  const { data, isLoading } = useQuery({
-    queryKey: qk.professionals.search(params),
-    queryFn: async () => {
-      const sp = new URLSearchParams();
-      Object.entries(params).forEach(([k, v]) => sp.set(k, String(v)));
-      const res = await apiClient.get<{ success: true } & SearchResponse>(
-        `/professionals/search?${sp.toString()}`,
-      );
-      return res.data;
-    },
+  // Submitted (committed) values — only updated when the user submits the
+  // form, so we don't fire a fetch on every keystroke.
+  const [submitted, setSubmitted] = useState({
+    q: '',
+    city: '',
+    profession: '',
+    verifiedOnly: false,
   });
+
+  const [data, setData] = useState<SearchResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const requestSeq = useRef(0);
+
+  const queryString = (() => {
+    const sp = new URLSearchParams();
+    sp.set('page', String(page));
+    sp.set('perPage', '20');
+    if (submitted.q.trim()) sp.set('q', submitted.q.trim());
+    if (submitted.city.trim()) sp.set('city', submitted.city.trim());
+    if (submitted.profession.trim()) sp.set('profession', submitted.profession.trim());
+    if (submitted.verifiedOnly) sp.set('verifiedOnly', 'true');
+    return sp.toString();
+  })();
+
+  // Plain fetch instead of @tanstack/react-query's `useQuery` because of a
+  // known Turbopack + @tanstack/query-core 5.102.x bundling bug that causes
+  // `resolveQueryValue` to be `undefined` at runtime.
+  useEffect(() => {
+    const seq = ++requestSeq.current;
+    let cancelled = false;
+    setIsLoading(true);
+
+    apiClient
+      .get<{ success: true } & SearchResponse>(`/professionals/search?${queryString}`)
+      .then((res) => {
+        if (cancelled || seq !== requestSeq.current) return;
+        setData(res.data);
+      })
+      .catch(() => {
+        if (cancelled || seq !== requestSeq.current) return;
+        setData(null);
+      })
+      .finally(() => {
+        if (cancelled || seq !== requestSeq.current) return;
+        setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [queryString]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
+    setSubmitted({ q, city, profession, verifiedOnly });
   };
 
   return (
@@ -130,7 +163,7 @@ export default function ProfessionalsSearchPage() {
                 <CardContent className="pt-6 flex items-start gap-3">
                   <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-muted">
                     {p.avatar ? (
-                      <Image
+                      <SafeImage
                         src={p.avatar}
                         alt={p.displayName}
                         fill

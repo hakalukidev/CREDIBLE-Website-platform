@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import Image from 'next/image';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { SafeImage } from '@/components/ui/safe-image';
 import { apiClient, extractError } from '@/lib/api/client';
 
 interface ImageUploadProps {
@@ -116,7 +116,7 @@ export function ImageUpload({
       >
         {value ? (
           <>
-            <Image
+            <SafeImage
               src={value}
               alt={label}
               fill

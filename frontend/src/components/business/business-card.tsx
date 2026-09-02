@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { VerifiedBadge } from '@/components/verification/verified-badge';
@@ -9,6 +8,7 @@ import { StarRating } from '@/components/reviews/star-rating';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SafeImage } from '@/components/ui/safe-image';
 import { cn } from '@/lib/utils';
 
 export interface BusinessCardProps {
@@ -110,6 +110,12 @@ export function BusinessCard({
   const initial = name?.charAt(0)?.toUpperCase() ?? '?';
   const ratingNum = typeof rating === 'string' ? parseFloat(rating) : (rating ?? 0);
 
+  // Defensive: <Image> throws if `src` is empty. Coerce anything
+  // non-truthy into undefined so we always fall back to the gradient.
+  const safeCoverImage =
+    typeof coverImage === 'string' && coverImage.trim().length > 0 ? coverImage : undefined;
+  const safeLogo = typeof logo === 'string' && logo.trim().length > 0 ? logo : undefined;
+
   const cardContent = (
     <Link
       href={`/business/${slug}`}
@@ -123,9 +129,9 @@ export function BusinessCard({
     >
       {/* Image container — 140px fixed height */}
       <div className="relative h-[140px] w-full shrink-0 overflow-hidden bg-muted">
-        {coverImage && !imgError ? (
-          <Image
-            src={coverImage}
+        {safeCoverImage && !imgError ? (
+          <SafeImage
+            src={safeCoverImage}
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -133,9 +139,9 @@ export function BusinessCard({
             onError={() => setImgError(true)}
             priority={false}
           />
-        ) : logo && !logoError ? (
-          <Image
-            src={logo}
+        ) : safeLogo && !logoError ? (
+          <SafeImage
+            src={safeLogo}
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

@@ -1,0 +1,24 @@
+# Render Blueprint for the Credible frontend (Next.js).
+# Use from repo root with: New + → Blueprint → connect repo
+# → Blueprint name "credible-frontend" → set path to "frontend/render.yaml".
+
+services:
+  - type: web
+    name: credible-frontend
+    runtime: node
+    plan: starter
+    region: singapore
+    buildCommand: rm -rf .next && npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Frontend env vars are configured in the Render Dashboard
+      # (Dashboard → Service → Environment) so that the deployed URL
+      # of credible-api can be used without committing it.
+      # Required at runtime:
+      #   NEXT_PUBLIC_API_URL  e.g. https://credible-api.onrender.com/api/v1
+      #   NEXT_PUBLIC_WEB_URL  e.g. https://credible-frontend.onrender.com
+      #   NEXT_PUBLIC_SITE_NAME "Credible"

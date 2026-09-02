@@ -45,13 +45,19 @@ export interface ApiSuccess<T> {
 export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
 export function extractError(err: unknown): { code: string; message: string } {
-  if (axios.isAxiosError<ApiError>(err)) {
-    const data = err.response?.data;
-    if (data && !data.success) {
-      return { code: data.error.code, message: data.error.message };
+  // Always returns a safe shape; never throws.
+  try {
+    if (err && axios.isAxiosError<ApiError>(err)) {
+      const data = err.response?.data;
+      if (data && !data.success && data.error) {
+        return { code: data.error.code, message: data.error.message };
+      }
+      return { code: err.code ?? 'NETWORK_ERROR', message: err.message };
     }
-    return { code: err.code ?? 'NETWORK_ERROR', message: err.message };
+    if (err instanceof Error) return { code: 'UNEXPECTED', message: err.message };
+    if (typeof err === 'string') return { code: 'UNEXPECTED', message: err };
+  } catch {
+    // never let extractError throw — fall through to default.
   }
-  if (err instanceof Error) return { code: 'UNEXPECTED', message: err.message };
   return { code: 'UNEXPECTED', message: 'Unexpected error' };
 }

@@ -1,12 +1,12 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import Image from 'next/image';
 import Link from 'next/link';
 import { use } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SafeImage } from '@/components/ui/safe-image';
 import { apiClient, extractError } from '@/lib/api/client';
 import { qk } from '@/lib/api/query-keys';
 import { ReviewItem, type ReviewItemModel } from '@/components/business/review-item';
@@ -104,7 +104,7 @@ export default function PublicProfessionalPage({
       {/* Cover */}
       <div className="relative h-56 w-full overflow-hidden bg-gradient-to-br from-primary/20 via-primary/10 to-background">
         {professional.coverImage && (
-          <Image
+          <SafeImage
             src={professional.coverImage}
             alt={`${professional.displayName} cover`}
             fill
@@ -122,7 +122,7 @@ export default function PublicProfessionalPage({
               <CardContent className="pt-6 flex flex-col items-center text-center">
                 <div className="relative h-28 w-28 overflow-hidden rounded-full ring-4 ring-background shadow-md bg-muted">
                   {professional.avatar ? (
-                    <Image
+                    <SafeImage
                       src={professional.avatar}
                       alt={professional.displayName}
                       fill
