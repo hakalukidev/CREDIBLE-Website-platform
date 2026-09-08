@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Star } from 'lucide-react';
 import { VerifiedBadge } from '@/components/verification/verified-badge';
 import { StarRating } from '@/components/reviews/star-rating';
 import { Badge } from '@/components/ui/badge';
@@ -124,15 +124,7 @@ export function BusinessCard({
       href={`/business/${slug}`}
       onClick={onClick}
       aria-label={`View profile of ${name}`}
-      className={cn(
-        // Chrome geometry — 16px corners, hairline border, soft
-        // "card" shadow at rest, slightly deeper shadow on hover.
-        // The translateY lift that the previous design used was a
-        // Material/Yelp pattern; Chrome cards don't lift, they deepen.
-        'group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card text-card-foreground shadow-card transition-shadow duration-200 hover:shadow-pop focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-        onClick ? 'cursor-pointer' : '',
-        className,
-      )}
+      className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-border/70 transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
     >
       {/* Image container — 144px fixed height. Rounded only at the
           top so the card's rounded corners are preserved on the cover. */}
@@ -169,12 +161,12 @@ export function BusinessCard({
 
       {/* Content — slightly more padding than before (16→20px) for a
           roomier Chrome-feel rhythm. */}
-      <div className="flex flex-1 flex-col gap-2 p-5">
+      <div className="flex flex-1 flex-col gap-2 p-5 p-2">
         {/* Rating row — fixed height */}
         <div className="h-4">
           {ratingNum > 0 && (
             <div className="flex items-center gap-1.5">
-              <StarRating value={ratingNum} className="h-3.5 w-3.5" />
+              <Star className="h-3.5 w-3.5 text-yellow-400" />
               <span className="text-sm font-semibold">{ratingNum.toFixed(1)}</span>
               <span className="text-xs text-muted-foreground">({reviewCount})</span>
             </div>
@@ -233,7 +225,7 @@ export function BusinessCard({
         <span
           className={cn(
             buttonVariants({ variant: 'outline', size: 'sm' }),
-            'pointer-events-none w-full rounded-full',
+            'pointer-events-none w-full rounded-full mb-1 bg-blue-50 text-blue-700 group-hover:bg-blue-100 group-hover:text-blue-800',
           )}
         >
           View Profile

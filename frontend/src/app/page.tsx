@@ -237,8 +237,8 @@ export default function HomePage() {
         <div className="mt-8">
           <FeaturedBusinesses limit={FEATURED_LIMIT} />
         </div>
-        <div className="mt-8 sm:hidden text-center">
-          <Button asChild variant="outline">
+        <div className="mt-8 sm:hidden text-center rounded-lg">
+          <Button asChild variant="outline" className="rounded-full px-6 py-3 text-sm font-medium border-2">
             <Link href={'/browse' as never}>
               See all businesses
               <ArrowRight className="ml-1.5 h-4 w-4" />

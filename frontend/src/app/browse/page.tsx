@@ -47,8 +47,7 @@ export default async function BrowsePage({
       {jsonLdData && <JsonLd data={[jsonLdData]} />}
 
       <PageShell
-        className="py-10"
-        eyebrow="Directory"
+        className="py-4"
         title={title}
         subtitle="Filter by category, minimum rating, sort order, and verification status."
       >
