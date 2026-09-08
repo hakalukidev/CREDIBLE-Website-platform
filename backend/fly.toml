@@ -1,0 +1,69 @@
+# Fly.io config for the Credible API (Express + Prisma).
+# Deploy from backend/ with:   fly deploy
+#
+# Region note: SIN = Singapore. Change to your nearest region
+# (sin / hkg / nrt / etc.) for lower latency.
+#
+# Free-tier behaviour: machines auto-stop when idle and auto-start
+# on the next request. First request after sleep incurs a cold start
+# of roughly 3–10 seconds.
+
+app            = "credible-api"
+primary_region = "sin"
+kill_signal    = "SIGINT"
+kill_timeout   = "10s"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV   = "production"
+  PORT       = "4000"
+  API_PREFIX = "/api/v1"
+  LOG_LEVEL  = "info"
+
+# Single process for this app; the worker runs in a separate Fly app
+# (see fly.worker.toml).
+[processes]
+  api = "node dist/server.js"
+
+# ----------------------------------------------------------------
+# Public HTTP service.
+# ----------------------------------------------------------------
+[[services]]
+  protocol      = "tcp"
+  internal_port = 4000
+  processes     = ["api"]
+
+  # Free-tier autoscaling: stop when idle, wake on first request.
+  auto_stop_machines   = "stop"
+  auto_start_machines  = true
+  min_machines         = 0
+  max_machines         = 1
+
+  [[services.ports]]
+    port        = 80
+    handlers    = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port     = 443
+    handlers = ["tls", "http"]
+
+  # Liveness — Fly restarts the machine if this fails.
+  [[services.tcp_checks]]
+    interval     = "15s"
+    timeout      = "2s"
+    grace_period = "10s"
+
+  # Readiness — matches the Express health route.
+  [[services.http_checks]]
+    interval     = "30s"
+    timeout      = "5s"
+    grace_period = "30s"
+    path         = "/api/v1/health"
+    method       = "GET"
+
+# Run Prisma migrations before each new release is promoted.
+[release]
+  command = "npx prisma migrate deploy"

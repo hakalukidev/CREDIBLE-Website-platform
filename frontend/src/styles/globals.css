@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* HSL tokens — match the design palette from the brief.
+       `--background` is the whole-site surface color and is
+       applied via `bg-background` on <body>. Locked to #EEF6FF
+       (a soft light blue) so the site reads as one cohesive
+       light-blue canvas across every route. The hex/HSL pair
+       is kept in sync — if you change one, update the other. */
+    --background: 212 100% 97%;       /* #EEF6FF */
+    --foreground: 222 47% 11%;        /* #111827 */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --primary: 222 76% 48%;            /* #1A56DB Trust Blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 38 95% 50%;           /* #F59E0B Gold / Certified */
+    --secondary-foreground: 26 80% 14%;
+
+    --success: 160 84% 30%;            /* #059669 */
+    --success-foreground: 0 0% 100%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 222 76% 48%;
+
+    /* Chrome geometry — 16px corner radius is the signature Google
+       curve used across surfaces like the Play Store, reviews, and
+       Material 3 expressive containers. Sub-cards step down to 12px
+       via the `rounded-xl` Tailwind utility. */
+    --radius: 1rem;
+  }
+
+  .dark {
+    /* The site is locked to the light theme (see app/layout.tsx —
+       boot script removes the `dark` class before first paint).
+       The `.dark` token block is kept here only so a future opt-in
+       dark mode has tokens to inherit. The background intentionally
+       mirrors the light value so a stray `dark` class — from a
+       browser extension, stale localStorage value, or hot-reload —
+       can never paint the page a different color. */
+    --background: 212 100% 97%;       /* #EEF6FF — mirror of :root */
+    --foreground: 222 47% 11%;        /* #111827 */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 38 95% 50%;
+    --secondary-foreground: 26 80% 14%;
+    --success: 160 84% 40%;
+    --success-foreground: 0 0% 100%;
+    --muted: 217 33% 12%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 12%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 73% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
+    --ring: 217 91% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+}
+
+@layer utilities {
+  .container-narrow {
+    @apply mx-auto w-full max-w-3xl px-4 sm:px-6;
+  }
+  .container-wide {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: hsl(var(--muted));
+  }
+  .skeleton-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--background) / 0.6),
+      transparent
+    );
+    animation: shimmer 1.6s infinite;
+  }
+}
+
+/* Respect the user's OS-level reduced-motion preference. We don't
+   disable the animations entirely (the design tokens still flow), we
+   just clamp every transition/animation to ~0ms so the layout stays
+   consistent without the motion. Accessibility-first, no flashing. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print stylesheet — used by the legal pages (/terms, /privacy) and
+   /guidelines so a Ctrl+P export to PDF shows only the document. The
+   `print:hidden` Tailwind variant is what hides page chrome. */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  header,
+  footer,
+  nav,
+  aside[aria-label='Table of contents'],
+  .no-print {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    min-height: 0 !important;
+  }
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+}

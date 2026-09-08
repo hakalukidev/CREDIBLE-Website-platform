@@ -1,0 +1,32 @@
+# Build artifacts
+node_modules
+dist
+*.tsbuildinfo
+
+# Tests & dev fixtures
+coverage
+*.log
+.nyc_output
+
+# Git & IDE
+.git
+.gitignore
+.github
+.vscode
+.idea
+
+# Secrets & local config — NEVER bake into images
+.env
+.env.*
+!.env.example
+
+# Other deployment configs (keep only Dockerfile in the build context)
+render.yaml
+fly.toml
+fly.worker.toml
+Dockerfile
+.dockerignore
+
+# Docs
+README.md
+FLY_DEPLOY.md
