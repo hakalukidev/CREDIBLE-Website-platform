@@ -46,13 +46,16 @@ function AuthModalMount() {
   const session = useSession((s) => s.session);
   const pathname = usePathname();
 
-  // When the user navigates to /login or /register directly, treat it
-  // as an intent to open the modal — the route becomes a thin
-  // shareable URL that resolves into the same overlay.
+  // When the user lands on /login or /register directly, treat it as an
+  // intent to open the modal — the route becomes a thin shareable URL
+  // that resolves into the same overlay. Any other route (e.g. clicking
+  // "Forgot password?" while the modal is open) closes the modal so the
+  // navigation isn't covered by a lingering overlay.
   useEffect(() => {
     if (pathname === '/login') openAuth('signin');
     else if (pathname === '/register') openAuth('signup');
-  }, [pathname, openAuth]);
+    else closeAuth();
+  }, [pathname, openAuth, closeAuth]);
 
   // Auto-dismiss the modal the moment a session lands — covers email
   // sign-in, signup, and OAuth round-trips. `closeAuth` is a no-op

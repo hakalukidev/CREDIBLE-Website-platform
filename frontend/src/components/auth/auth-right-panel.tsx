@@ -11,11 +11,11 @@ type Mode = 'signin' | 'signup';
 const COPY: Record<Mode, { title: string; subtitle: string }> = {
   signin: {
     title: 'Welcome back',
-    subtitle: 'Sign in to continue to Credible.',
+    subtitle: 'Sign in to continue.',
   },
   signup: {
     title: 'Create your account',
-    subtitle: 'Join the trust layer for businesses in Bangladesh.',
+    subtitle: 'Join Credible in seconds.',
   },
 };
 
@@ -35,11 +35,11 @@ export function AuthRightPanel({ initialMode = 'signin' }: AuthRightPanelProps =
   const copy = COPY[mode];
 
   return (
-    <div className="flex h-full flex-col p-6 sm:p-8">
+    <div className="flex flex-col px-6 py-8 sm:px-10 sm:py-10">
       <div className="flex-1">
         <MotionFadeUp key={mode}>
           <header className="space-y-1.5">
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[26px]">
+            <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
               {copy.title}
             </h1>
             <p className="text-sm text-muted-foreground">{copy.subtitle}</p>
@@ -57,7 +57,7 @@ export function AuthRightPanel({ initialMode = 'signin' }: AuthRightPanelProps =
               {mode === 'signin' ? (
                 <LoginForm bare variant="shell" onPendingChange={setSubmitting} />
               ) : (
-                <RegisterForm bare variant="shell" onPendingChange={setSubmitting} />
+                <RegisterForm variant="shell" onPendingChange={setSubmitting} />
               )}
             </div>
           </Suspense>

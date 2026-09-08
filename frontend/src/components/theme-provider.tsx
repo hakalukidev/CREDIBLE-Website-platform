@@ -19,14 +19,20 @@
  * emits the static HTML as-is for a server component `<script>`, and the
  * React runtime never sees the JSX.
  *
- * The site is locked to the **light** theme. This provider still keeps the
- * stored preference in localStorage so a future toggle can re-honor it, but
- * `applyClass()` always resolves to `light` and never toggles the `dark`
- * class onto <html>. Dark-mode tokens are kept in `globals.css` for any
- * future opt-in but are not active today.
+ * Theme resolution: light | dark | system. The pre-paint boot script in
+ * `layout.tsx` reads the stored preference (defaulting to the OS level),
+ * applies the matching class, and this provider keeps the two in sync on
+ * subsequent `setTheme()` calls and OS preference changes.
  */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { ReactNode } from 'react';
 
 export type Theme = 'light' | 'dark' | 'system';
@@ -41,6 +47,13 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 const STORAGE_KEY = 'theme';
 
+function systemPrefersDark(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia?.(`(prefers-color-scheme: dark)`).matches === true
+  );
+}
+
 function readStoredTheme(): Theme {
   if (typeof window === 'undefined') return 'system';
   try {
@@ -52,31 +65,40 @@ function readStoredTheme(): Theme {
   return 'system';
 }
 
+function resolve(theme: Theme): 'light' | 'dark' {
+  if (theme === 'system') return systemPrefersDark() ? 'dark' : 'light';
+  return theme === 'dark' ? 'dark' : 'light';
+}
+
 function applyClass(theme: Theme): 'light' | 'dark' {
   if (typeof document === 'undefined') return 'light';
   const root = document.documentElement;
-  // The site is locked to the light theme. Even if the user has set their
-  // OS to dark or explicitly selected "dark" in the past, we resolve to
-  // light so the page never flips to a dark surface. We still clear the
-  // `dark` class so any future toggle can re-engage it cleanly.
-  const resolved: 'light' | 'dark' = 'light';
-  root.classList.toggle('dark', false);
-  // Keep colorScheme in sync with the resolved value so form controls,
-  // scrollbars, and the browser UI match the rendered surface.
+  const resolved = resolve(theme);
+  root.classList.toggle('dark', resolved === 'dark');
   root.style.colorScheme = resolved;
   return resolved;
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Always start as 'light' on the server so SSR and client agree; the
-  // actual stored value is read in the effect below.
-  const [theme, setThemeState] = useState<Theme>('light');
+  const [theme, setThemeState] = useState<Theme>('system');
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
     const stored = readStoredTheme();
     setThemeState(stored);
     setResolvedTheme(applyClass(stored));
+
+    // Follow OS preference changes when the user is on `system`.
+    const mq = window.matchMedia(`(prefers-color-scheme: dark)`);
+    const onChange = () => {
+      setThemeState((current) => {
+        if (current !== 'system') return current;
+        setResolvedTheme(applyClass('system'));
+        return current;
+      });
+    };
+    mq.addEventListener?.('change', onChange);
+    return () => mq.removeEventListener?.('change', onChange);
   }, []);
 
   const setTheme = useCallback((next: Theme) => {

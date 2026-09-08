@@ -183,25 +183,27 @@ function FilterPill({
 
 function PostCard({ post }: { post: BlogPost }) {
   return (
-    <Card className="flex flex-col overflow-hidden p-0 shadow-card transition-shadow hover:shadow-pop">
+    <Card className="group flex h-full flex-col overflow-hidden p-0 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-pop">
       <div
-        className="mb-0 flex h-32 items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 text-5xl"
+        className="mb-0 flex h-32 items-center justify-center bg-gradient-to-br from-brand-500/15 via-primary/10 to-secondary/10 text-5xl transition-transform duration-500 group-hover:scale-[1.03]"
         aria-hidden
       >
         {post.coverEmoji}
       </div>
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-2 flex items-center gap-2">
-          <Badge variant="secondary">{post.category}</Badge>
+          <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">
+            {post.category}
+          </Badge>
           <span className="text-xs text-muted-foreground">{post.readTime}</span>
         </div>
-        <h2 className="font-semibold leading-snug">
-          <Link href={`/blog/${post.slug}`} className="hover:underline">
+        <h2 className="font-display font-semibold leading-snug">
+          <Link href={`/blog/${post.slug}`} className="transition-colors hover:text-primary">
             {post.title}
           </Link>
         </h2>
-        <p className="mt-2 text-sm text-muted-foreground flex-1">{post.excerpt}</p>
-        <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+        <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{post.excerpt}</p>
+        <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs text-muted-foreground">
           <time dateTime={post.date}>
             {new Date(post.date).toLocaleDateString('en-BD', {
               year: 'numeric',

@@ -141,8 +141,8 @@ export default function PrivacyPage() {
             <div className="space-y-8">
               <div className="max-w-3xl space-y-8">
                 {SECTIONS.map((s) => (
-                  <div key={s.id} id={s.id} className="scroll-mt-24">
-                    <h2 className="text-lg font-semibold">{s.heading}</h2>
+                  <div key={s.id} id={s.id} className="scroll-mt-24 border-l-2 border-border pl-5 hover:border-primary/40">
+                    <h2 className="font-display text-lg font-semibold">{s.heading}</h2>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
                   </div>
                 ))}

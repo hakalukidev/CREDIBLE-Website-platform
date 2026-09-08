@@ -4,82 +4,59 @@ import { ShieldCheck, BadgeCheck, MessageSquareQuote } from 'lucide-react';
 import { BrandMark } from './brand-mark';
 
 /**
- * Left side of the two-column auth modal. Stays consistent across sign-in
- * and sign-up so the marketing story doesn't change when the user toggles
- * modes — only the right-side form does.
- *
- * Layout uses a soft accent surface that matches the site's blue tint
- * (`bg-primary/5` over the white card) so the modal reads as a single
- * composition rather than two unrelated boxes.
+ * Left side of the two-column auth modal — the silent brand storyteller.
+ * Decorative only (`hidden` below `lg`): a soft accent surface with a
+ * short headline and compact trust chips so the marketing message stays
+ * tight and the form remains the focal point.
  */
 export function AuthLeftPanel() {
   return (
-    <div className="relative hidden h-full overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-background lg:flex lg:flex-col lg:justify-between lg:p-10">
-      {/* Decorative pattern — soft dotted grid in the bottom-right corner,
-          reads as a subtle texture rather than a marketing illustration.
-          Pure CSS so there's no extra asset to load. */}
+    <div className="relative hidden w-[42%] shrink-0 flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-600/10 via-primary/5 to-background px-8 py-10 lg:flex">
+      {/* Decorative dotted grid in the right edge */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_1px_1px,theme(colors.primary/15)_1px,transparent_0)] [background-size:18px_18px] opacity-60 [mask-image:linear-gradient(to_left,black,transparent)]"
+        className="pointer-events-none absolute inset-y-0 right-0 w-3/5 bg-[radial-gradient(circle_at_1px_1px,theme(colors.primary/15)_1px,transparent_0)] opacity-50 [background-size:18px_18px] [mask-image:linear-gradient(to_left,black,transparent)]"
+      />
+      {/* Ambient glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-20 -left-16 h-64 w-64 rounded-full bg-gradient-to-tr from-brand-500/20 to-transparent blur-3xl"
       />
 
       <div className="relative">
         <BrandMark brand="Credible" tagline="Verified reviews" />
       </div>
 
-      <div className="relative space-y-8">
-        <div>
-          <h2 className="text-3xl font-semibold leading-tight tracking-tight text-foreground">
-            Trust before you decide.
-          </h2>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
-            Discover credible businesses, professionals, and real customer
-            experiences — verified by humans, not algorithms.
-          </p>
-        </div>
-
-        <ul className="space-y-3">
-          <TrustPoint
-            icon={<ShieldCheck className="h-3.5 w-3.5" />}
-            title="Verified businesses"
-            body="Every badge is awarded after document review."
-          />
-          <TrustPoint
-            icon={<BadgeCheck className="h-3.5 w-3.5" />}
-            title="Human-reviewed trust signals"
-            body="No bots. No automated approvals."
-          />
-          <TrustPoint
-            icon={<MessageSquareQuote className="h-3.5 w-3.5" />}
-            title="Real customer reviews"
-            body="OTP-confirmed submissions, one per person."
-          />
+      <div className="relative">
+        <h2 className="font-display text-[32px] font-semibold leading-tight tracking-tight text-foreground">
+          Trust before you decide.
+        </h2>
+        <ul className="mt-6 space-y-2.5">
+          <TrustChip icon={<ShieldCheck className="h-3.5 w-3.5" />} label="Verified businesses only" />
+          <TrustChip icon={<BadgeCheck className="h-3.5 w-3.5" />} label="Humans review every badge" />
+          <TrustChip icon={<MessageSquareQuote className="h-3.5 w-3.5" />} label="OTP-confirmed reviews" />
         </ul>
       </div>
 
       <p className="relative text-xs text-muted-foreground">
-        Bangladesh&apos;s trust layer for businesses and professionals.
+        User&apos;s trust layer for businesses and professionals.
       </p>
     </div>
   );
 }
 
-interface TrustPointProps {
+interface TrustChipProps {
   icon: React.ReactNode;
-  title: string;
-  body: string;
+  label: string;
 }
 
-function TrustPoint({ icon, title, body }: TrustPointProps) {
+function TrustChip({ icon, label }: TrustChipProps) {
   return (
-    <li className="flex items-start gap-3">
-      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+    <li className="flex w-fit items-center gap-2 rounded-full border border-border/60 bg-background/50 py-1.5 pl-2 pr-3.5 text-xs font-medium text-foreground/90 shadow-sm backdrop-blur">
+      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-primary text-primary-foreground">
         {icon}
       </span>
-      <div className="text-sm leading-relaxed">
-        <span className="font-medium text-foreground">{title}.</span>{' '}
-        <span className="text-muted-foreground">{body}</span>
-      </div>
+      {label}
     </li>
   );
 }

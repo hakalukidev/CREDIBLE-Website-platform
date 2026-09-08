@@ -4,83 +4,158 @@
 
 @layer base {
   :root {
-    /* HSL tokens — match the design palette from the brief.
-       `--background` is the whole-site surface color and is
-       applied via `bg-background` on <body>. Locked to #EEF6FF
-       (a soft light blue) so the site reads as one cohesive
-       light-blue canvas across every route. The hex/HSL pair
-       is kept in sync — if you change one, update the other. */
-    --background: 212 100% 97%;       /* #EEF6FF */
-    --foreground: 222 47% 11%;        /* #111827 */
+    /* ============================================================
+       Design system — "Credible" premium trust aesthetic
+       Palette: deep ink neutrals + indigo/blue primary + gold accent
+       ============================================================ */
+
+    /* Background — deep, calm ink with a cool blue undertone. */
+    --background: 222 30% 98%;
+    --foreground: 224 26% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 224 26% 9%;
 
-    --primary: 222 76% 48%;            /* #1A56DB Trust Blue */
+    /* Primary — rich indigo-blue (trust) */
+    --primary: 239 84% 54%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 38 95% 50%;           /* #F59E0B Gold / Certified */
-    --secondary-foreground: 26 80% 14%;
+    /* Secondary — warm amber/gold (Certified) */
+    --secondary: 38 92% 50%;
+    --secondary-foreground: 27 80% 12%;
 
-    --success: 160 84% 30%;            /* #059669 */
+    --success: 157 68% 32%;
     --success-foreground: 0 0% 100%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 27 80% 12%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 222 47% 11%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --muted: 220 18% 96%;
+    --muted-foreground: 220 10% 44%;
+
+    --accent: 234 60% 97%;
+    --accent-foreground: 235 60% 28%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 222 76% 48%;
+    --border: 224 16% 90%;
+    --input: 224 16% 88%;
+    --ring: 239 84% 54%;
 
-    /* Chrome geometry — 16px corner radius is the signature Google
-       curve used across surfaces like the Play Store, reviews, and
-       Material 3 expressive containers. Sub-cards step down to 12px
-       via the `rounded-xl` Tailwind utility. */
-    --radius: 1rem;
+    /* Brand scale */
+    --brand-50: 235 100% 97%;
+    --brand-100: 236 94% 93%;
+    --brand-200: 235 89% 86%;
+    --brand-300: 235 84% 75%;
+    --brand-400: 236 82% 63%;
+    --brand-500: 238 81% 52%;
+    --brand-600: 239 84% 44%;
+    --brand-700: 241 77% 36%;
+    --brand-800: 241 65% 30%;
+    --brand-900: 242 59% 26%;
+    --brand-950: 243 64% 17%;
+
+    --radius: 0.85rem;
+    --radius-2xl: 1.25rem;
+    --radius-4xl: 2rem;
   }
 
   .dark {
-    /* The site is locked to the light theme (see app/layout.tsx —
-       boot script removes the `dark` class before first paint).
-       The `.dark` token block is kept here only so a future opt-in
-       dark mode has tokens to inherit. The background intentionally
-       mirrors the light value so a stray `dark` class — from a
-       browser extension, stale localStorage value, or hot-reload —
-       can never paint the page a different color. */
-    --background: 212 100% 97%;       /* #EEF6FF — mirror of :root */
-    --foreground: 222 47% 11%;        /* #111827 */
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 38 95% 50%;
-    --secondary-foreground: 26 80% 14%;
-    --success: 160 84% 40%;
+    /* Dark mode — deep ink canvas, subtle elevation via lightness. */
+    --background: 224 30% 7%;
+    --foreground: 220 26% 96%;
+
+    --card: 224 28% 10%;
+    --card-foreground: 220 26% 96%;
+
+    --primary: 236 84% 64%;
+    --primary-foreground: 236 60% 12%;
+
+    --secondary: 38 92% 54%;
+    --secondary-foreground: 27 80% 10%;
+
+    --success: 157 68% 44%;
     --success-foreground: 0 0% 100%;
-    --muted: 217 33% 12%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 12%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 73% 60%;
+
+    --warning: 38 92% 54%;
+    --warning-foreground: 27 80% 10%;
+
+    --info: 217 91% 64%;
+    --info-foreground: 0 0% 100%;
+
+    --muted: 224 26% 15%;
+    --muted-foreground: 220 12% 62%;
+
+    --accent: 235 45% 20%;
+    --accent-foreground: 220 26% 96%;
+
+    --destructive: 0 72% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 217 33% 18%;
-    --input: 217 33% 18%;
-    --ring: 217 91% 60%;
+
+    --border: 224 26% 18%;
+    --input: 224 26% 20%;
+    --ring: 236 84% 64%;
+
+    --brand-50: 243 65% 20%;
+    --brand-100: 242 60% 26%;
+    --brand-200: 241 59% 32%;
+    --brand-300: 239 60% 40%;
+    --brand-400: 238 66% 50%;
+    --brand-500: 237 75% 56%;
+    --brand-600: 236 84% 64%;
+    --brand-700: 234 90% 70%;
+    --brand-800: 233 100% 78%;
+    --brand-900: 233 100% 88%;
+    --brand-950: 234 100% 95%;
   }
 
   * {
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: hsl(var(--primary) / 0.16);
+    color: hsl(var(--foreground));
+  }
+
+  /* Custom scrollbar — premium, subtle */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--foreground) / 0.14);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--foreground) / 0.24);
+    background-clip: content-box;
+    border: 2px solid transparent;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--foreground) / 0.16) transparent;
   }
 }
 
@@ -91,6 +166,7 @@
   .container-wide {
     @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
   }
+
   .skeleton-shimmer {
     position: relative;
     overflow: hidden;
@@ -109,12 +185,46 @@
     );
     animation: shimmer 1.6s infinite;
   }
+
+  .text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .noise-overlay {
+    position: relative;
+  }
+  .noise-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, hsl(var(--foreground) / 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .bg-gradient-hero {
+    background-image:
+      radial-gradient(38% 42% at 78% 12%, hsl(239 84% 54% / 0.16) 0%, transparent 70%),
+      radial-gradient(30% 34% at 12% 18%, hsl(38 92% 50% / 0.10) 0%, transparent 70%),
+      radial-gradient(45% 50% at 50% 110%, hsl(236 84% 64% / 0.10) 0%, transparent 80%);
+  }
+
+  .anim-gradient {
+    background-size: 200% 200%;
+  }
 }
 
-/* Respect the user's OS-level reduced-motion preference. We don't
-   disable the animations entirely (the design tokens still flow), we
-   just clamp every transition/animation to ~0ms so the layout stays
-   consistent without the motion. Accessibility-first, no flashing. */
+/* Respect the user's OS-level reduced-motion preference. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -126,9 +236,7 @@
   }
 }
 
-/* Print stylesheet — used by the legal pages (/terms, /privacy) and
-   /guidelines so a Ctrl+P export to PDF shows only the document. The
-   `print:hidden` Tailwind variant is what hides page chrome. */
+/* Print stylesheet — used by legal pages. */
 @media print {
   body {
     background: white !important;

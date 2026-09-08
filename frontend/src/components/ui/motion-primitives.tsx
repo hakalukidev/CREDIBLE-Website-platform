@@ -21,8 +21,12 @@ import {
   fadeUp,
   staggerContainer,
   tabCrossfade,
+  sectionReveal,
+  cardReveal,
+  cardStagger,
   duration,
   easeOut,
+  viewportOnce,
 } from '@/lib/animations';
 
 interface MotionFadeUpProps extends HTMLMotionProps<'div'> {
@@ -102,6 +106,71 @@ export function MotionTabContent({
       animate="visible"
       exit="exit"
       transition={{ duration: duration.fast, ease: easeOut }}
+      {...rest}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/**
+ * Scroll-triggered section reveal. Fades + slides up when the element
+ * scrolls into view (once). Wrap whole marketing sections with this so
+ * the page feels alive but still respects reduced motion.
+ */
+export function MotionSection({
+  children,
+  ...rest
+}: HTMLMotionProps<'div'>) {
+  return (
+    <motion.div
+      variants={sectionReveal}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.15 }}
+      {...rest}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/**
+ * Scroll-triggered card reveal — a single card fades + scales in.
+ * Pair with `<MotionCardStagger>` for orchestrated grids.
+ */
+export function MotionCardReveal({
+  children,
+  ...rest
+}: HTMLMotionProps<'div'>) {
+  return (
+    <motion.div
+      variants={cardReveal}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ ...viewportOnce, margin: '0px 0px -60px 0px' }}
+      {...rest}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/**
+ * Scroll-triggered staggered grid. Wrap the grid, then render each card
+ * inside a `motion.div` using the `cardReveal` variant (or use
+ * `<MotionCardReveal>` which already wires `whileInView` per item).
+ */
+export function MotionCardStagger({
+  children,
+  ...rest
+}: HTMLMotionProps<'div'>) {
+  return (
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ ...viewportOnce, margin: '0px 0px -60px 0px' }}
+      variants={cardStagger}
       {...rest}
     >
       {children}

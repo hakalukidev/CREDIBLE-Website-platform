@@ -199,7 +199,7 @@ export default function GuidelinesPage() {
               </section>
 
               <section id="dos-donts" className="scroll-mt-24">
-                <h2 className="text-2xl font-bold tracking-tight">Do&apos;s and don&apos;ts</h2>
+                <h2 className="text-2xl font-bold tracking-tight font-display">Do&apos;s and don&apos;ts</h2>
                 <p className="mt-2 max-w-prose text-sm text-muted-foreground">
                   A quick reference. The detailed rules below cover the same ground with more nuance.
                 </p>
@@ -242,7 +242,7 @@ export default function GuidelinesPage() {
               </section>
 
           <section id="reporting" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold tracking-tight">Reporting a violation</h2>
+            <h2 className="text-2xl font-bold tracking-tight font-display">Reporting a violation</h2>
             <p className="mt-2 max-w-prose text-sm text-muted-foreground">
               Reports are how we keep the platform healthy. Here&apos;s the flow from spotting
               something wrong to resolution.
@@ -277,7 +277,7 @@ export default function GuidelinesPage() {
           </section>
 
           <section id="rules" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold tracking-tight">Detailed rules</h2>
+            <h2 className="text-2xl font-bold tracking-tight font-display">Detailed rules</h2>
             <div className="mt-6 space-y-8">
               {RULES.map((section) => (
                 <div key={section.heading} id={section.id} className="scroll-mt-24">
@@ -293,7 +293,7 @@ export default function GuidelinesPage() {
           </section>
 
           <section id="enforcement" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold tracking-tight">Enforcement ladder</h2>
+            <h2 className="text-2xl font-bold tracking-tight font-display">Enforcement ladder</h2>
             <p className="mt-2 max-w-prose text-sm text-muted-foreground">
               Most violations are minor and resolved with a warning. Serious or repeated
               violations escalate.
@@ -323,7 +323,7 @@ export default function GuidelinesPage() {
           </section>
 
           <section id="transparency" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold tracking-tight">Transparency</h2>
+            <h2 className="text-2xl font-bold tracking-tight font-display">Transparency</h2>
             <p className="mt-2 max-w-prose text-sm text-muted-foreground">
               We publish a regular transparency report with moderation volumes and response times.
             </p>
@@ -333,7 +333,7 @@ export default function GuidelinesPage() {
           </section>
 
           <section id="appeals" className="scroll-mt-24">
-            <h2 className="text-2xl font-bold tracking-tight">Appeals</h2>
+            <h2 className="text-2xl font-bold tracking-tight font-display">Appeals</h2>
             <p className="mt-3 max-w-prose text-sm text-muted-foreground">
               If you believe an enforcement decision was made in error, you may appeal within 30
               days. Appeals are reviewed by a moderator who was not involved in the original

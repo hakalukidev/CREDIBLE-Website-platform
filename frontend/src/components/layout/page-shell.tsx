@@ -41,24 +41,26 @@ export function PageShell({
   return (
     <section className={cn('container-wide', className)}>
       {eyebrow && (
-        <p className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
           {eyebrow}
         </p>
       )}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 flex-1">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-display">
+          <h1 className="font-display text-display-sm font-semibold tracking-tight text-foreground">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-3 max-w-prose text-base text-muted-foreground">{subtitle}</p>
+            <p className="mt-3 max-w-prose text-base leading-relaxed text-muted-foreground">
+              {subtitle}
+            </p>
           )}
         </div>
         {headerAction && <div className="shrink-0">{headerAction}</div>}
       </div>
 
-      <div className={cn('mt-8', innerWidthClass)}>{children}</div>
+      <div className={cn('mt-10', innerWidthClass)}>{children}</div>
     </section>
   );
 }

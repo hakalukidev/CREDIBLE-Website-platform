@@ -23,12 +23,12 @@ export function BrandMark({
 }: BrandMarkProps) {
   return (
     <div className="flex items-center gap-3">
-      <span className="relative block h-10 w-10 overflow-hidden rounded-lg ring-1 ring-black/5 shadow-sm">
+      <span className="relative block h-10 w-10 overflow-hidden rounded-2xl ring-1 ring-black/5 shadow-sm">
         <SafeImage src={logoSrc} alt={logoAlt} fill sizes="40px" priority />
       </span>
       <div className="flex flex-col leading-tight">
-        <span className="text-xl font-bold tracking-tight">{brand}</span>
-        <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#5F6368]">
+        <span className="font-display text-xl font-bold tracking-tight">{brand}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
           {tagline}
         </span>
       </div>

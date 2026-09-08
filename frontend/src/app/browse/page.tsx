@@ -64,16 +64,16 @@ export default async function BrowsePage({
 function BrowseSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-border/70 bg-card p-5">
-        <Skeleton className="h-11 w-full rounded-md" />
-        <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
+      <div className="rounded-3xl border border-border/70 bg-card/60 p-5 shadow-card backdrop-blur-sm">
+        <Skeleton className="h-11 w-full rounded-xl" />
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-border/60 pt-4">
           <Skeleton className="h-9 w-32 rounded-full" />
           <Skeleton className="h-9 w-32 rounded-full" />
           <Skeleton className="h-9 w-32 rounded-full" />
           <Skeleton className="ml-auto h-9 w-64 rounded-full" />
         </div>
       </div>
-      <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-[360px] rounded-2xl" />
         ))}

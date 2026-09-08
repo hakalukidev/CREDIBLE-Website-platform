@@ -5,13 +5,8 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      // Chrome geometry — 16px corner, hairline border, soft "card"
-      // shadow. The 70% alpha on the border is what makes the hairline
-      // read as a *guide* rather than a hard edge. The shadow is a
-      // 1px + 3px layered pair so cards float on the #EEF6FF surface
-      // without competing with content.
       className={cn(
-        'rounded-2xl border border-border/70 bg-card text-card-foreground shadow-card',
+        'rounded-2xl border border-border/70 bg-card/90 text-card-foreground shadow-card backdrop-blur-sm transition-all duration-300',
         className,
       )}
       {...props}
@@ -29,7 +24,14 @@ CardHeader.displayName = 'CardHeader';
 
 const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('font-semibold leading-none tracking-tight', className)} {...props} />
+    <div
+      ref={ref}
+      className={cn(
+        'font-display font-semibold leading-none tracking-tight text-foreground',
+        className,
+      )}
+      {...props}
+    />
   ),
 );
 CardTitle.displayName = 'CardTitle';

@@ -2,17 +2,9 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 /**
- * Chrome-style section heading — used as the header for repeating page
- * sections (How it works, Featured, Value props, etc.) where the brief
- * asks for a small label + title + subtitle + optional action.
- *
- * Composition rules:
- *  - Title is rendered as `<h2>` so the document hierarchy stays
- *    correct (one `<h1>` per page from PageShell, then `<h2>` for
- *    sections).
- *  - On `center` alignment the eyebrow + title + subtitle stack
- *    centered. On `left` (default) they stack left-aligned with the
- *    action pinned to the right edge on `sm+`.
+ * Premium section heading — small gradient eyebrow + display title +
+ * subtitle, with an optional right-aligned action. Used as the header
+ * for repeating page sections.
  */
 interface SectionHeadingProps {
   eyebrow?: React.ReactNode;
@@ -41,22 +33,22 @@ export function SectionHeading({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between',
-        isCenter && 'sm:flex-col sm:items-center sm:gap-2 sm:text-center',
+        'flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between',
+        isCenter && 'sm:flex-col sm:items-center sm:gap-3 sm:text-center',
         className,
       )}
     >
       <div className={cn('min-w-0 flex-1', isCenter && 'mx-auto max-w-2xl')}>
         {eyebrow && (
-          <p className="mb-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          <p className="mb-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             {eyebrow}
           </p>
         )}
-        <Tag className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+        <Tag className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           {title}
         </Tag>
         {subtitle && (
-          <p className="mt-2 max-w-prose text-sm text-muted-foreground sm:text-base">
+          <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground sm:text-base">
             {subtitle}
           </p>
         )}

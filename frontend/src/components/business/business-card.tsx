@@ -6,7 +6,6 @@ import { MapPin, Star } from 'lucide-react';
 import { VerifiedBadge } from '@/components/verification/verified-badge';
 import { StarRating } from '@/components/reviews/star-rating';
 import { Badge } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SafeImage } from '@/components/ui/safe-image';
 import { cn } from '@/lib/utils';
@@ -124,7 +123,7 @@ export function BusinessCard({
       href={`/business/${slug}`}
       onClick={onClick}
       aria-label={`View profile of ${name}`}
-      className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-border/70 transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/90 text-card-foreground shadow-card backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-pop focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
     >
       {/* Image container — 144px fixed height. Rounded only at the
           top so the card's rounded corners are preserved on the cover. */}
@@ -135,7 +134,7 @@ export function BusinessCard({
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
             onError={() => setImgError(true)}
             priority={false}
           />
@@ -145,13 +144,13 @@ export function BusinessCard({
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
             onError={() => setLogoError(true)}
             priority={false}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 transition-transform duration-300 group-hover:scale-105">
-            <span className="text-4xl font-bold text-primary/60">{initial}</span>
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-500/15 via-primary/10 to-secondary/10 transition-transform duration-500 group-hover:scale-105">
+            <span className="font-display text-4xl font-bold text-primary/50">{initial}</span>
           </div>
         )}
 
@@ -159,14 +158,13 @@ export function BusinessCard({
         <VerificationOverlay level={badgeType} />
       </div>
 
-      {/* Content — slightly more padding than before (16→20px) for a
-          roomier Chrome-feel rhythm. */}
-      <div className="flex flex-1 flex-col gap-2 p-5 p-2">
+      {/* Content */}
+      <div className="flex flex-1 flex-col gap-2 p-5">
         {/* Rating row — fixed height */}
         <div className="h-4">
           {ratingNum > 0 && (
             <div className="flex items-center gap-1.5">
-              <Star className="h-3.5 w-3.5 text-yellow-400" />
+              <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
               <span className="text-sm font-semibold">{ratingNum.toFixed(1)}</span>
               <span className="text-xs text-muted-foreground">({reviewCount})</span>
             </div>
@@ -174,7 +172,7 @@ export function BusinessCard({
         </div>
 
         {/* Business name — truncate to 1 line */}
-        <h3 className="truncate text-base font-semibold leading-tight">{name}</h3>
+        <h3 className="truncate font-display text-base font-semibold leading-tight">{name}</h3>
 
         {/* Tagline (preferred) or description — always reserve 2 lines for consistency */}
         <div className="min-h-[2.5rem]">
@@ -224,8 +222,8 @@ export function BusinessCard({
       <div className="px-5 pb-5">
         <span
           className={cn(
-            buttonVariants({ variant: 'outline', size: 'sm' }),
-            'pointer-events-none w-full rounded-full mb-1 bg-blue-50 text-blue-700 group-hover:bg-blue-100 group-hover:text-blue-800',
+            'pointer-events-none flex h-9 w-full items-center justify-center rounded-full text-sm font-medium shadow-sm transition-all duration-300',
+            'border border-border/80 bg-background/60 text-foreground group-hover:border-transparent group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-primary/30 group-hover:shadow-md',
           )}
         >
           View Profile

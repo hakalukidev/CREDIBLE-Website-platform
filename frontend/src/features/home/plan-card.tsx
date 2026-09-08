@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -60,11 +60,30 @@ export function PlanCard({ plan, isHighlighted, ctaHref, features }: Props) {
   const { display, suffix } = formatPrice(plan);
 
   return (
-    <Card className={isHighlighted ? 'border-primary shadow-md' : ''}>
-      <CardContent className="pt-6">
-        {isHighlighted && <Badge className="mb-2">Most popular</Badge>}
-        <p className="text-lg font-semibold">{plan.name}</p>
-        <p className="mt-2 text-3xl font-bold">
+    <Card
+      className={
+        isHighlighted
+          ? 'relative h-full overflow-hidden border-primary/40 p-0 shadow-pop transition-all duration-300 hover:-translate-y-1 hover:shadow-glow'
+          : 'relative h-full p-0 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-pop'
+      }
+    >
+      {isHighlighted && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent"
+        />
+      )}
+      <CardContent className="h-full p-6 pt-6">
+        <div className="flex items-center justify-between">
+          <p className="font-display text-lg font-semibold">{plan.name}</p>
+          {isHighlighted && (
+            <Badge className="gap-1 bg-gradient-to-r from-secondary to-secondary/90 shadow-sm shadow-secondary/30">
+              <Sparkles className="h-3 w-3" aria-hidden />
+              Most popular
+            </Badge>
+          )}
+        </div>
+        <p className="mt-3 font-display text-3xl font-bold tracking-tight">
           {display}
           {suffix && (
             <span className="text-sm font-normal text-muted-foreground">{suffix}</span>
@@ -73,17 +92,20 @@ export function PlanCard({ plan, isHighlighted, ctaHref, features }: Props) {
         {plan.description && (
           <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
         )}
-        <ul className="mt-4 space-y-2 text-sm">
+        <ul className="mt-5 space-y-2.5 text-sm">
           {features
             .filter((f) => f.always || (f.when && f.when(plan)))
             .map((f) => (
               <li key={f.label} className="flex items-start gap-2">
-                <ShieldCheck className="mt-0.5 h-4 w-4 text-success" /> {f.label}
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
+                  <ShieldCheck className="h-3 w-3" aria-hidden />
+                </span>
+                {f.label}
               </li>
             ))}
         </ul>
         <Button
-          className="mt-5 w-full"
+          className="mt-6 w-full font-semibold"
           variant={isHighlighted ? 'default' : 'outline'}
           asChild
         >

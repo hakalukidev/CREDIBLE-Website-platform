@@ -37,20 +37,22 @@ const FAQ_ITEMS = [
 
 export function ContactFaq() {
   return (
-    <section className="container-wide py-12 border-t">
+    <section className="border-t border-border/70 pt-14">
       <JsonLd data={faqSchema([...FAQ_ITEMS])} />
-      <h2 className="text-2xl font-bold tracking-tight">Frequently asked</h2>
-      <p className="mt-2 max-w-prose text-sm text-muted-foreground">
-        Quick answers to the questions we get most often. Don&apos;t see yours? Use the form above.
-      </p>
-      <Accordion type="single" collapsible className="mt-6 max-w-3xl">
-        {FAQ_ITEMS.map((item, idx) => (
-          <AccordionItem key={item.question} value={`faq-${idx}`}>
-            <AccordionTrigger>{item.question}</AccordionTrigger>
-            <AccordionContent>{item.answer}</AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+      <div className="mx-auto max-w-3xl">
+        <h2 className="font-display text-2xl font-bold tracking-tight">Frequently asked</h2>
+        <p className="mt-2 max-w-prose text-sm text-muted-foreground">
+          Quick answers to the questions we get most often. Don&apos;t see yours? Use the form above.
+        </p>
+        <Accordion type="single" collapsible className="mt-6">
+          {FAQ_ITEMS.map((item, idx) => (
+            <AccordionItem key={item.question} value={`faq-${idx}`}>
+              <AccordionTrigger>{item.question}</AccordionTrigger>
+              <AccordionContent>{item.answer}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
     </section>
   );
 }

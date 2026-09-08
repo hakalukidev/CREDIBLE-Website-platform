@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { AuthLeftPanel } from './auth-left-panel';
 import { AuthRightPanel } from './auth-right-panel';
+import { BrandMark } from './brand-mark';
 import { useSession } from '@/lib/store/session';
 import { homeForRole } from '@/lib/auth/redirects';
 
@@ -24,11 +25,11 @@ interface AuthModalProps {
 }
 
 /**
- * Two-column authentication modal. Built on Radix `Dialog` so focus
- * management, scroll locking, Escape-to-close, and ARIA wiring are
- * inherited. The form state (signin/signup toggle) lives in the
- * `AuthRightPanel` — re-mounting the panel via `key={initialMode}`
- * resets that internal state every time the modal opens.
+ * Two-column authentication modal built on Radix `Dialog`. The left
+ * brand panel is decorative (hidden below `lg`); the right column holds
+ * the form and scrolls independently so the dialog never clips on short
+ * viewports. Toggling sign-in/sign-up state lives in `AuthRightPanel` —
+ * re-mounting it via `key={initialMode}` resets that state per open.
  */
 export function AuthModal({ open, initialMode = 'signin', onOpenChange }: AuthModalProps) {
   const router = useRouter();
@@ -45,7 +46,7 @@ export function AuthModal({ open, initialMode = 'signin', onOpenChange }: AuthMo
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[min(96vw,960px)] gap-0 overflow-hidden rounded-2xl border border-border/70 bg-background p-0 shadow-2xl"
+        className="w-[min(96vw,1280px)] max-h-[calc(100dvh-2rem)] flex flex-col gap-0 overflow-hidden rounded-2xl border border-border/70 bg-background p-0 shadow-2xl"
         hideDefaultClose
         onOpenAutoFocus={(e) => {
           // Skip Radix's default first-focusable target so focus lands
@@ -62,14 +63,21 @@ export function AuthModal({ open, initialMode = 'signin', onOpenChange }: AuthMo
             : 'Create a new account to join Credible.'}
         </DialogDescription>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
           <AuthLeftPanel />
-          <AuthRightPanel key={initialMode} initialMode={initialMode} />
+
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            {/* Compact brand row for the single-column (mobile) layout */}
+            <div className="px-6 pb-6 pt-6 sm:px-10 lg:hidden">
+              <BrandMark brand="Credible" />
+            </div>
+            <AuthRightPanel key={initialMode} initialMode={initialMode} />
+          </div>
         </div>
 
         <DialogClose
           aria-label="Close authentication dialog"
-          className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-muted-foreground ring-1 ring-border backdrop-blur transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="h-[18px] w-[18px]" aria-hidden />
         </DialogClose>

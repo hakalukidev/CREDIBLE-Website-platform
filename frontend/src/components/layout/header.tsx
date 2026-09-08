@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut,
   Menu,
@@ -10,6 +11,9 @@ import {
   User2,
   LayoutDashboard,
   X,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +29,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSession } from '@/lib/store/session';
 import { useUI } from '@/lib/store/theme';
+import { useTheme } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
 
 interface NavLink {
@@ -35,6 +40,7 @@ interface NavLink {
 const NAV_LINKS: NavLink[] = [
   { href: '/browse', label: 'Browse' },
   { href: '/about', label: 'About' },
+  { href: '/for-business', label: 'For Business' },
 ];
 
 const ROLE_DASHBOARDS: Record<string, { href: string; label: string } | null> = {
@@ -61,7 +67,7 @@ function HeaderSearchField({
   return (
     <div className="relative w-full">
       <Search
-        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+        className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
         aria-hidden
       />
       <Input
@@ -69,7 +75,7 @@ function HeaderSearchField({
         placeholder={placeholder}
         aria-label={ariaLabel}
         className={cn(
-          'w-full rounded-full border-border/80 bg-muted/40 pl-9 pr-4 transition-colors placeholder:text-muted-foreground/80 hover:bg-muted/60 focus-visible:bg-background',
+          'w-full rounded-full border-border/80 bg-muted/40 pl-10 pr-4 transition-all placeholder:text-muted-foreground/70 hover:bg-muted/60 focus-visible:bg-card focus-visible:shadow-glow',
           size === 'lg' ? 'h-11' : 'h-10 text-sm',
         )}
       />
@@ -77,42 +83,57 @@ function HeaderSearchField({
   );
 }
 
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+
+  const toggle = () => {
+    if (theme === 'dark') setTheme('light');
+    else if (theme === 'light') setTheme('system');
+    else setTheme('dark');
+  };
+
+  const Icon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor;
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      className="rounded-full text-muted-foreground hover:text-foreground"
+      onClick={toggle}
+      aria-label={`Theme: ${theme}. Click to switch.`}
+      title={`Theme: ${theme}`}
+    >
+      <Icon className="h-4 w-4" />
+    </Button>
+  );
+}
+
 function HeaderNavLink({
   link,
   active,
-  variant = 'underline',
 }: {
   link: NavLink;
   active: boolean;
-  variant?: 'underline' | 'dot';
 }) {
   return (
     <Link
       href={link.href as never}
       aria-current={active ? 'page' : undefined}
-      onClick={variant === 'dot' ? () => undefined : undefined}
       className={cn(
-        variant === 'underline'
-          ? 'relative inline-flex h-9 items-center rounded-md px-3 font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
-          : 'flex items-center justify-between rounded-md px-2 py-3 text-sm font-medium transition-colors',
+        'group relative inline-flex h-9 items-center rounded-full px-4 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         active
-          ? variant === 'underline'
-            ? 'text-foreground'
-            : 'bg-accent/60 text-foreground'
-          : variant === 'underline'
-            ? 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
-            : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground',
+          ? 'text-primary'
+          : 'text-muted-foreground hover:text-foreground',
       )}
     >
       {link.label}
-      {active && variant === 'underline' && (
-        <span
+      {active && (
+        <motion.span
+          layoutId="nav-underline"
           aria-hidden
-          className="absolute inset-x-3 -bottom-[15px] h-0.5 rounded-full bg-primary"
+          className="absolute inset-x-4 -bottom-0.5 h-0.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)]"
+          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
         />
-      )}
-      {active && variant === 'dot' && (
-        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary" />
       )}
     </Link>
   );
@@ -133,7 +154,7 @@ function UserAvatar({
       {user.avatar && (
         <AvatarImage src={user.avatar} alt={user.firstName ?? ''} />
       )}
-      <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+      <AvatarFallback className="bg-gradient-to-br from-brand-500 to-brand-700 text-primary-foreground text-xs font-semibold">
         {initials}
       </AvatarFallback>
     </Avatar>
@@ -147,6 +168,7 @@ export function SiteHeader() {
   const clear = useSession((s) => s.clear);
   const openAuth = useUI((s) => s.openAuth);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     if (mobileOpen) setMobileOpen(false);
@@ -162,6 +184,13 @@ export function SiteHeader() {
     };
   }, [mobileOpen]);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const initials = (session?.user.firstName ?? session?.user.email ?? '?')
     .trim()
     .charAt(0)
@@ -175,14 +204,21 @@ export function SiteHeader() {
   const dashboard = session ? ROLE_DASHBOARDS[session.user.role] : null;
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
-      <div className="container-wide flex h-16 items-center gap-3 md:gap-6">
+    <header
+      className={cn(
+        'sticky top-0 z-40 w-full transition-all duration-300',
+        scrolled
+          ? 'border-b border-border/60 bg-background/80 shadow-soft backdrop-blur-xl supports-[backdrop-filter]:bg-background/75'
+          : 'border-b border-transparent bg-transparent',
+      )}
+    >
+      <div className="container-wide flex h-16 items-center gap-2 md:gap-5">
         <Link
           href="/"
-          className="group flex items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="group flex items-center gap-2.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           aria-label="Credible — go to homepage"
         >
-          <span className="relative block h-8 w-8 overflow-hidden rounded-lg ring-1 ring-black/5 shadow-sm transition-shadow group-hover:shadow-md">
+          <span className="relative block h-8 w-8 overflow-hidden rounded-xl ring-1 ring-black/5 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:ring-primary/30">
             <SafeImage
               src="/logo.jpg"
               alt="Credible"
@@ -192,17 +228,17 @@ export function SiteHeader() {
             />
           </span>
           <span className="flex flex-col leading-tight">
-            <span className="text-[15px] font-semibold tracking-tight text-foreground">
+            <span className="font-display text-[15px] font-bold tracking-tight text-foreground">
               Credible
             </span>
-            <span className="hidden text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground lg:block">
+            <span className="hidden text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/80 lg:block">
               Verified
             </span>
           </span>
         </Link>
 
         <nav
-          className="hidden items-center gap-1 text-sm md:flex"
+          className="hidden items-center md:flex"
           aria-label="Primary"
         >
           {NAV_LINKS.map((link) => (
@@ -210,7 +246,6 @@ export function SiteHeader() {
               key={link.href}
               link={link}
               active={isActive(pathname, link.href)}
-              variant="underline"
             />
           ))}
         </nav>
@@ -226,6 +261,8 @@ export function SiteHeader() {
         </form>
 
         <div className="ml-auto flex items-center gap-1 md:ml-0">
+          <ThemeToggle />
+
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -235,9 +272,7 @@ export function SiteHeader() {
                   aria-label="Open account menu"
                   className="h-10 w-10 rounded-full"
                 >
-                  <span className="block transition-transform hover:scale-[1.02]">
-                    <UserAvatar user={session.user} initials={initials} />
-                  </span>
+                  <UserAvatar user={session.user} initials={initials} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-60">
@@ -278,14 +313,14 @@ export function SiteHeader() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="hidden h-9 px-3 font-medium text-muted-foreground hover:text-foreground sm:inline-flex"
+                className="hidden h-9 rounded-full px-4 font-medium text-muted-foreground hover:text-foreground sm:inline-flex"
                 onClick={() => openAuth('signin')}
               >
                 Sign in
               </Button>
               <Button
                 size="sm"
-                className="h-9 rounded-full px-4 text-sm font-medium shadow-sm"
+                className="h-9 rounded-full px-4 text-sm font-semibold shadow-sm"
                 onClick={() => openAuth('signup')}
               >
                 Sign up
@@ -307,62 +342,82 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {mobileOpen && (
-        <>
-          <div
-            className="fixed inset-0 top-16 z-30 bg-black/30 backdrop-blur-sm md:hidden"
-            aria-hidden
-            onClick={() => setMobileOpen(false)}
-          />
-          <div
-            id="mobile-nav"
-            className="container-wide relative z-40 border-t border-border/70 bg-background pb-6 pt-4 md:hidden"
-          >
-            <form action="/search" role="search" className="mb-3">
-              <HeaderSearchField
-                size="lg"
-                placeholder="Search businesses…"
-                ariaLabel="Search businesses"
-              />
-            </form>
-
-            <nav className="flex flex-col" aria-label="Mobile primary">
-              {NAV_LINKS.map((link) => (
-                <HeaderNavLink
-                  key={link.href}
-                  link={link}
-                  active={isActive(pathname, link.href)}
-                  variant="dot"
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 top-16 z-30 bg-black/30 backdrop-blur-sm md:hidden"
+              aria-hidden
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.nav
+              id="mobile-nav"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="container-wide relative z-40 border-t border-border/70 bg-background/95 pb-6 pt-4 backdrop-blur-xl md:hidden"
+              aria-label="Mobile primary"
+            >
+              <form action="/search" role="search" className="mb-3">
+                <HeaderSearchField
+                  size="lg"
+                  placeholder="Search businesses…"
+                  ariaLabel="Search businesses"
                 />
-              ))}
-            </nav>
+              </form>
 
-            {!session && (
-              <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border/70 pt-4">
-                <Button
-                  variant="outline"
-                  className="h-10 rounded-full"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    openAuth('signin');
-                  }}
-                >
-                  Sign in
-                </Button>
-                <Button
-                  className="h-10 rounded-full"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    openAuth('signup');
-                  }}
-                >
-                  Sign up
-                </Button>
+              <div className="flex flex-col">
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href as never}
+                    aria-current={isActive(pathname, link.href) ? 'page' : undefined}
+                    className={cn(
+                      'flex items-center justify-between rounded-xl px-3 py-3 text-sm font-medium transition-colors',
+                      isActive(pathname, link.href)
+                        ? 'bg-accent text-foreground'
+                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                    )}
+                  >
+                    {link.label}
+                    {isActive(pathname, link.href) && (
+                      <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    )}
+                  </Link>
+                ))}
               </div>
-            )}
-          </div>
-        </>
-      )}
+
+              {!session && (
+                <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border/70 pt-4">
+                  <Button
+                    variant="outline"
+                    className="h-10 rounded-full"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      openAuth('signin');
+                    }}
+                  >
+                    Sign in
+                  </Button>
+                  <Button
+                    className="h-10 rounded-full"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      openAuth('signup');
+                    }}
+                  >
+                    Sign up
+                  </Button>
+                </div>
+              )}
+            </motion.nav>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

@@ -51,7 +51,7 @@ export function DataRequestForm() {
 
   if (!user) {
     return (
-      <div className="rounded-lg border bg-card p-6">
+      <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-card">
         <p className="font-medium">Sign in to submit a data request</p>
         <p className="mt-1 text-sm text-muted-foreground">
           Data requests are tied to your account so we can verify your identity before sharing or
@@ -88,7 +88,7 @@ export function DataRequestForm() {
     <form
       id="data-request"
       onSubmit={onSubmit}
-      className="space-y-5 rounded-lg border bg-card p-6"
+      className="space-y-5 rounded-2xl border border-border/60 bg-card p-6 shadow-card"
       noValidate
     >
       <div>

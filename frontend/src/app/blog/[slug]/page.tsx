@@ -74,16 +74,22 @@ export default async function BlogPostPage({ params }: PageProps) {
 
       <article className="container-wide py-12">
         <header className="mx-auto max-w-3xl text-center">
-          <Link href="/blog" className="text-xs text-muted-foreground hover:underline">
-            ← Back to blog
+          <Link
+            href="/blog"
+            className="group inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/70 py-1.5 pl-3 pr-4 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur transition-colors hover:border-border hover:text-foreground"
+          >
+            <span className="transition-transform group-hover:-translate-x-0.5">←</span>
+            Back to blog
           </Link>
-          <Badge variant="secondary" className="mt-4">
+          <Badge variant="secondary" className="mt-5">
             {post.category}
           </Badge>
-          <h1 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight">{post.title}</h1>
-          <p className="mt-3 text-muted-foreground">{post.excerpt}</p>
-          <div className="mt-6 flex items-center justify-center gap-3 text-sm text-muted-foreground">
-            <Avatar className="h-8 w-8">
+          <h1 className="mt-4 font-display text-3xl font-bold tracking-tight md:text-5xl md:leading-tight">
+            {post.title}
+          </h1>
+          <p className="mt-4 text-muted-foreground">{post.excerpt}</p>
+          <div className="mt-8 flex items-center justify-center gap-3 text-sm text-muted-foreground">
+            <Avatar className="h-9 w-9 ring-2 ring-ring/40">
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                 {post.author.initials}
               </AvatarFallback>
@@ -104,11 +110,19 @@ export default async function BlogPostPage({ params }: PageProps) {
           </div>
         </header>
 
-        <div
-          className="mx-auto mt-10 flex h-48 max-w-3xl items-center justify-center rounded-2xl border border-border/70 bg-gradient-to-br from-primary/10 to-primary/5 text-7xl shadow-card"
-          aria-hidden
-        >
-          {post.coverEmoji}
+        <div className="relative mx-auto mt-12 flex h-56 max-w-3xl items-center justify-center overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/15 via-primary/5 to-secondary/10 shadow-pop">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-60"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.08) 1px, transparent 0)',
+              backgroundSize: '22px 22px',
+            }}
+          />
+          <div className="pointer-events-none absolute left-1/2 top-0 h-40 w-[28rem] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
+          <span className="relative text-7xl" aria-hidden>
+            {post.coverEmoji}
+          </span>
         </div>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[12rem_1fr]">
@@ -119,9 +133,9 @@ export default async function BlogPostPage({ params }: PageProps) {
               <RenderBlock key={idx} block={block} />
             ))}
 
-            <div className="mt-10 rounded-2xl border border-border/70 bg-muted/30 p-6 shadow-card">
+            <div className="mt-10 rounded-2xl border border-border/60 bg-gradient-to-br from-card to-primary/[0.04] p-6 shadow-card">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                Share
+                Share this post
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <ShareLink
@@ -143,19 +157,21 @@ export default async function BlogPostPage({ params }: PageProps) {
 
         {related.length > 0 && (
           <section className="mx-auto mt-16 max-w-3xl border-t pt-8">
-            <h2 className="text-lg font-semibold">Related posts</h2>
-            <ul className="mt-4 space-y-3">
+            <h2 className="font-display text-lg font-semibold">Related posts</h2>
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {related.map((r) => (
                 <li key={r.slug}>
                   <Link
                     href={`/blog/${r.slug}`}
-                    className="group block rounded-md border p-4 hover:border-primary/40 hover:bg-accent/40"
+                    className="group flex h-full flex-col rounded-2xl border border-border/60 bg-card/60 p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-pop"
                   >
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">
                       {r.category} · {r.readTime}
                     </p>
-                    <p className="mt-1 font-medium group-hover:underline">{r.title}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{r.excerpt}</p>
+                    <p className="mt-2 font-medium leading-snug group-hover:text-primary">
+                      {r.title}
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">{r.excerpt}</p>
                   </Link>
                 </li>
               ))}
@@ -163,14 +179,17 @@ export default async function BlogPostPage({ params }: PageProps) {
           </section>
         )}
 
-        <section className="mx-auto mt-16 max-w-3xl rounded-lg border bg-gradient-to-br from-primary/5 to-primary/10 p-8 text-center">
-          <h2 className="text-lg font-semibold">Get monthly updates</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <section className="relative mx-auto mt-16 max-w-3xl overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-secondary/10 p-8 text-center sm:p-10">
+          <div className="pointer-events-none absolute left-1/2 top-0 h-32 w-80 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
+          <h2 className="font-display text-xl font-semibold sm:text-2xl">
+            Get monthly updates
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             One short email per month — new posts, product updates, and the occasional field
             report. No spam.
           </p>
           <form
-            className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center"
+            className="mx-auto mt-6 flex max-w-md flex-col gap-2 sm:flex-row sm:items-center sm:justify-center"
             action="/blog"
             method="get"
           >
@@ -183,9 +202,11 @@ export default async function BlogPostPage({ params }: PageProps) {
               name="email"
               placeholder="you@example.com"
               required
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:w-72"
+              className="h-11 w-full rounded-full border border-border/70 bg-background px-5 text-sm shadow-sm transition-shadow focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus-visible:border-primary/50 sm:w-72"
             />
-            <Button type="submit">Subscribe</Button>
+            <Button type="submit" className="h-11 px-6 shrink-0">
+              Subscribe
+            </Button>
           </form>
         </section>
       </article>
@@ -199,7 +220,7 @@ function ShareLink({ href, label }: { href: string; label: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+      className="rounded-full border border-border/70 bg-background/70 px-4 py-2 text-xs font-medium text-foreground shadow-sm backdrop-blur transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:text-primary"
     >
       {label}
     </a>
@@ -213,7 +234,7 @@ function RenderBlock({ block }: { block: BlogPostBlock }) {
         return (
           <h2
             id={slugifyHeading(block.text)}
-            className="mt-8 text-2xl font-bold tracking-tight"
+            className="mt-8 font-display text-2xl font-bold tracking-tight"
           >
             {block.text}
           </h2>
@@ -248,12 +269,12 @@ function RenderBlock({ block }: { block: BlogPostBlock }) {
       );
     case 'quote':
       return (
-        <blockquote className="border-l-4 border-primary/40 pl-4 italic text-muted-foreground">
-          {block.text}
-          {block.cite && (
-            <footer className="mt-1 text-xs not-italic">— {block.cite}</footer>
-          )}
-        </blockquote>
+        <blockquote className="rounded-r-2xl border-l-4 border-primary bg-primary/5 py-4 pl-5 pr-4 italic text-muted-foreground">
+        {block.text}
+        {block.cite && (
+          <footer className="mt-1 text-xs not-italic">— {block.cite}</footer>
+        )}
+      </blockquote>
       );
     case 'code':
       return (

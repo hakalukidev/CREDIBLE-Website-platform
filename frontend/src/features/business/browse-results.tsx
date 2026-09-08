@@ -222,7 +222,6 @@ export function BrowseResults({ initial = {} }: Props) {
       .catch((err) => {
         if (cancelled || seq !== requestSeq.current) return;
         if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
-          // eslint-disable-next-line no-console
           console.error('[browse] fetch failed:', err);
         }
         setError(err);

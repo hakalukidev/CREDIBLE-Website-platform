@@ -17,16 +17,20 @@ export function StatsStripClient() {
 
   return (
     <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-      {STATS.map(({ key, label, icon: Icon, suffix }) => (
-        <div key={key} className="flex items-center gap-4">
+      {STATS.map(({ key, label, icon: Icon, suffix }, idx) => (
+        <div
+          key={key}
+          className="group flex items-center gap-4 transition-transform duration-300 hover:-translate-y-0.5"
+          style={{ transitionDelay: `${idx * 20}ms` }}
+        >
           <span
             aria-hidden
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/15 to-primary/5 text-primary ring-1 ring-primary/15 transition-all duration-300 group-hover:shadow-glow"
           >
             <Icon className="h-5 w-5" />
           </span>
           <div>
-            <div className="text-2xl sm:text-3xl font-bold tracking-tight tabular-nums">
+            <div className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
               {ready ? (
                 <AnimatedCounter value={data[key]} suffix={suffix} />
               ) : (

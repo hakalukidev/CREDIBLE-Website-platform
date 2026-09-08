@@ -76,3 +76,42 @@ export const buttonSpring = {
  * `whileInView="visible"` is the cheapest way to do a tasteful scroll-in.
  */
 export const viewportOnce = { once: true, amount: 0.2 } as const;
+
+/**
+ * Scroll-reveal preset — a slightly larger slide + fade used for page
+ * sections. Set `initial="hidden" whileInView="visible"` and pass these
+ * as `variants`.
+ */
+export const sectionReveal: Variants = {
+  hidden: { opacity: 0, y: 28 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: easeOut },
+  },
+};
+
+/**
+ * Cards / grids — fade + scale-in so a set of sibling cards feels like
+ * it "settles" into place rather than sliding past each other.
+ */
+export const cardReveal: Variants = {
+  hidden: { opacity: 0, y: 20, scale: 0.97 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.5, ease: easeOut },
+  },
+};
+
+/**
+ * Stagger wrapper for grids of cards. Wrap the grid, then put each card
+ * in a `<MotionCardReveal>` (or a `motion.div` using `cardReveal`).
+ */
+export const cardStagger: Variants = {
+  hidden: {},
+  visible: {
+    transition: { delayChildren: 0.06, staggerChildren: 0.08 },
+  },
+};

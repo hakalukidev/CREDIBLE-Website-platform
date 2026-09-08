@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import { Providers } from './providers';
 import { ChromeFrame } from '@/components/layout/chrome-frame';
 import { siteMetadata } from '@/lib/seo/metadata';
@@ -8,20 +8,25 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import '@/styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const display = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+});
 
 export const metadata: Metadata = siteMetadata;
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
-    { media: '(prefers-color-scheme: dark)', color: '#0B1220' },
+    { media: '(prefers-color-scheme: light)', color: '#F7F8FC' },
+    { media: '(prefers-color-scheme: dark)', color: '#0B0F19' },
   ],
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${display.variable}`}>
       <head>
         {/*
           Pre-paint theme boot. Rendered as a real HTML <script> from a
@@ -29,17 +34,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           not trip the React 19 / Next 16 "script tag inside React
           component" diagnostic that next-themes' inline script did.
 
-          The site is locked to the light theme. This script runs before
-          first paint to (1) drop any `dark` class that may have leaked
-          from a previous session or browser extension, (2) sync
-          `color-scheme` so form controls and scrollbars render correctly,
-          and (3) persist the canonical 'light' value so any future toggle
-          starts from a known state.
+          The site is currently locked to the theme stored in localStorage
+          (defaulting to light at the OS level). This script reads the
+          stored preference (light | dark | system) and applies the
+          matching class before first paint.
         */}
         <script
-          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var k='theme';document.documentElement.classList.remove('dark');document.documentElement.style.colorScheme='light';localStorage.setItem(k,'light');}catch(e){}})();`,
+            __html: `(function(){try{var k='theme';var s=localStorage.getItem(k);var mode=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(mode==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}document.documentElement.style.colorScheme=mode;}catch(e){}})();`,
           }}
         />
       </head>
