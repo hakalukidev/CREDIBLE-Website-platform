@@ -4,9 +4,9 @@ import { useCallback, useRef, useState, type ChangeEvent, type DragEvent } from 
 import { Camera, Loader2, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { apiClient } from '@/lib/api/client';
 import { friendlyMessage } from '@/components/ui/friendly-error';
 import { cn } from '@/lib/utils';
+import { uploadToStorage } from '@/lib/upload';
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -24,24 +24,14 @@ export interface ProfileImageUploadProps {
   className?: string;
 }
 
-interface PresignResponse {
-  url: string;
-  key: string;
-  publicUrl: string;
-  expiresIn: number;
-  maxBytes: number;
-  headers: Record<string, string>;
-}
-
 /**
  * Drag-and-drop image uploader for the business/professional profile pages.
  *
  * Flow:
  *   1. Validate file type + size client-side (mirror server-side checks).
- *   2. POST /uploads/presign → get a one-time PUT URL + the canonical
- *      public URL we'll store.
- *   3. PUT the file body to the presigned URL with the returned headers.
- *   4. Fire `onChange({ key, publicUrl })` so the parent form can persist
+ *   2. Upload via `uploadToStorage` — presigned direct PUT, falling back to a
+ *      server-side proxy when the bucket lacks CORS.
+ *   3. Fire `onChange({ key, publicUrl })` so the parent form can persist
  *      the key in its PATCH request.
  */
 export function ProfileImageUpload({
@@ -73,27 +63,7 @@ export function ProfileImageUpload({
       setPreview(localUrl);
 
       try {
-        // 1. Ask the server for a presigned PUT URL.
-        const presignRes = await apiClient.post<{ success: true; data: PresignResponse }>(
-          '/uploads/presign',
-          {
-            namespace,
-            contentType: file.type,
-            originalName: file.name,
-            size: file.size,
-          },
-        );
-        const { url, key, publicUrl, headers } = presignRes.data.data;
-
-        // 2. PUT the file body to S3/R2 with the exact headers the signature expects.
-        const putRes = await fetch(url, {
-          method: 'PUT',
-          body: file,
-          headers,
-        });
-        if (!putRes.ok) {
-          throw new Error(`Upload failed (${putRes.status})`);
-        }
+        const { key, publicUrl } = await uploadToStorage(file, namespace);
 
         URL.revokeObjectURL(localUrl);
         setPreview(publicUrl);

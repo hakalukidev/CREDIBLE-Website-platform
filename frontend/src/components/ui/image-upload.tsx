@@ -5,8 +5,8 @@ import { Upload, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { SafeImage } from '@/components/ui/safe-image';
-import { apiClient } from '@/lib/api/client';
 import { friendlyMessage } from '@/components/ui/friendly-error';
+import { uploadToStorage } from '@/lib/upload';
 
 interface ImageUploadProps {
   value?: string | null;
@@ -44,38 +44,9 @@ export function ImageUpload({
 
       setUploading(true);
       try {
-        // 1. Get presigned URL from our API. The server returns the exact
-        //    headers we must echo back in the PUT so the signed policy
-        //    matches (Content-Type + Content-Length when applicable).
-        const presignRes = await apiClient.post<{
-          success: true;
-          data: {
-            url: string;
-            key: string;
-            publicUrl: string;
-            expiresIn: number;
-            maxBytes: number;
-            headers: Record<string, string>;
-          };
-        }>('/uploads/presign', {
-          namespace,
-          contentType: file.type,
-          originalName: file.name,
-          size: file.size,
-        });
-        const { url, publicUrl, headers } = presignRes.data.data;
-
-        // 2. PUT the file directly to S3/R2. Send the same headers the
-        //    signature was computed against; otherwise the request will be
-        //    rejected with `SignatureDoesNotMatch`.
-        const putRes = await fetch(url, {
-          method: 'PUT',
-          headers: { ...headers },
-          body: file,
-        });
-        if (!putRes.ok) {
-          throw new Error(`Upload to storage failed (${putRes.status})`);
-        }
+        // Upload to S3/R2 — try the presigned direct PUT first, fall back to
+        // a server-side proxy when the bucket blocks cross-origin uploads.
+        const { publicUrl } = await uploadToStorage(file, namespace);
 
         // 3. Set the public URL in the form
         onChange(publicUrl);

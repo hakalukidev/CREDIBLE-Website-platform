@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { storage } from '../storage/s3';
 import { STORAGE_KEYS } from '@credible/shared';
 import type { VerificationLevel } from '@credible/types';
+import { env } from '../../config/env';
 
 interface BadgeInput {
   displayName: string;
@@ -52,7 +53,7 @@ export async function generateBadge(input: BadgeInput): Promise<BadgeOutput> {
     key,
     body: buffer,
     contentType: 'image/svg+xml',
-    bucket: process.env.S3_PUBLIC_BUCKET,
+    bucket: env.S3_PUBLIC_BUCKET,
     encrypt: false,
   });
 

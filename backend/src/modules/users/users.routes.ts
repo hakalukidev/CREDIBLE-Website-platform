@@ -18,11 +18,13 @@ const updateMeSchema = z
   .object({
     firstName: z.string().trim().min(1).max(80).optional(),
     lastName: z.string().trim().min(1).max(80).optional(),
+    avatar: z.string().trim().url().max(2048).optional(),
   })
   .strict()
-  .refine((v) => v.firstName !== undefined || v.lastName !== undefined, {
-    message: 'Provide at least one of firstName / lastName.',
-  });
+  .refine(
+    (v) => v.firstName !== undefined || v.lastName !== undefined || v.avatar !== undefined,
+    { message: 'Provide at least one of firstName, lastName, or avatar.' },
+  );
 
 const SAFE_USER_SELECT = {
   id: true,

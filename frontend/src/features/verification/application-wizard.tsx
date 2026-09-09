@@ -12,8 +12,8 @@ import { Input, Textarea } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { apiClient } from '@/lib/api/client';
 import { friendlyMessage } from '@/components/ui/friendly-error';
+import { uploadToStorage } from '@/lib/upload';
 import {
   DOCUMENT_TYPES,
   DOCUMENT_TYPE_LABELS,
@@ -296,27 +296,12 @@ function UploadStep({
   async function handleFileChange(file: File, type: DocumentType) {
     try {
       setProgress(5);
-      const presign = await apiClient.post<{
-        success: true;
-        data: { url: string; key: string; publicUrl: string };
-      }>('/uploads/presign', {
-        namespace: 'documents',
-        contentType: file.type,
-        originalName: file.name,
-        size: file.size,
-      });
-      setProgress(40);
-      // PUT the file to the presigned URL.
-      await fetch(presign.data.data.url, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      });
+      const { key: fileKey, publicUrl } = await uploadToStorage(file, 'documents');
       setProgress(70);
       await uploadMutation.mutateAsync({
         type,
-        fileKey: presign.data.data.key,
-        fileUrl: presign.data.data.publicUrl,
+        fileKey,
+        fileUrl: publicUrl,
         mimeType: file.type,
         fileSize: file.size,
         originalName: file.name,
