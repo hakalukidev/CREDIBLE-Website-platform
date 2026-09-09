@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Metadata, Viewport } from 'next';
-import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
+import { Inter, Comfortaa } from 'next/font/google';
 import { Providers } from './providers';
 import { ChromeFrame } from '@/components/layout/chrome-frame';
 import { siteMetadata } from '@/lib/seo/metadata';
@@ -8,7 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import '@/styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
-const display = Plus_Jakarta_Sans({
+const display = Comfortaa({
   subsets: ['latin'],
   variable: '--font-display',
   display: 'swap',

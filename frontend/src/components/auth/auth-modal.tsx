@@ -46,7 +46,7 @@ export function AuthModal({ open, initialMode = 'signin', onOpenChange }: AuthMo
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[min(96vw,1280px)] max-h-[calc(100dvh-2rem)] flex flex-col gap-0 overflow-hidden rounded-2xl border border-border/70 bg-background p-0 shadow-2xl"
+        className="w-[min(96vw,800px)] max-w-none max-h-[calc(100dvh-2rem)] flex flex-col gap-0 overflow-hidden rounded-2xl border border-border/70 bg-background p-0 shadow-2xl"
         hideDefaultClose
         onOpenAutoFocus={(e) => {
           // Skip Radix's default first-focusable target so focus lands

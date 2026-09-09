@@ -286,7 +286,7 @@ export function RegisterForm({
               <Button
                 type="submit"
                 disabled={submit.isPending}
-                className="w-full h-11 text-base font-semibold gap-2"
+                className="w-full h-11 mt-2 text-base font-semibold gap-2"
               >
                 {submit.isPending ? (
                   <>

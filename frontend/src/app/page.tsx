@@ -8,6 +8,8 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle2,
+  PenLine,
+  MessageSquareQuote,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +18,8 @@ import { SectionHeading } from '@/components/layout/section-heading';
 import { FeaturedBusinesses } from '@/features/home/featured-businesses';
 import { HeroPreviewCard } from '@/features/home/hero-preview-card';
 import { StatsStripClient } from '@/features/home/stats-strip-client';
+import { TrendingReviews } from '@/features/home/trending-reviews';
+import { HowAuthentic } from '@/features/home/how-authentic';
 import { MotionSection, MotionCardReveal } from '@/components/ui/motion-primitives';
 import {
   organizationSchema,
@@ -247,6 +251,38 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* TRENDING REVIEWS — reviews.io-style social proof */}
+      <section className="relative overflow-hidden border-y border-border/60 bg-gradient-to-b from-background to-muted/30">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
+        />
+        <div className="container-wide py-20 md:py-24">
+          <SectionHeading
+            eyebrow={
+              <>
+                <MessageSquareQuote className="mr-1 inline h-3 w-3 align-middle" />
+                Trending reviews
+              </>
+            }
+            title="What customers are praising"
+            subtitle="Real feedback from real, verified reviewers — the highest-rated businesses on Credible right now."
+            action={
+              <Link
+                href={'/browse' as never}
+                className="hidden items-center text-sm font-semibold text-primary transition-colors hover:text-primary/80 sm:inline-flex"
+              >
+                Browse all reviews
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            }
+          />
+          <div className="mt-10">
+            <TrendingReviews />
+          </div>
+        </div>
+      </section>
+
       {/* VALUE PROPS */}
       <MotionSection className="container-wide py-20 md:py-24">
         <SectionHeading
@@ -272,6 +308,58 @@ export default function HomePage() {
           ))}
         </div>
       </MotionSection>
+
+      {/* WHY WE'RE AUTHENTIC — avast-style interactive walkthrough */}
+      <section className="relative border-y border-border/60 bg-gradient-to-b from-muted/40 to-background">
+        <div className="container-wide py-20 md:py-24">
+          <SectionHeading
+            eyebrow="Why Credible"
+            title="How we keep reviews authentic."
+            subtitle="An inside look at the layers that protect every review — from phone verification to human document review."
+            align="center"
+          />
+          <div className="mt-12">
+            <HowAuthentic />
+          </div>
+        </div>
+      </section>
+
+      {/* WRITE A REVIEW — trustpilot-style entry point */}
+      <section className="container-wide py-20 md:py-24">
+        <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card/50 p-8 shadow-card md:p-12">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent"
+          />
+          <div className="grid items-center gap-8 md:grid-cols-[1.4fr_1fr]">
+            <div>
+              <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">
+                <PenLine className="mr-1.5 h-3 w-3" />
+                Write a review
+              </Badge>
+              <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+                Share your experience — help others choose the best.
+              </h2>
+              <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground sm:text-base">
+                Found a service that exceeded expectations? Let everyone know. Your OTP-verified
+                review helps hard-working businesses earn the recognition they deserve — and helps
+                the best in every category rise to the top.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 md:items-end">
+              <Button asChild size="lg" className="w-full rounded-full sm:w-auto">
+                <Link href={'/browse' as never}>
+                  Write a review
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Link>
+              </Button>
+              <p className="text-center text-xs text-muted-foreground md:text-right">
+                Free for everyone · No account needed
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* TESTIMONIAL */}
       <section className="relative overflow-hidden border-y border-border/60 bg-gradient-to-b from-muted/40 to-background">

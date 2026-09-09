@@ -14,6 +14,7 @@ import {
   Sun,
   Moon,
   Monitor,
+  PenLine,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,9 +39,11 @@ interface NavLink {
 }
 
 const NAV_LINKS: NavLink[] = [
-  { href: '/browse', label: 'Browse' },
-  { href: '/about', label: 'About' },
+  { href: '/categories', label: 'Categories' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/awards', label: 'Awards' },
   { href: '/for-business', label: 'For Business' },
+  { href: '/for-professionals', label: 'For Professionals' },
 ];
 
 const ROLE_DASHBOARDS: Record<string, { href: string; label: string } | null> = {
@@ -51,7 +54,9 @@ const ROLE_DASHBOARDS: Record<string, { href: string; label: string } | null> = 
 
 function isActive(pathname: string | null, href: string) {
   if (!pathname) return false;
-  if (href === '/browse') return pathname === '/browse' || pathname.startsWith('/browse/');
+  // Home links.
+  if (href === '/') return pathname === '/';
+  // Exact match or child route (e.g. /blog/article).
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -122,19 +127,11 @@ function HeaderNavLink({
       className={cn(
         'group relative inline-flex h-9 items-center rounded-full px-4 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         active
-          ? 'text-primary'
+          ? 'bg-gradient-to-r from-brand-600 to-primary text-primary-foreground shadow-sm'
           : 'text-muted-foreground hover:text-foreground',
       )}
     >
       {link.label}
-      {active && (
-        <motion.span
-          layoutId="nav-underline"
-          aria-hidden
-          className="absolute inset-x-4 -bottom-0.5 h-0.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)]"
-          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-        />
-      )}
     </Link>
   );
 }
@@ -237,8 +234,9 @@ export function SiteHeader() {
           </span>
         </Link>
 
+        {/* Floating main menu — centered, pill-shaped (awwwards-style) */}
         <nav
-          className="hidden items-center md:flex"
+          className="mx-auto hidden items-center rounded-full border border-border/70 bg-card/80 px-1.5 py-1.5 shadow-soft backdrop-blur-xl md:flex"
           aria-label="Primary"
         >
           {NAV_LINKS.map((link) => (

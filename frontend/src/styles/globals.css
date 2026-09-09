@@ -9,8 +9,8 @@
        Palette: deep ink neutrals + indigo/blue primary + gold accent
        ============================================================ */
 
-    /* Background — deep, calm ink with a cool blue undertone. */
-    --background: 222 30% 98%;
+    /* Background — clean, airy white so the site feels light and trustworthy. */
+    --background: 220 33% 99%;
     --foreground: 224 26% 9%;
 
     --card: 0 0% 100%;
