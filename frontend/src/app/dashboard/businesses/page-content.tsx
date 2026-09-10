@@ -108,7 +108,7 @@ interface EntityCardProps {
 
 function EntityCard({ entity, kind }: EntityCardProps) {
   const Icon = kind === 'business' ? Building2 : Stethoscope;
-  const editHref = kind === 'business' ? '/business/dashboard' : '/professional/dashboard';
+  const editHref = kind === 'business' ? '/business/profile' : '/professional/profile';
   const viewHref =
     entity.status === (('PUBLISHED' as BusinessStatus))
       ? kind === 'business'

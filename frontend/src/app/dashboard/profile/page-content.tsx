@@ -68,7 +68,6 @@ import { AvatarUploadZone } from '@/components/dashboard/profile/avatar-upload-z
 import { useUserProfile } from '@/lib/hooks/use-user-profile';
 import { refreshSessionUser } from '@/lib/auth/refresh-session-user';
 import { useProfileCompletion } from '@/lib/hooks/use-profile-completion';
-import { cn } from '@/lib/utils';
 
 const profileUpdateSchema = z
   .object({

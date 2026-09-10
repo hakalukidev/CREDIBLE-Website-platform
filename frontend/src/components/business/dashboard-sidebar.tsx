@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { Route } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, User2, MessageSquare, ShieldCheck, CreditCard, LogOut, X } from 'lucide-react';
+import { SafeImage } from '@/components/ui/safe-image';
 import { useSession } from '@/lib/store/session';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -54,6 +55,9 @@ export function DashboardSidebar() {
       >
         <div className="flex h-16 items-center justify-between border-b px-4">
           <Link href="/business/dashboard" className="flex items-center gap-2">
+            <span className="relative h-8 w-8 overflow-hidden rounded-lg bg-white ring-1 ring-black/5 shadow-sm">
+              <SafeImage src="/logo.jpg" alt="Credible" fill sizes="32px" priority />
+            </span>
             <span className="text-lg font-bold tracking-tight">Credible</span>
           </Link>
           <Button

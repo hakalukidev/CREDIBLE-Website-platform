@@ -6,7 +6,7 @@ import type { UserRole } from '@credible/types';
 
 interface RequireAuthProps {
   children: ReactNode;
-  role?: UserRole;
+  role?: UserRole | UserRole[];
   fallback?: ReactNode;
 }
 
@@ -14,6 +14,9 @@ interface RequireAuthProps {
  * Wraps a subtree in a client-side auth guard. Renders `fallback` (or a
  * minimal loading state) while waiting for the session, redirects to
  * `/login` if no user, and to `/` if the role doesn't match.
+ *
+ * `role` accepts a single role or an array of roles — if the user's
+ * role matches any of the provided roles, access is granted.
  */
 export function RequireAuth({ children, role, fallback }: RequireAuthProps) {
   const { isReady, isAuthorised } = useRequireAuth({ role });

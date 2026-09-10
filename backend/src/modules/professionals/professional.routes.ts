@@ -22,12 +22,12 @@ router.get('/id/:id', professionalController.getById);
 // subject and 404s if none exists. The owner check is the real
 // security gate; the role gate is here only to keep non-owners
 // out before the lookup runs.
-router.get('/me/profile', authRequired, ensureActiveUser, requireRole('PROFESSIONAL', 'CUSTOMER', 'ADMIN'), meProfessionalController.getMine);
+router.get('/me/profile', authRequired, ensureActiveUser, requireRole('PROFESSIONAL', 'BUSINESS', 'CUSTOMER', 'ADMIN'), meProfessionalController.getMine);
 router.patch(
   '/me/profile',
   authRequired,
   ensureActiveUser,
-  requireRole('PROFESSIONAL', 'CUSTOMER', 'ADMIN'),
+  requireRole('PROFESSIONAL', 'BUSINESS', 'CUSTOMER', 'ADMIN'),
   validate(updateProfessionalSchema),
   meProfessionalController.updateMine,
 );
@@ -47,6 +47,13 @@ router.get(
   requireRole('PROFESSIONAL', 'CUSTOMER', 'ADMIN'),
   meProfessionalController.listReviews,
 );
+router.delete(
+  '/me/profile',
+  authRequired,
+  ensureActiveUser,
+  requireRole('PROFESSIONAL', 'CUSTOMER'),
+  meProfessionalController.deleteMine,
+);
 
 // Owner-scoped on `/professionals` (id)
 //
@@ -58,7 +65,7 @@ router.post(
   '/',
   authRequired,
   ensureActiveUser,
-  requireRole('PROFESSIONAL', 'CUSTOMER', 'ADMIN'),
+  requireRole('PROFESSIONAL', 'BUSINESS', 'CUSTOMER', 'ADMIN'),
   validate(createProfessionalSchema),
   professionalController.create,
 );

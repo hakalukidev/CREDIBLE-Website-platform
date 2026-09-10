@@ -23,7 +23,7 @@ export function BrandMark({
 }: BrandMarkProps) {
   return (
     <div className="flex items-center gap-3">
-      <span className="relative block h-10 w-10 overflow-hidden rounded-2xl ring-1 ring-black/5 shadow-sm">
+      <span className="relative block h-10 w-10 overflow-hidden rounded-lg bg-white ring-1 ring-black/5 shadow-sm">
         <SafeImage src={logoSrc} alt={logoAlt} fill sizes="40px" priority />
       </span>
       <div className="flex flex-col leading-tight">

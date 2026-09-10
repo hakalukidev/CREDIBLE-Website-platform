@@ -44,6 +44,28 @@ export const meProfessionalController = {
     }
   },
 
+  async deleteMine(req: Request, res: Response, next: NextFunction) {
+    try {
+      const ownerId = req.user!.id;
+      const profile = await prisma.professional.findUnique({ where: { ownerId } });
+      if (!profile) throw new NotFoundError('Professional profile not found');
+
+      await professionalService.delete(ownerId, profile.id);
+
+      // Downgrade role back to CUSTOMER since they no longer own a professional profile.
+      const remaining = await prisma.$transaction([
+        prisma.business.findFirst({ where: { ownerId, deletedAt: null } }),
+      ]);
+      if (!remaining[0]) {
+        await prisma.user.update({ where: { id: ownerId }, data: { role: 'CUSTOMER' } });
+      }
+
+      res.json({ success: true, data: { deleted: true } });
+    } catch (e) {
+      next(e);
+    }
+  },
+
   /**
    * GET /professionals/me/reviews — paginated reviews for the owner's profile.
    * Mirrors /businesses/me/reviews so the same ReviewItem UI works.

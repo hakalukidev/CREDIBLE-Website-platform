@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Component, type ErrorInfo, type ReactNode, useEffect, useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -27,6 +27,31 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { Building2 } from 'lucide-react';
 
 type ProfileFormValues = BusinessProfileUpdateInput;
+
+class SectionBoundary extends Component<
+  { children: ReactNode; title: string },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    debugWarn(`[profile-form] "${this.props.title}" section crashed:`, error, info.componentStack);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+            This section cannot be shown. Other sections remain editable.
+          </CardContent>
+        </Card>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export function ProfileForm() {
   const qc = useQueryClient();
@@ -307,13 +332,27 @@ function EditBusinessProfile() {
 
   return (
     <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
-      <BasicInfoSection form={form} />
-      <ImagesSection form={form} />
-      <ContactSection form={form} />
-      <AddressSection form={form} />
-      <HoursSection form={form} />
-      <CategoriesSection form={form} categories={categories ?? []} />
-      <SeoSection form={form} />
+      <SectionBoundary title="Basic info">
+        <BasicInfoSection form={form} />
+      </SectionBoundary>
+      <SectionBoundary title="Photos">
+        <ImagesSection form={form} />
+      </SectionBoundary>
+      <SectionBoundary title="Contact">
+        <ContactSection form={form} />
+      </SectionBoundary>
+      <SectionBoundary title="Address">
+        <AddressSection form={form} />
+      </SectionBoundary>
+      <SectionBoundary title="Operating hours">
+        <HoursSection form={form} />
+      </SectionBoundary>
+      <SectionBoundary title="Categories">
+        <CategoriesSection form={form} categories={categories ?? []} />
+      </SectionBoundary>
+      <SectionBoundary title="SEO">
+        <SeoSection form={form} />
+      </SectionBoundary>
 
       <div className="flex justify-end">
         <Button type="submit" loading={save.isPending}>

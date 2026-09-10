@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { Component, type ErrorInfo, type ReactNode, useCallback, useRef, useState } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { SafeImage } from '@/components/ui/safe-image';
 import { friendlyMessage } from '@/components/ui/friendly-error';
 import { uploadToStorage } from '@/lib/upload';
+import { debugWarn } from '@/lib/utils';
 
 interface ImageUploadProps {
   value?: string | null;
@@ -19,6 +20,25 @@ interface ImageUploadProps {
 
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_MB = 5;
+
+class ImageUploadErrorBoundary extends Component<
+  { children: ReactNode; fallback?: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    debugWarn('[ImageUpload] rendering error:', error, info.componentStack);
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? null;
+    }
+    return this.props.children;
+  }
+}
 
 export function ImageUpload({
   value,
@@ -44,14 +64,25 @@ export function ImageUpload({
 
       setUploading(true);
       try {
-        // Upload to S3/R2 — try the presigned direct PUT first, fall back to
-        // a server-side proxy when the bucket blocks cross-origin uploads.
         const { publicUrl } = await uploadToStorage(file, namespace);
 
-        // 3. Set the public URL in the form
-        onChange(publicUrl);
+        if (!publicUrl || typeof publicUrl !== 'string') {
+          debugWarn('[ImageUpload] upload succeeded but publicUrl is invalid:', publicUrl);
+          toast.error('Upload completed but no image URL was returned. Please try again.');
+          return;
+        }
+
+        try {
+          onChange(publicUrl);
+        } catch (onChangeErr) {
+          debugWarn('[ImageUpload] onChange callback threw:', onChangeErr);
+          toast.error('Upload succeeded but the form could not be updated. Please refresh.');
+          return;
+        }
+
         toast.success(`${label} uploaded`);
       } catch (err) {
+        debugWarn('[ImageUpload] upload failed:', err);
         toast.error(friendlyMessage(err, 'upload'));
       } finally {
         setUploading(false);
@@ -88,13 +119,20 @@ export function ImageUpload({
       >
         {value ? (
           <>
-            <SafeImage
-              src={value}
-              alt={label}
-              fill
-              className="object-cover"
-              sizes={isCover ? '100vw' : '144px'}
-            />
+            <ImageUploadErrorBoundary
+              fallback={
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={value} alt={label} className="h-full w-full object-cover" />
+              }
+            >
+              <SafeImage
+                src={value}
+                alt={label}
+                fill
+                className="object-cover"
+                sizes={isCover ? '100vw' : '144px'}
+              />
+            </ImageUploadErrorBoundary>
             {!disabled && !uploading && (
               <button
                 type="button"

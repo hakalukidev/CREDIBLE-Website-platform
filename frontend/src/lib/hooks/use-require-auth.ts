@@ -7,7 +7,7 @@ import { useCurrentUser } from './use-current-user';
 import type { UserRole } from '@credible/types';
 
 interface UseRequireAuthOptions {
-  role?: UserRole;
+  role?: UserRole | UserRole[];
   redirectTo?: string;
 }
 
@@ -16,6 +16,9 @@ interface UseRequireAuthOptions {
  * returns `isReady: false`. Once read, redirects to `/login` (or the supplied
  * path) if no user is signed in, or to `/` if a role is required and doesn't
  * match.
+ *
+ * `role` accepts a single role or an array of roles — if the user's role
+ * matches any of the provided roles, access is granted.
  */
 export function useRequireAuth(opts: UseRequireAuthOptions = {}) {
   const { role, redirectTo = '/login' } = opts;
@@ -24,7 +27,11 @@ export function useRequireAuth(opts: UseRequireAuthOptions = {}) {
 
   const isReady = true; // session store is synchronous from localStorage
   const missingUser = !user;
-  const roleMismatch = Boolean(role && user && user.role !== role);
+  const roleMismatch = Boolean(
+    role &&
+    user &&
+    (Array.isArray(role) ? !role.includes(user.role as UserRole) : user.role !== role),
+  );
 
   useEffect(() => {
     if (missingUser) {

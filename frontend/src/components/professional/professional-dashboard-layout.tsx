@@ -14,10 +14,14 @@ interface ProfessionalDashboardLayoutProps {
 /**
  * Shared shell for all authenticated `/professional/*` dashboard pages.
  * Mirrors the business dashboard layout but is role-gated to PROFESSIONAL.
+ *
+ * Accepts both PROFESSIONAL and CUSTOMER roles because a CUSTOMER who
+ * registered a professional profile may still have a stale JWT until
+ * their tokens are refreshed.
  */
 export function ProfessionalDashboardLayout({ children }: ProfessionalDashboardLayoutProps) {
   return (
-    <RequireAuth role="PROFESSIONAL">
+    <RequireAuth role={['PROFESSIONAL', 'CUSTOMER']}>
       <ProfessionalShell>{children}</ProfessionalShell>
     </RequireAuth>
   );

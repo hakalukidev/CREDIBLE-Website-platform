@@ -19,6 +19,7 @@ import {
   Flag,
 } from 'lucide-react';
 import { useSession } from '@/lib/store/session';
+import { SafeImage } from '@/components/ui/safe-image';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useUI } from '@/lib/store/theme';
@@ -76,7 +77,10 @@ export function AdminSidebar() {
       >
         <div className="flex h-16 items-center justify-between border-b px-4">
           <Link href="/admin" className="flex items-center gap-2">
-            <span className="text-lg font-bold tracking-tight">Credible Admin</span>
+            <span className="relative h-8 w-8 overflow-hidden rounded-lg bg-white ring-1 ring-black/5 shadow-sm">
+              <SafeImage src="/logo.jpg" alt="Credible" fill sizes="32px" priority />
+            </span>
+            <span className="text-lg font-bold tracking-tight">Admin</span>
           </Link>
           <Button
             variant="ghost"

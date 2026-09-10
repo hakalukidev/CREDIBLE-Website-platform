@@ -25,7 +25,7 @@ router.post(
   '/',
   authRequired,
   ensureActiveUser,
-  requireRole('BUSINESS', 'CUSTOMER'),
+  requireRole('BUSINESS', 'PROFESSIONAL', 'CUSTOMER'),
   validate(createBusinessSchema),
   businessController.create,
 );

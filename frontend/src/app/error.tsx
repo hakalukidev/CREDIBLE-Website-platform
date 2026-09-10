@@ -16,10 +16,11 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Dev-only — keep production console output clean.
     if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
       console.error('App error', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
     }
   }, [error]);
 

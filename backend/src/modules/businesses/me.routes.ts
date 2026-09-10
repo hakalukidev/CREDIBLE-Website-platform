@@ -21,7 +21,7 @@ const router = Router();
 // hit `/businesses/me/profile` without first refreshing their token
 // (and lets the dashboard's "you don't own a business yet" path
 // return a real 404 instead of a misleading 403).
-router.use(authRequired, ensureActiveUser, requireRole('BUSINESS', 'CUSTOMER'));
+router.use(authRequired, ensureActiveUser, requireRole('BUSINESS', 'PROFESSIONAL', 'CUSTOMER'));
 
 router.get('/profile', meController.getProfile);
 router.patch('/profile', validate(businessProfileUpdateSchema), meController.updateProfile);

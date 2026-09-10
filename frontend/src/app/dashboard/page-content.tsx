@@ -24,7 +24,6 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Building2,
   Eye,
   KeyRound,
   LineChart as LineChartIcon,
@@ -251,7 +250,6 @@ export function DashboardOverviewContent() {
 
   // --- Derived state --------------------------------------------------
 
-  const ownedCount = (business ? 1 : 0) + (professional ? 1 : 0);
   const isBusinessOwner = Boolean(business?.id);
   const totalReviewsWritten = reviews.length;
   const recentReviews = reviews.slice(0, 5);
@@ -294,7 +292,6 @@ export function DashboardOverviewContent() {
     ? buildBusinessStatCards({ business, analytics, analyticsLoading })
     : buildCustomerStatCards({
         reviewsWritten: totalReviewsWritten,
-        ownedCount,
         completionPercent: completion.percent,
       });
 
@@ -530,15 +527,13 @@ function buildBusinessStatCards({
 
 interface CustomerStatCardInput {
   reviewsWritten: number;
-  ownedCount: number;
   completionPercent: number;
 }
 
 function buildCustomerStatCards({
   reviewsWritten,
-  ownedCount,
   completionPercent,
-}: CustomerStatCardInput) {
+}: Omit<CustomerStatCardInput, 'ownedCount'>) {
   return [
     {
       icon: <MessageSquare className="h-4 w-4" />,
@@ -549,16 +544,6 @@ function buildCustomerStatCards({
           ? 'Find a business to get started'
           : `${reviewsWritten} ${pluralize(reviewsWritten, 'review')} total`,
       tone: 'primary' as const,
-    },
-    {
-      icon: <Building2 className="h-4 w-4" />,
-      label: 'Pages owned',
-      value: ownedCount.toLocaleString(),
-      helper:
-        ownedCount === 0
-          ? 'Register a business or professional page'
-          : 'Manage from "Your Businesses"',
-      tone: 'secondary' as const,
     },
     {
       icon: <Sparkles className="h-4 w-4" />,
@@ -587,7 +572,6 @@ interface QuickActionsInput {
 }
 
 function buildQuickActions({ business, professional }: QuickActionsInput) {
-  // The "View page" shortcut only makes sense if a page actually exists.
   const viewPageHref = business?.slug
     ? `/business/${business.slug}`
     : professional?.slug
@@ -604,7 +588,7 @@ function buildQuickActions({ business, professional }: QuickActionsInput) {
     },
     {
       href: '/dashboard/register',
-      title: ownedCount(business, professional) > 0 ? 'Add another page' : 'Register a page',
+      title: ownedCount(business, professional) > 0 ? 'Add another business' : 'Register a Business',
       description: 'Business or professional',
       icon: <PlusCircle className="h-4 w-4" />,
       tone: 'secondary' as const,

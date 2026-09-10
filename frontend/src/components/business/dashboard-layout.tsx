@@ -14,10 +14,15 @@ interface DashboardLayoutProps {
 /**
  * Shared shell for all authenticated `/business/*` dashboard pages.
  * Performs the role guard, then renders the sidebar + main panel.
+ *
+ * Accepts both BUSINESS and CUSTOMER roles because a CUSTOMER who
+ * registered a business may still have a stale JWT with role=CUSTOMER
+ * until their tokens are refreshed. The API routes perform the real
+ * ownership check.
  */
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <RequireAuth role="BUSINESS">
+    <RequireAuth role={['BUSINESS', 'CUSTOMER']}>
       <DashboardShell>{children}</DashboardShell>
     </RequireAuth>
   );

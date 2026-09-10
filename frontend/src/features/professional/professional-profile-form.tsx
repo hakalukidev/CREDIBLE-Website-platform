@@ -4,9 +4,19 @@ import { useEffect, useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input, Textarea } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiClient } from '@/lib/api/client';
@@ -228,6 +238,8 @@ function CreateProfessionalForm() {
 
 function EditProfessionalProfile() {
   const qc = useQueryClient();
+  const router = useRouter();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { data: profile } = useQuery({
     queryKey: qk.professionals.me(),
     queryFn: async () => {
@@ -301,6 +313,21 @@ function EditProfessionalProfile() {
     ) as UpdateProfessionalInput;
     save.mutate(cleaned);
   };
+
+  const deleteProfile = useMutation({
+    mutationFn: async () => {
+      await apiClient.delete('/professionals/me/profile');
+    },
+    onSuccess: async () => {
+      toast.success('Professional profile deleted');
+      await refreshSessionTokens();
+      qc.invalidateQueries({ queryKey: qk.professionals.all() });
+      router.push('/dashboard/profile');
+    },
+    onError: (err) => {
+      toast.error(friendlyMessage(err, 'profile'));
+    },
+  });
 
   return (
     <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
@@ -404,11 +431,51 @@ function EditProfessionalProfile() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <Button
+          type="button"
+          variant="destructive"
+          className="gap-2"
+          onClick={() => setDeleteDialogOpen(true)}
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete profile
+        </Button>
         <Button type="submit" loading={save.isPending}>
           Save profile
         </Button>
       </div>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete professional profile?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove your professional profile from Credible.
+              Your reviews will remain but will no longer be associated with a professional page.
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleteProfile.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              loading={deleteProfile.isPending}
+              onClick={() => deleteProfile.mutate()}
+            >
+              Yes, delete my profile
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </form>
   );
 }

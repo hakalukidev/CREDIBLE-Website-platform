@@ -3,7 +3,12 @@
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
-import { ReviewItem, type ReviewItemModel } from '@/components/business/review-item';
+import {
+  ReviewItem,
+  type ReviewItemModel,
+  type ReviewsListEnvelope,
+  unwrapReviewsListEnvelope,
+} from '@/components/business/review-item';
 import { RatingHistogram } from '@/components/reviews/rating-histogram';
 import {
   ReviewSortSelect,
@@ -24,14 +29,6 @@ const SORT_TO_PARAMS: Record<ReviewSortKey, { sortBy: string; sortOrder: 'asc' |
   highest: { sortBy: 'rating', sortOrder: 'desc' },
   lowest: { sortBy: 'rating', sortOrder: 'asc' },
 };
-
-interface ReviewsResponse {
-  items: ReviewItemModel[];
-  distribution: number[];
-  total: number;
-  average: number;
-  meta: { page: number; perPage: number; totalPages: number; total: number };
-}
 
 interface ReviewsTabProps {
   businessId: string;
@@ -84,17 +81,12 @@ export function ReviewsTab({ businessId }: ReviewsTabProps) {
     queryFn: async () => {
       const res = await apiClient.get<{
         success: true;
-        data: { items?: ReviewItemModel[]; distribution?: number[]; total?: number };
+        data: ReviewsListEnvelope;
         meta?: { total: number };
       }>(`/businesses/${businessId}/reviews?perPage=100&sortBy=helpfulCount&sortOrder=desc`);
-      const distribution = normalizeDistribution(
-        (res.data.data as { distribution?: unknown })?.distribution,
-      );
-      const items = (res.data.data as { items?: ReviewItemModel[] })?.items ?? [];
-      const total =
-        (res.data.data as { total?: number })?.total ??
-        res.data.meta?.total ??
-        items.length;
+      const { items, total: envelopeTotal } = unwrapReviewsListEnvelope(res.data.data);
+      const distribution = normalizeDistribution(res.data.data.distribution);
+      const total = envelopeTotal ?? res.data.meta?.total ?? items.length;
       const average = items.length
         ? items.reduce((s, r) => s + r.rating, 0) / items.length
         : 0;
@@ -115,13 +107,11 @@ export function ReviewsTab({ businessId }: ReviewsTabProps) {
       if (filter != null) params.set('rating', String(filter));
       const res = await apiClient.get<{
         success: true;
-        data: ReviewItemModel[];
-        meta?: { page: number; perPage: number; totalPages: number; total: number };
+        data: ReviewsListEnvelope;
+        meta: { page: number; perPage: number; totalPages: number; total: number };
       }>(`/businesses/${businessId}/reviews?${params.toString()}`);
-      return {
-        items: res.data.data,
-        meta: res.data.meta ?? { page, perPage: PAGE_SIZE, totalPages: 1, total: res.data.data.length },
-      };
+      const { items } = unwrapReviewsListEnvelope(res.data.data);
+      return { items, meta: res.data.meta };
     },
   });
 

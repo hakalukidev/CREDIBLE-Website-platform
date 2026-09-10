@@ -15,9 +15,10 @@ import {
   Building2,
   PlusCircle,
   LogOut,
-  ShieldCheck,
+  Globe,
   type LucideIcon,
 } from 'lucide-react';
+import { SafeImage } from '@/components/ui/safe-image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -32,13 +33,23 @@ interface NavItem {
   icon: LucideIcon;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const BASE_NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/dashboard/profile', label: 'Profile', icon: User2 },
   { href: '/dashboard/reviews', label: 'Reviews', icon: MessageSquare },
-  { href: '/dashboard/businesses', label: 'Your Businesses', icon: Building2 },
-  { href: '/dashboard/register', label: 'Register a Page', icon: PlusCircle },
 ];
+
+function useNavItems(): NavItem[] {
+  const session = useSession((s) => s.session);
+  const user = session?.user;
+  const role = user?.role;
+  const items = [...BASE_NAV_ITEMS];
+  if (role === 'CUSTOMER') {
+    items.push({ href: '/dashboard/businesses', label: 'Your Businesses', icon: Building2 });
+    items.push({ href: '/dashboard/register', label: 'Register a Business', icon: PlusCircle });
+  }
+  return items;
+}
 
 function isActive(pathname: string | null, href: string): boolean {
   if (!pathname) return false;
@@ -86,12 +97,13 @@ interface NavLinksProps {
 }
 
 function NavLinks({ pathname, onNavigate }: NavLinksProps) {
+  const navItems = useNavItems();
   return (
     <nav className="flex flex-col gap-0.5">
       <p className="px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
         Workspace
       </p>
-      {NAV_ITEMS.map((item) => {
+      {navItems.map((item) => {
         const active = isActive(pathname, item.href);
         const Icon = item.icon;
         return (
@@ -129,6 +141,22 @@ function NavLinks({ pathname, onNavigate }: NavLinksProps) {
           </Link>
         );
       })}
+      <div className="mt-3 pt-3 border-t border-border/40">
+        <Link
+          href="/"
+          onClick={onNavigate}
+          className="group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+        >
+          <span
+            className={cn(
+              'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors bg-transparent text-muted-foreground group-hover:bg-background/80 group-hover:text-foreground',
+            )}
+          >
+            <Globe className="h-4 w-4" aria-hidden />
+          </span>
+          <span className="truncate">Explore Website</span>
+        </Link>
+      </div>
     </nav>
   );
 }
@@ -217,12 +245,8 @@ export function SidebarContent({ pathname, onSignOut, onNavigate }: SidebarConte
           onClick={onNavigate}
           className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
         >
-          <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_4px_12px_-4px_hsl(var(--primary)/0.5)] transition-transform duration-200 group-hover:scale-[1.04]">
-            <ShieldCheck className="h-4 w-4" />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/0 via-white/15 to-white/0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-            />
+          <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+            <SafeImage src="/logo.jpg" alt="Credible" fill sizes="36px" priority />
           </span>
           <span className="flex flex-col leading-tight">
             <span className="text-[15px] font-semibold tracking-tight text-foreground">

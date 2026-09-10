@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { StarRating } from '@/components/reviews/star-rating';
 import { VerifiedBadge } from '@/components/verification/verified-badge';
 import { ReviewsTab } from '@/components/business/reviews-tab';
+import { unwrapReviewsListEnvelope } from '@/components/business/review-item';
 import { ReviewForm } from '@/features/review/review-form';
 import { ContactForm } from '@/features/business/contact-form';
 import { GalleryCarousel } from '@/components/business/gallery-carousel';
@@ -51,20 +52,8 @@ async function fetchTopReviews(businessId: string) {
       { next: { revalidate: 60 } },
     );
     if (!res.ok) return [];
-    const body = (await res.json()) as {
-      success: true;
-      data: Array<{
-        id: string;
-        rating: number;
-        title?: string;
-        content: string;
-        createdAt: string;
-        helpfulCount?: number;
-        response?: { content: string; createdAt: string };
-        user: { id: string; firstName?: string; lastName?: string };
-      }>;
-    };
-    return body.data;
+    const body = (await res.json()) as { success: true; data: unknown };
+    return unwrapReviewsListEnvelope(body.data).items;
   } catch {
     return [];
   }
@@ -130,15 +119,16 @@ export default async function BusinessProfilePage({ params }: PageProps) {
     businessName: business.displayName,
     reviewId: r.id,
     rating: r.rating,
-    title: r.title,
+    title: r.title ?? undefined,
     content: r.content,
     author: [r.user.firstName, r.user.lastName].filter(Boolean).join(' ') || 'Anonymous',
     authorId: r.user.id,
     createdAt: r.createdAt,
     helpfulCount: r.helpfulCount,
-    response: r.response
-      ? { content: r.response.content, at: r.response.createdAt }
-      : undefined,
+    response:
+      r.responseContent && r.responseAt
+        ? { content: r.responseContent, at: r.responseAt }
+        : undefined,
   }));
 
   const jsonLd = [

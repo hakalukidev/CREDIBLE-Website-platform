@@ -110,6 +110,13 @@ export const professionalService = {
     });
   },
 
+  async delete(ownerId: string, professionalId: string) {
+    const professional = await professionalRepository.findById(professionalId);
+    if (!professional) throw new NotFoundError('Professional');
+    if (professional.ownerId !== ownerId) throw new ForbiddenError('You do not own this professional profile');
+    return professionalRepository.softDelete(professionalId);
+  },
+
   async getBySlug(slug: string) {
     const professional = await professionalRepository.findBySlug(slug);
     if (!professional || professional.deletedAt) throw new NotFoundError('Professional');
@@ -138,8 +145,8 @@ export const professionalService = {
       minRating: params.minRating,
       skip: params.skip,
       take: params.take,
-      sortBy: undefined,
-      sortOrder: 'desc',
+      sortBy: params.sortBy,
+      sortOrder: params.sortOrder ?? 'desc',
     });
     return { items, total };
   },

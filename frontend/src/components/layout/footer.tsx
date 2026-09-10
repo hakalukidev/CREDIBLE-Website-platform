@@ -71,7 +71,7 @@ export function SiteFooter() {
       <div className="container-wide relative grid grid-cols-2 gap-10 py-14 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
         <div className="col-span-2 md:col-span-1">
           <Link href="/" className="flex items-center gap-2.5" aria-label="Credible — home">
-            <span className="relative block h-9 w-9 overflow-hidden rounded-xl ring-1 ring-black/5 shadow-sm">
+            <span className="relative block h-9 w-9 overflow-hidden rounded-lg bg-white ring-1 ring-black/5 shadow-sm">
               <SafeImage src="/logo.jpg" alt="Credible" fill sizes="36px" />
             </span>
             <span className="font-display text-lg font-bold tracking-tight">Credible</span>

@@ -103,6 +103,7 @@ export function ProfileImageUpload({
 
   return (
     <div className={cn('w-full', className)}>
+      <div className="relative inline-block">
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -165,7 +166,12 @@ export function ProfileImageUpload({
             type="button"
             variant="destructive"
             size="icon"
-            className="absolute top-1 right-1 h-7 w-7 rounded-full shadow-md"
+            className={cn(
+              "absolute h-7 w-7 rounded-full shadow-md z-10",
+              isAvatar
+                ? "-bottom-1 -right-1"
+                : "top-1 right-1"
+            )}
             onClick={(e) => {
               e.stopPropagation();
               handleClear();
@@ -184,6 +190,7 @@ export function ProfileImageUpload({
           onChange={handleFile}
           disabled={disabled}
         />
+      </div>
       </div>
       {!isAvatar && (
         <p className="mt-1 text-xs text-muted-foreground">

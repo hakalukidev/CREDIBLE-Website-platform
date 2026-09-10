@@ -215,7 +215,7 @@ export function SiteHeader() {
           className="group flex items-center gap-2.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           aria-label="Credible — go to homepage"
         >
-          <span className="relative block h-8 w-8 overflow-hidden rounded-xl ring-1 ring-black/5 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:ring-primary/30">
+          <span className="relative block h-8 w-8 overflow-hidden bg-white ring-1 ring-black/5 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:ring-primary/30">
             <SafeImage
               src="/logo.jpg"
               alt="Credible"

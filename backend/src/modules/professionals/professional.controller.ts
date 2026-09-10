@@ -69,7 +69,7 @@ export const professionalController = {
   async search(req: Request, res: Response, next: NextFunction) {
     try {
       const { page, perPage, skip, take } = normalizePagination(req.query);
-      const { q, profession, city, categoryId, verifiedOnly, minRating } = req.query as Record<string, string | undefined>;
+      const { q, profession, city, categoryId, verifiedOnly, minRating, sortBy, sortOrder } = req.query as Record<string, string | undefined>;
       const { items, total } = await professionalService.search({
         q,
         profession,
@@ -77,6 +77,8 @@ export const professionalController = {
         categoryId,
         verifiedOnly: verifiedOnly === 'true',
         minRating: minRating ? Number(minRating) : undefined,
+        sortBy,
+        sortOrder: sortOrder as 'asc' | 'desc' | undefined,
         page,
         perPage,
         skip,

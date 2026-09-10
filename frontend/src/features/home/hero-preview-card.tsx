@@ -75,7 +75,7 @@ export function HeroPreviewCard({ limit = 4 }: HeroPreviewCardProps = {}) {
         className="relative"
       >
         <Card className="relative overflow-hidden border-border/80 shadow-pop">
-          <div className="h-24 bg-gradient-to-r from-purple-500 via-primary to-green-500" />
+          <div className="h-24 bg-gradient-to-r from-purple-500 via-primary to-pink-400" />
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"

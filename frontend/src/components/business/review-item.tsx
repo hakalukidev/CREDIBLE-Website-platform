@@ -26,6 +26,31 @@ export interface ReviewItemModel {
   };
 }
 
+/**
+ * The public list endpoints (`GET /businesses/:id/reviews`,
+ * `GET /professionals/:id/reviews`) return their payload inside an envelope:
+ *   { success: true, data: { items, distribution, total }, meta: {...} }
+ * Owners-list endpoints (`/businesses/me/reviews`, `/professionals/me/reviews`)
+ * return a bare array instead. Centralise the envelope shape and unwrap helper
+ * so consumers don't duplicate the cast.
+ */
+export interface ReviewsListEnvelope {
+  items?: ReviewItemModel[];
+  distribution?: number[];
+  total?: number;
+}
+
+export function unwrapReviewsListEnvelope(raw: unknown): {
+  items: ReviewItemModel[];
+  total: number | undefined;
+} {
+  if (raw && typeof raw === 'object') {
+    const envelope = raw as ReviewsListEnvelope;
+    return { items: envelope.items ?? [], total: envelope.total };
+  }
+  return { items: [], total: undefined };
+}
+
 interface ReviewItemProps {
   review: ReviewItemModel;
   viewer: 'OWNER' | 'PUBLIC';

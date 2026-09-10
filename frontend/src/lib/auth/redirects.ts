@@ -24,7 +24,7 @@ export function homeForRole(role: string): string {
     case 'CUSTOMER':
     case 'GUEST':
     default:
-      return '/';
+      return '/dashboard/profile';
   }
 }
 
