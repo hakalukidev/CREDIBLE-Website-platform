@@ -54,7 +54,7 @@ export default function AdminSettingsPage() {
           ) : data && data.length ? (
             <div className="space-y-2">
               {data.map((s) => (
-                <div key={s.id} className="rounded-md border p-3">
+                <div key={s.key} className="rounded-md border p-3">
                   <div className="flex items-center justify-between">
                     <div className="font-medium">{s.key}</div>
                     <div className="text-xs text-muted-foreground">

@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  const seedPassword = process.env.SEED_PASSWORD ?? 'Password123!';
+  const seedPassword = process.env.SEED_PASSWORD ?? 'Password12!';
   if (process.env.NODE_ENV === 'production' && !process.env.SEED_PASSWORD) {
     throw new Error('SEED_PASSWORD must be set in production to avoid seeding with a known default password.');
   }
@@ -16,7 +16,7 @@ async function main() {
   // Admin user
   const admin = await prisma.user.upsert({
     where: { email: 'admin@credible.local' },
-    update: {},
+    update: { passwordHash },
     create: {
       email: 'admin@credible.local',
       passwordHash,

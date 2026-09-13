@@ -126,7 +126,8 @@ export interface VerificationDocument {
 
 export interface VerificationApplication {
   id: string;
-  businessId: string;
+  businessId: string | null;
+  professionalId: string | null;
   level: VerificationLevel;
   type: 'BASIC' | 'PREMIUM';
   status: VerificationStatusKey;
@@ -151,6 +152,11 @@ export interface VerificationApplication {
     displayName: string;
     slug?: string;
     logo?: string | null;
+  };
+  professional?: {
+    id: string;
+    displayName: string;
+    slug?: string;
   };
 }
 

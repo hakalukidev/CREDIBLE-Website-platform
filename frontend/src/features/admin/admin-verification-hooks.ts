@@ -27,12 +27,13 @@ export interface AdminStats {
 
 export interface AdminApplication {
   id: string;
-  businessId: string;
+  businessId: string | null;
   status: VerificationStatusKey;
   appliedAt: string;
   level: VerificationLevel;
   type: 'BASIC' | 'PREMIUM';
-  business: { id: string; displayName: string; slug: string; ownerId: string };
+  business: { id: string; displayName: string; slug: string; ownerId: string } | null;
+  professional: { id: string; displayName: string; slug: string; ownerId: string } | null;
   documents: Pick<VerificationDocument, 'id' | 'type' | 'status'>[];
 }
 

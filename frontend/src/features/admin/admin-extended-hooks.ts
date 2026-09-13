@@ -97,7 +97,6 @@ export interface AdminAuditLog {
 }
 
 export interface AdminSetting {
-  id: string;
   key: string;
   valueJson: unknown;
   updatedAt: string;

@@ -117,7 +117,9 @@ export default function AdminApplicationDetailPage({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>{app.data.business?.displayName ?? app.data.businessId}</CardTitle>
+              <CardTitle>
+                {app.data.business?.displayName ?? app.data.professional?.displayName ?? '—'}
+              </CardTitle>
               <CardDescription>
                 Applied {new Date(app.data.appliedAt).toLocaleString()} ·{' '}
                 Level <strong>{app.data.level}</strong> · Type <strong>{app.data.type}</strong>
@@ -126,6 +128,13 @@ export default function AdminApplicationDetailPage({
             {app.data.business?.slug && (
               <Button asChild variant="outline" size="sm">
                 <Link href={`/business/${app.data.business.slug}`} target="_blank">
+                  View public profile <ExternalLink className="h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+            {app.data.professional?.slug && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/p/${app.data.professional.slug}`} target="_blank">
                   View public profile <ExternalLink className="h-4 w-4" />
                 </Link>
               </Button>
@@ -285,6 +294,7 @@ export default function AdminApplicationDetailPage({
             onSubmit={(e) => {
               e.preventDefault();
               if (revokeReason.trim().length < 5) return;
+              if (!app.data!.businessId) return;
               revoke.mutate(
                 { businessId: app.data!.businessId, reason: revokeReason },
                 {

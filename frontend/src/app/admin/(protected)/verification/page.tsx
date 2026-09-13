@@ -143,7 +143,7 @@ export default function AdminVerificationQueuePage() {
             <table className="w-full text-sm">
               <thead className="text-left text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="px-2 py-2">Business</th>
+                  <th className="px-2 py-2">Entity</th>
                   <th className="px-2 py-2">Level</th>
                   <th className="px-2 py-2">Documents</th>
                   <th className="px-2 py-2">Status</th>
@@ -191,13 +191,14 @@ export default function AdminVerificationQueuePage() {
 }
 
 function Row({ app }: { app: AdminApplication }) {
+  const target = app.business ?? app.professional;
   return (
     <tr className="border-t border-border">
       <td className="px-2 py-3">
         <Link href={`/admin/verification/${app.id}`} className="font-medium hover:underline">
-          {app.business.displayName}
+          {target?.displayName ?? '—'}
         </Link>
-        <p className="text-xs text-muted-foreground">{app.business.slug}</p>
+        <p className="text-xs text-muted-foreground">{target?.slug}</p>
       </td>
       <td className="px-2 py-3 text-xs">{app.level}</td>
       <td className="px-2 py-3 text-xs">{app.documents.length}</td>

@@ -22,15 +22,17 @@ interface ChromeFrameProps {
  */
 export function ChromeFrame({ children }: ChromeFrameProps) {
   const pathname = usePathname();
-  const isDashboard = pathname?.startsWith('/dashboard') ?? false;
+  const ownsChrome =
+    (pathname?.startsWith('/dashboard') ?? false) ||
+    (pathname?.startsWith('/admin') ?? false);
 
   return (
     <>
-      {!isDashboard && <SiteHeader />}
+      {!ownsChrome && <SiteHeader />}
       <main id="main-content" className="min-h-[60vh]" tabIndex={-1}>
         {children}
       </main>
-      {!isDashboard && <SiteFooter />}
+      {!ownsChrome && <SiteFooter />}
     </>
   );
 }
