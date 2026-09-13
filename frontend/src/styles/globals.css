@@ -13,8 +13,11 @@
     --background: 220 33% 99%;
     --foreground: 224 26% 9%;
 
-    --card: 0 0% 100%;
+--card: 0 0% 100%;
     --card-foreground: 224 26% 9%;
+
+    --popover: 220 33% 99%;
+    --popover-foreground: 224 26% 9%;
 
     /* Primary — rich indigo-blue (trust) */
     --primary: 239 84% 54%;
@@ -69,8 +72,11 @@
     --background: 224 30% 7%;
     --foreground: 220 26% 96%;
 
-    --card: 224 28% 10%;
+--card: 224 28% 10%;
     --card-foreground: 220 26% 96%;
+
+    --popover: 224 30% 7%;
+    --popover-foreground: 220 26% 96%;
 
     --primary: 236 84% 64%;
     --primary-foreground: 236 60% 12%;
@@ -257,4 +263,36 @@
     color: inherit !important;
     text-decoration: none !important;
   }
+}
+
+/* ============================================================
+   Admin console accent � visually distinct from the public site.
+   Rotates the trust-blue primary toward a red "restricted" accent
+   for anything scoped with .admin-shell (the admin layout).
+   ============================================================ */
+.admin-shell {
+  --primary: 350 85% 53%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 350 85% 53%;
+  --accent: 350 60% 97%;
+  --accent-foreground: 350 60% 28%;
+  --muted: 350 20% 96%;
+  --muted-foreground: 350 10% 44%;
+  --border: 350 16% 90%;
+}
+
+.dark .admin-shell {
+  --background: 224 30% 7%;
+  --foreground: 220 26% 96%;
+  --card: 224 28% 10%;
+  --card-foreground: 220 26% 96%;
+  --primary: 350 85% 58%;
+  --primary-foreground: 350 60% 10%;
+  --ring: 350 85% 58%;
+  --accent: 350 45% 12%;
+  --accent-foreground: 350 55% 85%;
+  --muted: 224 26% 15%;
+  --muted-foreground: 220 15% 64%;
+  --border: 224 20% 20%;
+  --input: 224 20% 22%;
 }

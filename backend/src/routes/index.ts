@@ -27,6 +27,7 @@ import { adminAnalyticsRouter } from '../modules/admin/analytics.routes';
 import { businessAnalyticsRouter } from '../modules/businesses/analytics.routes';
 import { adminExtendedRouter } from '../modules/admin-extended/admin-extended.routes';
 import { adminReviewsRouter } from '../modules/admin-reviews/admin-reviews.routes';
+import { adminAuthRouter } from '../modules/admin-auth/admin-auth.routes';
 import { env } from '../config/env';
 
 export function buildRouter(): Router {
@@ -78,7 +79,10 @@ router.get('/health', async (_req, res) => {
   router.use('/payments', paymentRouter);
   router.use('/business/subscription', subscriptionRouter);
 
-  // Phase 4 — admin billing & vouchers (nested under /admin/billing).
+  // Phase 4 — admin billing & vouchers (nested under /admin/billing). The
+  // admin-auth gateway (login/otp/logout/me/audit-visit) is mounted first so
+  // its unauthenticated endpoints are never caught by the guarded admin routers.
+  router.use('/admin', adminAuthRouter);
   router.use('/admin', adminRouter);
   router.use('/admin', adminAnalyticsRouter);
   router.use('/admin/billing', billingRouter);

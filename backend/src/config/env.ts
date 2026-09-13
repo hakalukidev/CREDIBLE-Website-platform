@@ -17,6 +17,11 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(16),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
+  // Admin-only JWT. Kept separate from user auth — admin sessions must never
+  // be opened with a regular user token. Set an explicit value in production;
+  // when unset it is derived from JWT_ACCESS_SECRET so local dev works.
+  JWT_ADMIN_SECRET: z.string().min(16).optional(),
+  JWT_ADMIN_EXPIRES_IN: z.string().default('30m'),
 
   // Redis — REDIS_URL takes precedence when set (managed providers like
   // Render/Railway expose a single connection string rather than
@@ -101,7 +106,16 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-export const env = parsed.data;
+export const env = {
+  ...parsed.data,
+  /**
+   * Derive the admin secret from JWT_ACCESS_SECRET when it isn't explicitly
+   * configured. Fine for development; production deployments should set an
+   * independent JWT_ADMIN_SECRET so a leaked user secret can't forge admin
+   * sessions (and vice-versa).
+   */
+  JWT_ADMIN_SECRET: parsed.data.JWT_ADMIN_SECRET ?? `${parsed.data.JWT_ACCESS_SECRET}:admin`,
+};
 export const isProd = env.NODE_ENV === 'production';
 export const isTest = env.NODE_ENV === 'test';
 export const isDev = env.NODE_ENV === 'development';

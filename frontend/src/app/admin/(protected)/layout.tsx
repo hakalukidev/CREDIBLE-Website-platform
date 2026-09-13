@@ -1,16 +1,12 @@
 import type { ReactNode } from 'react';
 import { AdminLayout } from '@/components/admin/admin-layout';
-import { RequireAuth } from '@/components/auth/require-auth';
 
 /**
- * Authenticated admin shell. Wraps every `/admin/*` page (except `/admin/login`)
- * in a session guard + sidebar layout. The route group `(protected)` keeps the
- * guard from intercepting the public login page.
+ * Authenticated admin shell. `AdminLayout` enforces the dedicated admin-session
+ * guard and renders the isolated layout (dark + red accent, own sidebar/header)
+ * for every `/admin/*` page except the `/admin/login` gateway, which lives
+ * outside this `(protected)` route group.
  */
 export default function AdminProtectedLayout({ children }: { children: ReactNode }) {
-  return (
-    <RequireAuth role="ADMIN">
-      <AdminLayout>{children}</AdminLayout>
-    </RequireAuth>
-  );
+  return <AdminLayout>{children}</AdminLayout>;
 }

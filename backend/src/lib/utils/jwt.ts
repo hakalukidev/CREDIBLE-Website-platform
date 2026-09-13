@@ -53,3 +53,24 @@ export function issueTokenPair(user: { id: string; email: string; role: UserRole
   const { token: refreshToken } = signRefreshToken(user.id);
   return { accessToken: token, refreshToken, expiresIn };
 }
+
+export interface AdminToken {
+  token: string;
+  expiresIn: number;
+}
+
+/**
+ * Signs a dedicated admin JWT. Deliberately separate from `signAccessToken`:
+ * a regular user token can never authenticate against admin routes (and vice
+ * versa). The {@link env.JWT_ADMIN_SECRET} is distinct from the user secret.
+ */
+export function signAdminToken(user: { id: string; email: string }): AdminToken {
+  const expiresIn = parseExpires(env.JWT_ADMIN_EXPIRES_IN);
+  const opts: SignOptions = { expiresIn: env.JWT_ADMIN_EXPIRES_IN as SignOptions['expiresIn'] };
+  const token = jwt.sign(
+    { sub: user.id, email: user.email, role: 'ADMIN' as const, type: 'admin' },
+    env.JWT_ADMIN_SECRET,
+    opts,
+  );
+  return { token, expiresIn };
+}

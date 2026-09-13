@@ -43,6 +43,25 @@ export const loginSchema = z
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
+export const adminLoginSchema = z
+  .object({
+    loginId: z.string().trim().min(3).max(254),
+    password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+    otp: z.string().trim().regex(/^[0-9]{4,8}$/, 'Invalid code').optional(),
+  })
+  .strict();
+
+export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
+
+export const adminLoginOtpSchema = z
+  .object({
+    loginId: z.string().trim().min(3).max(254),
+    password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+  })
+  .strict();
+
+export type AdminLoginOtpInput = z.infer<typeof adminLoginOtpSchema>;
+
 export const requestOtpSchema = z
   .object({
     email: emailSchema.optional(),

@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type AxiosInstance } from 'axios';
 import { getSession } from '../store/session';
+import { getAdminSession, isAdminSessionExpired } from '../admin/admin-session';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
@@ -10,7 +11,24 @@ export const apiClient: AxiosInstance = axios.create({
   timeout: 20_000,
 });
 
+/** True for calls that target the hidden admin surface. */
+function isAdminRequest(url?: string): boolean {
+  return Boolean(url && /^\/admin\//.test(url));
+}
+
 apiClient.interceptors.request.use((config) => {
+  // Admin endpoints are authenticated with the separate admin JWT. Regular
+  // user tokens are never used against the admin API (and vice-versa).
+  if (isAdminRequest(config.url)) {
+    const admin = getAdminSession();
+    const token = admin && !isAdminSessionExpired(admin) ? admin.token : null;
+    if (token) {
+      config.headers.set('Authorization', `Bearer ${token}`);
+      return config;
+    }
+    // Fall through without a header — the API will answer 401.
+    return config;
+  }
   const token = getSession()?.tokens?.accessToken;
   if (token) {
     config.headers.set('Authorization', `Bearer ${token}`);
@@ -20,10 +38,14 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (res) => res,
-  async (error: AxiosError) => {
+  (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Trigger a client-side logout / redirect as needed.
-      if (typeof window !== 'undefined') {
+      if (isAdminRequest(error.config?.url)) {
+        // Keep the public user session intact — only the admin session dies.
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('credible:admin-unauthorized'));
+        }
+      } else if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('credible:unauthorized'));
       }
     }

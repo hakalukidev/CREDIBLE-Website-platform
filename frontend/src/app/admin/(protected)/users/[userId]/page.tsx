@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ConfirmAction } from '@/components/ui/confirm-action';
 import { useAdminUser, useUpdateUser } from '@/features/admin/admin-extended-hooks';
 import { formatDate } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
@@ -17,6 +17,7 @@ export default function AdminUserDetailPage() {
 
   const [role, setRole] = useState<string>('');
   const [status, setStatus] = useState<string>('');
+  const [confirm, setConfirm] = useState<null | { kind: 'ROLE'; value: string } | { kind: 'STATUS'; value: string }>(null);
 
   if (isLoading || !user) {
     return (
@@ -26,14 +27,30 @@ export default function AdminUserDetailPage() {
     );
   }
 
-  const onSaveRole = async () => {
-    await update.mutateAsync({ id: user.id, role: role as never });
+  const onSaveRole = async (value: string) => {
+    await update.mutateAsync({ id: user.id, role: value as never });
     setRole('');
   };
 
-  const onSaveStatus = async () => {
-    await update.mutateAsync({ id: user.id, status: status as never });
+  const onSaveStatus = async (value: string) => {
+    await update.mutateAsync({ id: user.id, status: value as never });
     setStatus('');
+  };
+
+  const handleRoleSave = () => {
+    if (role === 'ADMIN') {
+      setConfirm({ kind: 'ROLE', value: 'ADMIN' });
+    } else {
+      void onSaveRole(role);
+    }
+  };
+
+  const handleStatusSave = () => {
+    if (status === 'SUSPENDED' || status === 'DELETED') {
+      setConfirm({ kind: 'STATUS', value: status });
+    } else {
+      void onSaveStatus(status);
+    }
   };
 
   return (
@@ -77,7 +94,7 @@ export default function AdminUserDetailPage() {
             <option value="PROFESSIONAL">Professional</option>
             <option value="ADMIN">Admin</option>
           </select>
-          <Button onClick={onSaveRole} disabled={!role || update.isPending}>
+          <Button onClick={handleRoleSave} disabled={!role || update.isPending}>
             Save
           </Button>
         </CardContent>
@@ -100,11 +117,43 @@ export default function AdminUserDetailPage() {
             <option value="PENDING_VERIFICATION">Pending verification</option>
             <option value="DELETED">Deleted</option>
           </select>
-          <Button onClick={onSaveStatus} disabled={!status || update.isPending}>
+          <Button onClick={handleStatusSave} disabled={!status || update.isPending}>
             Save
           </Button>
         </CardContent>
       </Card>
+
+      <ConfirmAction
+        open={confirm?.kind === 'ROLE'}
+        onOpenChange={(open) => !open && setConfirm(null)}
+        onConfirm={() => {
+          if (confirm?.kind === 'ROLE') void onSaveRole(confirm.value);
+          setConfirm(null);
+        }}
+        title="Grant admin access"
+        description={`This permanently grants ${user.firstName ?? user.email} full access to the admin console. Only do this for staff you trust implicitly.`}
+        confirmLabel="Grant admin role"
+        requireType="ADMIN"
+        loading={update.isPending}
+      />
+
+      <ConfirmAction
+        open={confirm?.kind === 'STATUS'}
+        onOpenChange={(open) => !open && setConfirm(null)}
+        onConfirm={() => {
+          if (confirm?.kind === 'STATUS') void onSaveStatus(confirm.value);
+          setConfirm(null);
+        }}
+        title={confirm?.value === 'DELETED' ? 'Delete account' : 'Suspend account'}
+        description={
+          confirm?.value === 'DELETED'
+            ? `This will permanently delete ${user.email} and their data. Audited for traceability.`
+            : `${user.email} will be locked out immediately. The account can be reactivated later.`
+        }
+        confirmLabel={confirm?.value === 'DELETED' ? 'Permanently delete' : 'Suspend account'}
+        requireType={confirm?.value === 'DELETED' ? 'DELETE' : 'SUSPEND'}
+        loading={update.isPending}
+      />
     </div>
   );
 }

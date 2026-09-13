@@ -15,7 +15,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../lib/db/prisma';
-import { authRequired, ensureActiveUser, requireRole } from '../../middleware/auth';
+import { adminAuthRequired, ensureActiveUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import {
   adminListPaymentsSchema,
@@ -27,7 +27,7 @@ import { voucherService } from '../../services/voucherService';
 import { NotFoundError } from '../../lib/errors/AppError';
 
 const router = Router();
-router.use(authRequired, ensureActiveUser, requireRole('ADMIN'));
+router.use(adminAuthRequired, ensureActiveUser);
 
 // ----- Payments -----
 router.get(

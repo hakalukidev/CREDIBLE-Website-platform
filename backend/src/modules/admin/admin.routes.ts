@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { authRequired, ensureActiveUser, requireRole } from '../../middleware/auth';
+import { adminAuthRequired, ensureActiveUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { moderationDecisionSchema } from '@credible/shared';
 import { adminController } from './admin.controller';
 
 const router = Router();
 
-router.use(authRequired, ensureActiveUser, requireRole('ADMIN'));
+router.use(adminAuthRequired, ensureActiveUser);
 
 router.get('/dashboard', adminController.dashboard);
 router.get('/reviews/flagged', adminController.listFlaggedReviews);

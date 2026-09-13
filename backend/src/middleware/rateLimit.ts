@@ -29,6 +29,25 @@ export const authRateLimit = rateLimit({
   },
 });
 
+/**
+ * Admin gateway limiter — 5 attempts / 15 minutes / IP. Much tighter than the
+ * regular auth limiter because the admin surface is a high-value target.
+ */
+export const adminLoginRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `admin-login:${req.ip ?? 'unknown'}`,
+  message: {
+    success: false,
+    error: {
+      code: 'ADMIN_RATE_LIMITED',
+      message: 'Too many admin login attempts. Please try again later.',
+    },
+  },
+});
+
 export const uploadRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 30,

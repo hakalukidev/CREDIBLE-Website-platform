@@ -15,13 +15,13 @@ import {
   adminListPaymentsSchema,
   adminListSubscriptionsSchema,
 } from '@credible/shared';
-import { authRequired, ensureActiveUser, requireRole } from '../../middleware/auth';
+import { adminAuthRequired, ensureActiveUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { adminExtendedController } from './admin-extended.controller';
 
 const router = Router();
 
-router.use(authRequired, ensureActiveUser, requireRole('ADMIN'));
+router.use(adminAuthRequired, ensureActiveUser);
 
 // Users
 router.get('/users', validate(adminListUsersSchema, 'query'), adminExtendedController.listUsers);

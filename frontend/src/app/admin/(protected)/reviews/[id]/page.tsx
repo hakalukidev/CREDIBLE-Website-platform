@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ConfirmAction } from '@/components/ui/confirm-action';
 import {
   useAdminReview,
   useAdminRespondReview,
@@ -24,6 +25,7 @@ export default function AdminReviewDetailPage() {
 
   const [response, setResponse] = useState('');
   const [reason, setReason] = useState('');
+  const [hideConfirm, setHideConfirm] = useState(false);
 
   if (isLoading || !review) {
     return (
@@ -151,7 +153,7 @@ export default function AdminReviewDetailPage() {
             <Button
               variant="outline"
               disabled={reason.length < 3 || force.isPending}
-              onClick={() => onForce('HIDDEN')}
+              onClick={() => setHideConfirm(true)}
             >
               Force hide
             </Button>
@@ -165,6 +167,20 @@ export default function AdminReviewDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmAction
+        open={hideConfirm}
+        onOpenChange={setHideConfirm}
+        onConfirm={() => {
+          void onForce('HIDDEN');
+          setHideConfirm(false);
+        }}
+        title="Hide review"
+        description={`This removes “${review.title ?? `Review by ${review.user.firstName ?? review.user.email}`}” from the public profile immediately. The review is not deleted and can be published again.`}
+        confirmLabel="Hide review"
+        requireType="HIDE"
+        loading={force.isPending}
+      />
     </div>
   );
 }

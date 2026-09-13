@@ -18,33 +18,54 @@ import {
   Settings as SettingsIcon,
   Flag,
 } from 'lucide-react';
-import { useSession } from '@/lib/store/session';
-import { SafeImage } from '@/components/ui/safe-image';
+import { useAdminSession } from '@/lib/admin/admin-session';
+import { useAdminLogout } from '@/features/admin/admin-auth-hooks';
+import { useAdminBadgeCounts } from '@/features/admin/admin-badges';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useUI } from '@/lib/store/theme';
+import { Badge } from '@/components/ui/badge';
 
 interface NavItem {
   href: Route;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  badgeCount?: number;
 }
 
-// NOTE: "Reviews" (/admin/reviews) is wired here because the API supports
-// flagged-review moderation (GET/POST /admin/reviews/...). The route file
-// lives at apps/web/src/app/admin/(protected)/reviews/page.tsx.
-const NAV_ITEMS: NavItem[] = [
-  { href: '/admin', label: 'Overview', icon: LayoutDashboard },
-  { href: '/admin/verification', label: 'Verification', icon: ShieldCheck },
-  { href: '/admin/reviews', label: 'Reviews', icon: Flag },
-  { href: '/admin/users', label: 'Users', icon: Users },
-  { href: '/admin/businesses', label: 'Businesses', icon: Building2 },
-  { href: '/admin/professionals', label: 'Professionals', icon: Stethoscope },
-  { href: '/admin/contact', label: 'Contact', icon: MessageSquare },
-  { href: '/admin/billing', label: 'Billing', icon: Banknote },
-  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/admin/audit', label: 'Audit Log', icon: ScrollText },
-  { href: '/admin/settings', label: 'Settings', icon: SettingsIcon },
+const NAV_SECTIONS: Array<{ title: string; items: NavItem[] }> = [
+  { title: 'Overview', items: [{ href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard }] },
+  {
+    title: 'Moderation',
+    items: [
+      { href: '/admin/verification', label: 'Verification', icon: ShieldCheck },
+      { href: '/admin/reviews', label: 'Reviews', icon: Flag },
+    ],
+  },
+  {
+    title: 'Directory',
+    items: [
+      { href: '/admin/users', label: 'Users', icon: Users },
+      { href: '/admin/businesses', label: 'Businesses', icon: Building2 },
+      { href: '/admin/professionals', label: 'Professionals', icon: Stethoscope },
+      { href: '/admin/contact', label: 'Contact', icon: MessageSquare },
+    ],
+  },
+  {
+    title: 'Finance',
+    items: [{ href: '/admin/billing', label: 'Billing', icon: Banknote }],
+  },
+  {
+    title: 'Insights',
+    items: [{ href: '/admin/analytics', label: 'Analytics', icon: BarChart3 }],
+  },
+  {
+    title: 'System',
+    items: [
+      { href: '/admin/audit', label: 'Audit Log', icon: ScrollText },
+      { href: '/admin/settings', label: 'Settings', icon: SettingsIcon },
+    ],
+  },
 ];
 
 export function AdminSidebar() {
@@ -52,12 +73,29 @@ export function AdminSidebar() {
   const router = useRouter();
   const sidebarOpen = useUI((s) => s.sidebarOpen);
   const setSidebarOpen = useUI((s) => s.setSidebarOpen);
-  const clear = useSession((s) => s.clear);
+  const logout = useAdminLogout();
+  const admin = useAdminSession((s) => s.session);
+  const counts = useAdminBadgeCounts();
 
   const handleSignOut = () => {
-    clear();
-    router.push('/');
+    logout.mutate(undefined, {
+      onSuccess: () => router.push('/'),
+      onSettled: () => router.push('/'),
+    });
   };
+
+  const sections = NAV_SECTIONS.map((s) => ({
+    ...s,
+    items: s.items.map((item) => ({
+      ...item,
+      badgeCount:
+        item.href === '/admin/verification'
+          ? counts.verification
+          : item.href === '/admin/reviews'
+            ? counts.flagged + counts.pendingModeration
+            : undefined,
+    })),
+  }));
 
   return (
     <>
@@ -70,22 +108,22 @@ export function AdminSidebar() {
       )}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 w-64 border-r bg-background transition-transform md:static md:translate-x-0',
+          'admin-shell fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-zinc-800 bg-zinc-950 transition-transform md:static md:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
         )}
         aria-label="Admin navigation"
       >
-        <div className="flex h-16 items-center justify-between border-b px-4">
-          <Link href="/admin" className="flex items-center gap-2">
-            <span className="relative h-8 w-8 overflow-hidden rounded-lg bg-white ring-1 ring-black/5 shadow-sm">
-              <SafeImage src="/logo.jpg" alt="Credible" fill sizes="32px" priority />
+        <div className="flex h-16 items-center justify-between border-b border-zinc-800 px-4">
+          <Link href="/admin/dashboard" className="flex items-center gap-2">
+            <span className="relative h-8 w-8 overflow-hidden rounded-lg bg-zinc-900 ring-1 ring-zinc-800 shadow-sm">
+              <ShieldCheck className="h-5 w-5 p-0.5 text-rose-500" />
             </span>
-            <span className="text-lg font-bold tracking-tight">Admin</span>
+            <span className="text-lg font-bold tracking-tight text-zinc-100">Admin</span>
           </Link>
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100 md:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-label="Close sidebar"
           >
@@ -93,42 +131,62 @@ export function AdminSidebar() {
           </Button>
         </div>
 
-        <nav className="flex h-[calc(100%-4rem)] flex-col justify-between p-4">
-          <ul className="space-y-1 overflow-y-auto">
-            {NAV_ITEMS.map((item) => {
-              const active =
-                pathname === item.href ||
-                (item.href !== '/admin' && pathname?.startsWith(item.href + '/'));
-              const Icon = item.icon;
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    className={cn(
-                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                      active
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+        <nav className="flex-1 overflow-y-auto p-4">
+          {sections.map((section) => (
+            <div key={section.title} className="mb-5">
+              <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-600">
+                {section.title}
+              </p>
+              <ul className="space-y-0.5">
+                {section.items.map((item) => {
+                  const active =
+                    pathname === item.href ||
+                    (item.href !== '/admin/dashboard' && pathname?.startsWith(item.href + '/')) ||
+                    (item.href === '/admin/dashboard' && pathname === '/admin');
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setSidebarOpen(false)}
+                        className={cn(
+                          'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                          active
+                            ? 'bg-rose-600/15 text-rose-400'
+                            : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100',
+                        )}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span className="flex-1">{item.label}</span>
+                        {item.badgeCount ? (
+                          <Badge className="bg-rose-600 font-semibold text-white">{item.badgeCount}</Badge>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
 
+        <div className="border-t border-zinc-800 p-4">
+          <p className="mb-2 truncate text-xs text-zinc-500">
+            Signed in as{' '}
+            <span className="font-medium text-zinc-300">
+              {admin?.user.email?.split('@')[0] ?? 'admin'}
+            </span>
+          </p>
           <Button
             variant="ghost"
             onClick={handleSignOut}
-            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            disabled={logout.isPending}
+            className="flex w-full items-center justify-start gap-2 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
           >
             <LogOut className="h-4 w-4" />
             Sign out
           </Button>
-        </nav>
+        </div>
       </aside>
     </>
   );

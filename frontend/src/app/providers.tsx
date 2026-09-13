@@ -10,6 +10,7 @@ import { useUI } from '@/lib/store/theme';
 import { ThemeProvider } from '@/components/theme-provider';
 import { CookieConsent } from '@/components/layout/cookie-consent';
 import { AuthModal } from '@/components/auth/auth-modal';
+import { AdminAccessTrigger } from '@/components/admin/admin-gateway';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(() => makeQueryClient());
@@ -24,6 +25,9 @@ export function Providers({ children }: { children: ReactNode }) {
             a null fallback is visually identical. */}
         <Suspense fallback={null}>
           <AuthModalMount />
+        </Suspense>
+        <Suspense fallback={null}>
+          <AdminAccessTrigger />
         </Suspense>
         <Toaster richColors position="top-right" />
         <CookieConsent />

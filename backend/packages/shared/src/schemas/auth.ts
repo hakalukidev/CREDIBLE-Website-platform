@@ -43,6 +43,30 @@ export const loginSchema = z
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
+/**
+ * Admin gateway sign-in. `loginId` accepts either an email address or a
+ * phone number so the hidden admin panel can authenticate either way.
+ * `otp` is optional and only enforced when 2FA is switched on platform-wide.
+ */
+export const adminLoginSchema = z
+  .object({
+    loginId: z.string().trim().min(3).max(254),
+    password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+    otp: z.string().trim().regex(/^[0-9]{4,8}$/, 'Invalid code').optional(),
+  })
+  .strict();
+
+export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
+
+export const adminLoginOtpSchema = z
+  .object({
+    loginId: z.string().trim().min(3).max(254),
+    password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+  })
+  .strict();
+
+export type AdminLoginOtpInput = z.infer<typeof adminLoginOtpSchema>;
+
 export const requestOtpSchema = z
   .object({
     email: emailSchema.optional(),

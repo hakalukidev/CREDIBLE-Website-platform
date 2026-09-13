@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/input';
+import { ConfirmAction } from '@/components/ui/confirm-action';
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,7 @@ export default function AdminApplicationDetailPage({
   const [reason, setReason] = useState('');
   const [badgeType, setBadgeType] = useState<VerificationLevel>('BASIC');
   const [notes, setNotes] = useState('');
+  const [rejectConfirm, setRejectConfirm] = useState(false);
 
   const [revokeOpen, setRevokeOpen] = useState(false);
   const [revokeReason, setRevokeReason] = useState('');
@@ -76,7 +78,6 @@ export default function AdminApplicationDetailPage({
   const isApproved = app.data.status === 'APPROVED';
 
   const onDecide = () => {
-    if (decision === 'REJECT' && reason.trim().length < 5) return;
     decide.mutate(
       {
         decision,
@@ -91,6 +92,14 @@ export default function AdminApplicationDetailPage({
         },
       },
     );
+  };
+
+  const handleDecideClick = () => {
+    if (decision === 'APPROVE') {
+      onDecide();
+    } else {
+      setRejectConfirm(true);
+    }
   };
 
   return (
@@ -231,7 +240,7 @@ export default function AdminApplicationDetailPage({
               <div className="flex justify-end">
                 <Button
                   type="button"
-                  onClick={onDecide}
+                  onClick={handleDecideClick}
                   loading={decide.isPending}
                   disabled={decision === 'REJECT' && reason.trim().length < 5}
                 >
@@ -313,6 +322,24 @@ export default function AdminApplicationDetailPage({
           </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmAction
+        open={rejectConfirm}
+        onOpenChange={setRejectConfirm}
+        onConfirm={() => {
+          onDecide();
+          setRejectConfirm(false);
+        }}
+        title="Reject verification application"
+        description={
+          reason.trim().length >= 5
+            ? `“${reason.trim()}” will be sent to the business as the rejection reason. They may appeal, and a rejected badge cannot be issued without a new application.`
+            : 'This will permanently reject the application. A rejection reason is required and will be shared with the business.'
+        }
+        confirmLabel="Reject application"
+        requireType="REJECT"
+        loading={decide.isPending}
+      />
     </div>
   );
 }

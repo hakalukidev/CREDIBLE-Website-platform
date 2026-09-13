@@ -221,6 +221,16 @@ export function renderTemplate(name: string, vars: Record<string, unknown>): { s
         <p><a href="${escape(String(v.invoiceUrl ?? baseLink('/business/subscription/invoices')))}">View invoice</a></p>
       `.trim(),
     }),
+    // ----- Admin gateway 2FA -----
+    adminTwoFactorOtp: (v) => ({
+      subject: 'Your Credible admin sign-in code',
+      html: `
+        <p>Hi ${escape(v.firstName ?? 'there')},</p>
+        <p>A sign-in to the Credible admin console is pending. Use this one-time code to complete it:</p>
+        <p style="font-size:28px;font-weight:700;letter-spacing:6px;margin:16px 0;">${escape(v.code)}</p>
+        <p>It expires in ${escape(String(v.expiresInMinutes ?? 10))} minutes. If you didn't try to sign in, contact your administrator immediately.</p>
+      `.trim(),
+    }),
     voucherRedeemed: (v) => ({
       subject: `Voucher ${escape(String(v.code ?? ''))} redeemed`,
       html: `

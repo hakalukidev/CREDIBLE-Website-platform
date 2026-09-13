@@ -18,14 +18,14 @@ import {
   adminApplicationListSchema,
 } from '@credible/shared';
 import { validate } from '../../middleware/validate';
-import { authRequired, ensureActiveUser, requireRole } from '../../middleware/auth';
+import { authRequired, ensureActiveUser, requireRole, adminAuthRequired } from '../../middleware/auth';
 import { verificationController } from './verification.controller';
 
 const router = Router();
 
 const businessGuard = [authRequired, ensureActiveUser, requireRole('BUSINESS')] as const;
 const professionalGuard = [authRequired, ensureActiveUser, requireRole('PROFESSIONAL')] as const;
-const adminGuard = [authRequired, ensureActiveUser, requireRole('ADMIN')] as const;
+const adminGuard = [adminAuthRequired, ensureActiveUser] as const;
 
 // ----------------------------------------------------------------------------
 // Business-facing verification wizard endpoints

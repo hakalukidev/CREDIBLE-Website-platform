@@ -13,6 +13,11 @@ export interface AuditInput {
   action: string;
   target?: string | null;
   meta?: Prisma.InputJsonValue | null;
+  /** Client IP — persisted so security events (logins, impersonation) can be
+   *  traced back to a source. */
+  ip?: string | null;
+  /** Raw User-Agent header — audit trail enrichment. */
+  userAgent?: string | null;
 }
 
 export async function audit(input: AuditInput): Promise<void> {
@@ -23,6 +28,8 @@ export async function audit(input: AuditInput): Promise<void> {
         action: input.action,
         target: input.target ?? null,
         meta: input.meta ?? Prisma.JsonNull,
+        ip: input.ip ?? null,
+        userAgent: input.userAgent ?? null,
       },
     });
   } catch (e) {

@@ -65,7 +65,7 @@ interface PublicProfessional {
   country?: string | null;
   category?: { id: string; name: string; slug: string } | null;
   status: string;
-  ratingAverage: number;
+  ratingAverage: number | string | null;
   ratingCount: number;
   verified: boolean;
 }
@@ -133,6 +133,11 @@ export default function PublicProfessionalPage({
     .slice(0, 2)
     .join('')
     .toUpperCase();
+
+  const ratingAvg =
+    professional.ratingAverage != null && professional.ratingAverage !== ''
+      ? Number(professional.ratingAverage)
+      : 0;
 
   const coverStyle = getCoverStyle(professional.coverImage, professional.slug);
   const hasSocialLinks = professional.website || professional.email || professional.phone;
@@ -210,7 +215,7 @@ export default function PublicProfessionalPage({
                       key={i}
                       className={cn(
                         'h-4 w-4',
-                        i < Math.round(professional.ratingAverage)
+                        i < Math.round(ratingAvg)
                           ? 'fill-yellow-400 text-yellow-400'
                           : 'fill-muted text-muted',
                       )}
@@ -218,7 +223,7 @@ export default function PublicProfessionalPage({
                   ))}
                 </div>
                 <span className="text-sm font-semibold">
-                  {professional.ratingAverage.toFixed(1)}
+                  {ratingAvg.toFixed(1)}
                 </span>
                 <span className="text-sm text-muted-foreground">
                   ({professional.ratingCount} review{professional.ratingCount === 1 ? '' : 's'})

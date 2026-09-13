@@ -245,7 +245,7 @@ export function SidebarContent({ pathname, onSignOut, onNavigate }: SidebarConte
           onClick={onNavigate}
           className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
         >
-          <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+          <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden bg-white shadow-sm ring-1 ring-black/5">
             <SafeImage src="/logo.jpg" alt="Credible" fill sizes="36px" priority />
           </span>
           <span className="flex flex-col leading-tight">

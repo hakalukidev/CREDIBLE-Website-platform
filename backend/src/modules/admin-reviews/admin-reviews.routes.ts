@@ -11,13 +11,13 @@ import {
   adminResolveReviewFlagSchema,
   adminForceReviewStatusSchema,
 } from '@credible/shared';
-import { authRequired, ensureActiveUser, requireRole } from '../../middleware/auth';
+import { adminAuthRequired, ensureActiveUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { adminReviewsController } from './admin-reviews.controller';
 
 const router = Router();
 
-router.use(authRequired, ensureActiveUser, requireRole('ADMIN'));
+router.use(adminAuthRequired, ensureActiveUser);
 
 router.get('/', validate(adminListReviewsSchema, 'query'), adminReviewsController.list);
 router.get('/:id', adminReviewsController.get);
