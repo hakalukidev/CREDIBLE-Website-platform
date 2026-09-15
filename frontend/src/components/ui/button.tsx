@@ -4,24 +4,24 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] will-change-transform',
+  'relative inline-flex select-none items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full text-sm font-medium transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 will-change-transform active:scale-[0.97]',
   {
     variants: {
       variant: {
         default:
-          'bg-primary text-primary-foreground shadow-sm shadow-primary/30 hover:bg-primary/90 hover:shadow-md hover:shadow-primary/30',
+          'bg-primary text-primary-foreground shadow-sm shadow-primary/25 hover:bg-primary/95 hover:shadow-md hover:shadow-primary/35 hover:brightness-[1.03] hover:scale-[1.03]',
         secondary:
-          'bg-secondary text-secondary-foreground shadow-sm shadow-secondary/25 hover:bg-secondary/90 hover:shadow-md hover:shadow-secondary/25',
+          'bg-secondary text-secondary-foreground shadow-sm shadow-secondary/25 hover:bg-secondary/95 hover:shadow-md hover:shadow-secondary/35 hover:brightness-[1.03] hover:scale-[1.03]',
         outline:
-          'border border-border bg-card/60 backdrop-blur-sm hover:border-primary/40 hover:bg-primary/5 hover:text-primary shadow-sm',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
+          'border border-border bg-card/60 text-foreground backdrop-blur-sm hover:border-primary/40 hover:bg-primary/5 hover:text-primary hover:scale-[1.03] shadow-sm',
+        ghost: 'hover:bg-accent hover:text-accent-foreground hover:scale-[1.03]',
         destructive:
-          'bg-destructive text-destructive-foreground shadow-sm shadow-destructive/30 hover:bg-destructive/90',
+          'bg-destructive text-destructive-foreground shadow-sm shadow-destructive/25 hover:bg-destructive/95 hover:brightness-[1.03] hover:scale-[1.03]',
         success:
-          'bg-success text-success-foreground shadow-sm shadow-success/30 hover:bg-success/90',
-        link: 'text-primary underline-offset-4 hover:underline rounded-sm',
+          'bg-success text-success-foreground shadow-sm shadow-success/25 hover:bg-success/95 hover:brightness-[1.03] hover:scale-[1.03]',
+        link: 'text-primary underline-offset-4 hover:underline rounded-sm hover:scale-[1.02]',
         'gradient-primary':
-          'bg-gradient-to-br from-brand-600 via-primary to-brand-500 text-white shadow-md shadow-brand-600/30 hover:shadow-lg hover:shadow-brand-600/40 hover:brightness-110 bg-[length:200%_200%] anim-gradient hover:bg-gradient-to-br',
+          'bg-gradient-to-br from-brand-600 via-primary to-brand-500 text-white shadow-md shadow-brand-600/30 hover:shadow-lg hover:shadow-brand-600/40 hover:brightness-110 hover:scale-[1.03] bg-[length:200%_200%] anim-gradient hover:bg-gradient-to-br',
       },
       size: {
         default: 'h-10 px-5',

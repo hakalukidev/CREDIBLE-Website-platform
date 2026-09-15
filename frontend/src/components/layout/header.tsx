@@ -39,9 +39,8 @@ interface NavLink {
 }
 
 const NAV_LINKS: NavLink[] = [
+  { href: '/browse', label: 'Browse' },
   { href: '/categories', label: 'Categories' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/awards', label: 'Awards' },
   { href: '/for-business', label: 'For Business' },
   { href: '/for-professionals', label: 'For Professionals' },
 ];
@@ -62,7 +61,7 @@ function isActive(pathname: string | null, href: string) {
 
 function HeaderSearchField({
   size = 'md',
-  placeholder = 'Search businesses, professionals…',
+  placeholder = 'Search businesses…',
   ariaLabel = 'Search businesses and professionals',
 }: {
   size?: 'md' | 'lg';
@@ -227,9 +226,6 @@ export function SiteHeader() {
           <span className="flex flex-col leading-tight">
             <span className="font-display text-[15px] font-bold tracking-tight text-foreground">
               Credible
-            </span>
-            <span className="hidden text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/80 lg:block">
-              Verified
             </span>
           </span>
         </Link>

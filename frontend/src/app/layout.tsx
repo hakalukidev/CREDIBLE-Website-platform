@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Metadata, Viewport } from 'next';
-import { Inter, Comfortaa } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import { ChromeFrame } from '@/components/layout/chrome-frame';
 import { siteMetadata } from '@/lib/seo/metadata';
@@ -8,10 +8,11 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import '@/styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
-const display = Comfortaa({
+const display = Inter({
   subsets: ['latin'],
   variable: '--font-display',
   display: 'swap',
+  weight: ['600', '700', '800'],
 });
 
 export const metadata: Metadata = siteMetadata;

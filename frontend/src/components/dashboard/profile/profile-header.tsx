@@ -12,10 +12,15 @@
  * Animation is subtle: the avatar fades + scales in, no bounce.
  */
 
+import { useRef, useState, type ChangeEvent } from 'react';
 import { motion } from 'framer-motion';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   ArrowRight,
   CalendarDays,
+  Loader2,
+  Plus,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
@@ -23,9 +28,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MotionFadeUp } from '@/components/ui/motion-primitives';
+import { friendlyMessage } from '@/components/ui/friendly-error';
+import { ALLOWED_TYPES, MAX_BYTES } from '@/components/business/profile-image-upload';
 import { IconTile } from '../primitives/icon-tile';
 import { SectionCard } from '../primitives/section-card';
 import { duration, easeOut } from '@/lib/animations';
+import { apiClient } from '@/lib/api/client';
+import { qk } from '@/lib/api/query-keys';
+import { refreshSessionUser } from '@/lib/auth/refresh-session-user';
+import { uploadToStorage } from '@/lib/upload';
 import { cn } from '@/lib/utils';
 
 interface ProfileHeaderProps {
@@ -53,6 +64,52 @@ export function ProfileHeader({
   onEditProfile,
   className,
 }: ProfileHeaderProps) {
+  const qc = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [avatarPending, setAvatarPending] = useState(false);
+
+  const saveAvatar = useMutation({
+    mutationFn: async (avatar: string) => {
+      const res = await apiClient.patch<{ success: true; data: { avatar: string } }>(
+        '/users/me',
+        { avatar },
+      );
+      return res.data.data;
+    },
+    onSuccess: (updated) => {
+      refreshSessionUser({ avatar: updated.avatar });
+      qc.invalidateQueries({ queryKey: qk.users.me() });
+      toast.success('Profile photo updated');
+    },
+    onError: (err) => toast.error(friendlyMessage(err, 'upload')),
+  });
+
+  const busy = avatarPending || saveAvatar.isPending;
+
+  async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Reset so the same file can be re-selected later.
+    e.target.value = '';
+    if (!file) return;
+    if (!ALLOWED_TYPES.has(file.type)) {
+      toast.error('Use a JPG, PNG, or WebP image.');
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      toast.error('Image is too large. Max 5 MB.');
+      return;
+    }
+    setAvatarPending(true);
+    try {
+      const { publicUrl } = await uploadToStorage(file, 'avatars');
+      saveAvatar.mutate(publicUrl);
+    } catch (err) {
+      toast.error(friendlyMessage(err, 'upload'));
+    } finally {
+      setAvatarPending(false);
+    }
+  }
+
   return (
     <MotionFadeUp className={className}>
       <SectionCard
@@ -86,19 +143,33 @@ export function ProfileHeader({
                   {avatarFallback}
                 </AvatarFallback>
               </Avatar>
+
+              {/* "+" overlay — opens the file picker to swap the photo */}
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                disabled={busy}
+                aria-label="Update profile photo"
+                title="Update profile photo"
+                className="absolute -bottom-1 -right-1 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white shadow-pop ring-2 ring-card transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70 disabled:hover:scale-100"
+              >
+                {busy ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" aria-hidden />
+                )}
+              </button>
+
+              <input
+                ref={inputRef}
+                type="file"
+                accept={Array.from(ALLOWED_TYPES).join(',')}
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
             </motion.div>
 
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <IconTile
-                  icon={<Sparkles className="h-4 w-4" />}
-                  tone="primary"
-                  size="sm"
-                />
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                  Your account
-                </p>
-              </div>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                 {fullName}
               </h1>
@@ -122,15 +193,6 @@ export function ProfileHeader({
               </div>
             </div>
           </div>
-
-          <Button
-            size="sm"
-            onClick={onEditProfile}
-            className={cn('shrink-0 gap-2 self-start shadow-pop sm:self-auto')}
-          >
-            Edit profile
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Button>
         </div>
       </SectionCard>
     </MotionFadeUp>

@@ -24,32 +24,63 @@ export function homeForRole(role: string): string {
     case 'CUSTOMER':
     case 'GUEST':
     default:
-      return '/dashboard/profile';
+      return '/';
   }
 }
 
+/** Auth screens that a fresh session must never be sent back to —
+ *  landing there would immediately re-trigger the sign-in flow. */
+const AUTH_SCREEN_PATHS = ['/login', '/register', '/forgot-password', '/admin/login'];
+
+function pathOf(value: string): string {
+  return value.split(/[?#]/, 1)[0];
+}
+
+/** True when `value` is a plausible post-auth destination — a plain
+ *  same-origin path that isn't itself an auth screen. */
+function isSafeDestination(value: string): boolean {
+  if (!value.startsWith('/') || value.startsWith('//')) return false;
+  return !AUTH_SCREEN_PATHS.includes(pathOf(value));
+}
+
+/** Origin guard. Unlike `?next=…`, the page the user came from must
+ *  never resolve into the admin console — that area auto-guards anyway,
+ *  and a stray origin could otherwise bounce a regular user about. */
+function isSafeOrigin(value: string): boolean {
+  if (!isSafeDestination(value)) return false;
+  const path = pathOf(value);
+  return !(path === '/admin' || path.startsWith('/admin/'));
+}
+
 /**
- * Post-auth landing URL when an inbound deep link (`?next=…`) is
- * present. Falls back to the role-appropriate home so unauthenticated
- * visitors without a `next` still get sensible defaults. Only same-
- * origin paths are honoured — anything else is dropped to the role
- * default to avoid open-redirect abuse.
+ * Post-auth landing URL. Resolution order:
+ *   1. A same-origin `?next=…` deep link (explicit intent).
+ *   2. `origin` — the page the user was on when they triggered sign-in,
+ *      so closing the auth modal drops them back where they were.
+ *   3. The role-appropriate home for a sensible default.
+ *
+ * Only same-origin paths are honoured — anything else is dropped to the
+ * role default to avoid open-redirect abuse, and auth screens are
+ * excluded so a fresh session never loops back into login.
  *
  * `search` accepts anything with a `get()` method, so the helper
  * works with both `URLSearchParams` and Next's `useSearchParams()`.
  * `adminOnly` is for the admin sign-in page — when set, only an ADMIN
- * role is allowed through to `?next=`, everyone else gets bounced to
- * `/admin` (or `/` if no session is present yet).
+ * role is allowed through to `?next=`, the `origin` fallback is
+ * ignored, and everyone else gets bounced to `/admin` (or `/` if no
+ * session is present yet).
  */
 export function postAuthRedirect(
   search: { get(name: string): string | null } | null,
   role: string,
-  options: { adminOnly?: boolean } = {},
+  options: { adminOnly?: boolean; origin?: string } = {},
 ): string {
   const next = search?.get('next') ?? '';
-  // Only allow same-origin path-only redirects.
-  const safeNext = next.startsWith('/') && !next.startsWith('//');
-  if (safeNext && (!options.adminOnly || role === 'ADMIN')) return next;
+  if (isSafeDestination(next) && (!options.adminOnly || role === 'ADMIN')) return next;
   if (options.adminOnly) return role === 'ADMIN' ? '/admin' : '/';
+
+  const origin = options.origin ?? '';
+  if (isSafeOrigin(origin)) return origin;
+
   return homeForRole(role);
 }

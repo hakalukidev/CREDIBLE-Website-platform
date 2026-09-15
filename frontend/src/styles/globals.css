@@ -36,8 +36,8 @@
     --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
 
-    --muted: 220 18% 96%;
-    --muted-foreground: 220 10% 44%;
+--muted: 220 18% 96%;
+    --muted-foreground: 220 10% 46%;
 
     --accent: 234 60% 97%;
     --accent-foreground: 235 60% 28%;
@@ -45,8 +45,8 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 224 16% 90%;
-    --input: 224 16% 88%;
+--border: 224 16% 91%;
+    --input: 224 16% 89%;
     --ring: 239 84% 54%;
 
     /* Brand scale */
@@ -62,9 +62,9 @@
     --brand-900: 242 59% 26%;
     --brand-950: 243 64% 17%;
 
-    --radius: 0.85rem;
-    --radius-2xl: 1.25rem;
-    --radius-4xl: 2rem;
+--radius: 0.75rem;
+    --radius-2xl: 1rem;
+    --radius-4xl: 1.5rem;
   }
 
   .dark {
@@ -128,10 +128,27 @@
     scroll-padding-top: 5.5rem;
   }
 
-  body {
+body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: 'rlig' 1, 'calt' 1;
     text-rendering: optimizeLegibility;
+  }
+
+  /* Gentle fade/slide on route change — applied to the page body each
+     navigation so page transitions feel intentional, not abrupt. */
+  @keyframes page-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  main#main-content {
+    animation: page-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   ::selection {

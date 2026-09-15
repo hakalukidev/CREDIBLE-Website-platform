@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+import Link from 'next/link';
 import { Building2, Star, ShieldCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -58,41 +60,56 @@ export function HeroPreviewCard({ limit = 4 }: HeroPreviewCardProps = {}) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-      className="relative"
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.12 }}
+      className="relative mx-auto w-full max-w-[500px]"
     >
       {/* Glow behind card */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-primary/20 via-secondary/10 to-transparent blur-2xl"
+        className="pointer-events-none absolute -inset-5 rounded-[1.75rem] bg-gradient-to-br from-primary/20 via-secondary/10 to-transparent blur-2xl"
       />
 
       <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
         className="relative"
       >
-        <Card className="relative overflow-hidden border-border/80 shadow-pop">
-          <div className="h-24 bg-gradient-to-r from-purple-500 via-primary to-pink-400" />
+        <Card className="relative overflow-hidden border border-border/80 bg-background/90 shadow-[0_25px_80px_-35px_rgba(15,23,42,0.7)] backdrop-blur-sm">
+          <div className="relative h-28 w-full overflow-hidden bg-muted">
+            {top.coverImage || top.logo ? (
+              <Image
+                src={top.coverImage || top.logo || ''}
+                alt={top.displayName}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 500px"
+                priority
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 via-secondary/10 to-transparent">
+                <Building2 className="h-8 w-8 text-muted-foreground" aria-hidden />
+              </div>
+            )}
+          </div>
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"
           />
-          <CardContent className="pt-0 -mt-10 relative">
+          <CardContent className="relative px-4 pb-4 pt-3">
             <div className="flex items-end gap-4">
               <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-background bg-card shadow-sm">
                 <Building2 className="h-8 w-8 text-muted-foreground" aria-hidden />
               </div>
-              <div className="pb-2">
+              <div className="flex-1 pt-2">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-display text-lg font-semibold">{top.displayName}</h3>
+                  <h3 className="font-display text-lg font-semibold leading-tight">{top.displayName}</h3>
                   {top.verificationLevel !== 'NONE' && (
                     <VerifiedBadge level={top.verificationLevel} size="sm" />
                   )}
                 </div>
-                {location && <p className="text-sm text-muted-foreground">{location}</p>}
+                {location && <p className="mt-1 text-sm text-muted-foreground">{location}</p>}
               </div>
             </div>
 
@@ -109,31 +126,37 @@ export function HeroPreviewCard({ limit = 4 }: HeroPreviewCardProps = {}) {
               </div>
             )}
 
-            <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-3">
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
               {verifiedYears != null && verifiedYears > 0 && (
                 <div className="rounded-xl border border-border/70 bg-card/70 p-2">
-                  <p className="font-display font-bold text-lg">{verifiedYears}</p>
-                  <p className="text-muted-foreground">
-                    {verifiedYears === 1 ? 'yr' : 'yrs'} verified
-                  </p>
+                  <p className="font-display text-lg font-bold">{verifiedYears}</p>
+                  <p className="text-muted-foreground">{verifiedYears === 1 ? 'yr' : 'yrs'}</p>
                 </div>
               )}
               {rating != null && (
                 <div className="rounded-xl border border-border/70 bg-card/70 p-2">
-                  <p className="font-display font-bold text-lg">{Math.round((rating / 5) * 100)}%</p>
-                  <p className="text-muted-foreground">Trust score</p>
+                  <p className="font-display text-lg font-bold">{Math.round((rating / 5) * 100)}%</p>
+                  <p className="text-muted-foreground">Trust</p>
                 </div>
               )}
               <div className="rounded-xl border border-border/70 bg-card/70 p-2">
-                <p className="font-display font-bold text-lg">{top.ratingCount}</p>
+                <p className="font-display text-lg font-bold">{top.ratingCount}</p>
                 <p className="text-muted-foreground">Reviews</p>
               </div>
             </div>
 
             <div className="mt-4 flex items-center gap-2 rounded-xl border border-success/25 bg-success/10 px-3 py-2 text-xs font-medium text-success">
               <ShieldCheck className="h-4 w-4" aria-hidden />
-              Badge verified by a real human reviewer
+              Human-reviewed
             </div>
+
+            <Link
+              href={`/submit-review/${encodeURIComponent(top.id)}`}
+              className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label={`Rate ${top.displayName}`}
+            >
+              Rate this Business
+            </Link>
           </CardContent>
         </Card>
       </motion.div>

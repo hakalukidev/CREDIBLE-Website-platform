@@ -34,18 +34,18 @@ const CATEGORY_AWARDS = [
 const AWARD_STEPS = [
   {
     icon: ShieldCheck,
-    title: 'Human-reviewed entries',
-    body: 'Every nominee is checked against verified documents — no bots, no paid entries.',
+    title: 'Human-reviewed',
+    body: 'Every nominee checked against documents.',
   },
   {
     icon: Users,
-    title: 'Real customer signal',
-    body: 'Ratings, reviews, and response quality are weighted from authentic, OTP-verified reviewers.',
+    title: 'Real signal',
+    body: 'Weighted by OTP-verified ratings and reviews.',
   },
   {
     icon: BadgeCheck,
     title: 'Best in category',
-    body: 'The top performer in each category is crowned Best in Category, with a shareable award.',
+    body: 'One winner per category, with a shareable award.',
   },
 ];
 
@@ -74,8 +74,7 @@ export default function AwardsPage() {
             </span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Every year, Credible honours the businesses and professionals who earned the trust of
-            their customers — celebrated with a shareable Best in Category award.
+            Earned by real customer trust. Judged by humans.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" variant="gradient-primary">
@@ -151,11 +150,10 @@ export default function AwardsPage() {
           />
           <Trophy className="mx-auto h-12 w-12 text-secondary" aria-hidden />
           <h2 className="mx-auto mt-5 max-w-2xl font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Could your business be Best in Category?
+            Could your business win?
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-            Get verified and build the reputation that wins awards. Earn the badges customers
-            trust, then let your reviews speak for themselves.
+            Get verified. Earn the badge. Let reviews speak.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" variant="gradient-primary">

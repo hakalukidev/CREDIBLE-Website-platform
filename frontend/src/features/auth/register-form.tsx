@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -75,7 +75,11 @@ export function RegisterForm({
   onPendingChange,
 }: RegisterFormProps = {}) {
   const router = useRouter();
+  const pathname = usePathname();
   const search = useSearchParams();
+  // Page the user was on when they triggered signup — a successful
+  // registration returns them there via `postAuthRedirect`'s origin.
+  const origin = search.size > 0 ? `${pathname}?${search.toString()}` : pathname;
   const [showPassword, setShowPassword] = useState(false);
   const [providers, setProviders] = useState<{ google: boolean; facebook: boolean }>({
     google: false,
@@ -111,7 +115,7 @@ export function RegisterForm({
     onSuccess: (data) => {
       setSession(data);
       toast.success('Welcome to Credible!');
-      router.push(postAuthRedirect(search, data.user.role) as never);
+      router.push(postAuthRedirect(search, data.user.role, { origin }) as never);
     },
     onError: (err) => toast.error(friendlyMessage(err, 'register')),
   });
@@ -129,7 +133,7 @@ export function RegisterForm({
       // OAuth signup produces a CUSTOMER by default.
       setSession(session);
       toast.success('Welcome!');
-      router.push(postAuthRedirect(search, session.user.role) as never);
+      router.push(postAuthRedirect(search, session.user.role, { origin }) as never);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Social sign-in failed';
       toast.error(message);
