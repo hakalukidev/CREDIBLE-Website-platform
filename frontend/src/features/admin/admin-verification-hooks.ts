@@ -63,6 +63,7 @@ export function useAdminApplications(filters: {
   search?: string;
   page?: number;
   perPage?: number;
+  targetType?: 'BUSINESS' | 'PROFESSIONAL';
 }) {
   return useQuery({
     queryKey: qk.verification.adminList(filters),
@@ -70,6 +71,7 @@ export function useAdminApplications(filters: {
       const params = new URLSearchParams();
       if (filters.status) params.set('status', filters.status);
       if (filters.search) params.set('search', filters.search);
+      if (filters.targetType) params.set('targetType', filters.targetType);
       if (filters.page) params.set('page', String(filters.page));
       if (filters.perPage) params.set('perPage', String(filters.perPage));
       const res = await apiClient.get<{ success: true; data: AdminListResponse }>(

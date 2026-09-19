@@ -59,15 +59,24 @@ function isActive(pathname: string | null, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+type SearchTarget = 'business' | 'professional';
+
+function searchCopy(target: SearchTarget) {
+  return target === 'professional'
+    ? { action: '/professionals/search', placeholder: 'Search professionals…', ariaLabel: 'Search professionals' }
+    : { action: '/search', placeholder: 'Search businesses…', ariaLabel: 'Search businesses' };
+}
+
 function HeaderSearchField({
   size = 'md',
-  placeholder = 'Search businesses…',
-  ariaLabel = 'Search businesses and professionals',
+  target = 'business',
+  defaultValue,
 }: {
   size?: 'md' | 'lg';
-  placeholder?: string;
-  ariaLabel?: string;
+  target?: SearchTarget;
+  defaultValue?: string;
 }) {
+  const copy = searchCopy(target);
   return (
     <div className="relative w-full">
       <Search
@@ -76,8 +85,9 @@ function HeaderSearchField({
       />
       <Input
         name="q"
-        placeholder={placeholder}
-        aria-label={ariaLabel}
+        defaultValue={defaultValue}
+        placeholder={copy.placeholder}
+        aria-label={copy.ariaLabel}
         className={cn(
           'w-full rounded-full border-border/80 bg-muted/40 pl-10 pr-4 transition-all placeholder:text-muted-foreground/70 hover:bg-muted/60 focus-visible:bg-card focus-visible:shadow-glow',
           size === 'lg' ? 'h-11' : 'h-10 text-sm',
@@ -199,6 +209,9 @@ export function SiteHeader() {
 
   const dashboard = session ? ROLE_DASHBOARDS[session.user.role] : null;
 
+  const searchTarget: SearchTarget = pathname?.startsWith('/professionals') ? 'professional' : 'business';
+  const searchAction = searchCopy(searchTarget).action;
+
   return (
     <header
       className={cn(
@@ -245,12 +258,12 @@ export function SiteHeader() {
         </nav>
 
         <form
-          action="/search"
+          action={searchAction}
           className="ml-auto hidden flex-1 justify-end md:flex"
           role="search"
         >
           <div className="w-full max-w-sm">
-            <HeaderSearchField />
+            <HeaderSearchField target={searchTarget} />
           </div>
         </form>
 
@@ -356,12 +369,8 @@ export function SiteHeader() {
               className="container-wide relative z-40 border-t border-border/70 bg-background/95 pb-6 pt-4 backdrop-blur-xl md:hidden"
               aria-label="Mobile primary"
             >
-              <form action="/search" role="search" className="mb-3">
-                <HeaderSearchField
-                  size="lg"
-                  placeholder="Search businesses…"
-                  ariaLabel="Search businesses"
-                />
+              <form action={searchAction} role="search" className="mb-3">
+                <HeaderSearchField size="lg" target={searchTarget} />
               </form>
 
               <div className="flex flex-col">

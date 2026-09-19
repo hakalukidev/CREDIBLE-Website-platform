@@ -10,6 +10,7 @@ import { ReviewResponseForm } from '@/components/business/review-response-form';
 import { ReportReviewModal } from '@/components/business/report-review-modal';
 import { apiClient } from '@/lib/api/client';
 import { qk } from '@/lib/api/query-keys';
+import { VerificationStatusBanner } from '@/features/verification/verification-status-banner';
 import { ArrowRight, MessageSquare, ShieldCheck, Eye } from 'lucide-react';
 
 interface ProfessionalProfile {
@@ -140,6 +141,8 @@ export default function ProfessionalDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <VerificationStatusBanner target="professional" entityId={profile?.id ?? null} />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

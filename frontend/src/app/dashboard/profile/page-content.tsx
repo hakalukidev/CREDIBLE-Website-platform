@@ -250,9 +250,8 @@ export function DashboardProfileContent() {
         <MotionFadeUp delay={0.1}>
           <SectionCard className="h-full p-6">
             <SectionCardHeader
-              eyebrow="Security"
               title="Account & Security"
-              description="The basics of your account. Email and password changes use our secure OTP recovery flow."
+              description="Manage your account settings, password, and security preferences."
             />
 
             <div className="mt-5 grid gap-1">

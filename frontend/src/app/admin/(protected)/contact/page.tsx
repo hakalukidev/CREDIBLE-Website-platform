@@ -85,12 +85,12 @@ export default function AdminContactPage() {
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                             c.status === 'NEW'
-                              ? 'bg-blue-100 text-blue-700'
+                              ? 'bg-info/15 text-info'
                               : c.status === 'CONVERTED'
-                                ? 'bg-emerald-100 text-emerald-700'
+                                ? 'bg-success/15 text-success'
                                 : c.status === 'REJECTED'
-                                  ? 'bg-rose-100 text-rose-700'
-                                  : 'bg-zinc-100 text-zinc-700'
+                                  ? 'bg-destructive/15 text-destructive'
+                                  : 'bg-muted text-muted-foreground'
                           }`}
                         >
                           {c.status}

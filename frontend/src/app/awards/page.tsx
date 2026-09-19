@@ -1,14 +1,12 @@
 import Link from 'next/link';
 import {
   Trophy,
-  Medal,
   Award,
-  Star,
   ArrowRight,
-  Sparkles,
   ShieldCheck,
   Users,
   BadgeCheck,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,13 +21,6 @@ export const metadata = pageMetadata({
     'Credible Awards recognise the best businesses and professionals in every category — human-reviewed and proudly earned.',
   path: '/awards',
 });
-
-const CATEGORY_AWARDS = [
-  { name: 'Best Restaurant', blurb: 'Best in category', icon: Star },
-  { name: 'Best Legal Service', blurb: 'Best in category', icon: Medal },
-  { name: 'Best Healthcare Provider', blurb: 'Best in category', icon: Trophy },
-  { name: 'Best IT & Technology', blurb: 'Best in category', icon: Sparkles },
-];
 
 const AWARD_STEPS = [
   {
@@ -77,13 +68,13 @@ export default function AwardsPage() {
             Earned by real customer trust. Judged by humans.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg" variant="gradient-primary">
+            <Button asChild size="lg" variant="outline">
               <Link href="/browse">
-                Explore winners
+                Explore verified businesses
                 <ArrowRight className="ml-1.5 h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline">
+            <Button asChild size="lg" variant="gradient-primary">
               <Link href="/for-business">Nominate your business</Link>
             </Button>
           </div>
@@ -115,29 +106,37 @@ export default function AwardsPage() {
       <section className="border-y border-border/60 bg-gradient-to-b from-muted/40 to-background">
         <div className="container-wide py-16 md:py-20">
           <SectionHeading
-            eyebrow="Current categories"
-            title="Winners in every niche"
-            subtitle="Every category crowns a Best in Category winner — from restaurants to legal services."
+            eyebrow="First awards cycle"
+            title="Nominations are open"
+            subtitle="Our first Best-in-Category awards open for nominations once the verification cycle completes. Verified businesses are eligible automatically."
           />
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {CATEGORY_AWARDS.map(({ name, blurb, icon: Icon }) => (
-              <Card
-                key={name}
-                className="group relative overflow-hidden p-6 transition-all duration-300 hover:-translate-y-1 hover:border-secondary/40 hover:shadow-pop"
+          <div className="mt-10 mx-auto max-w-2xl">
+            <Card className="p-8 text-center sm:p-10">
+              <span
+                aria-hidden
+                className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500/15 to-secondary/10 text-secondary ring-1 ring-secondary/20"
               >
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-secondary/15 blur-2xl"
-                />
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/15 to-secondary/10 text-secondary ring-1 ring-secondary/20">
-                  <Icon className="h-5 w-5" aria-hidden />
-                </span>
-                <h3 className="mt-4 font-display font-semibold">{name}</h3>
-                <p className="mt-1 text-xs font-medium uppercase tracking-wide text-secondary">
-                  {blurb}
-                </p>
-              </Card>
-            ))}
+                <Sparkles className="h-6 w-6" />
+              </span>
+              <h3 className="mt-5 font-display text-xl font-semibold">
+                No winners have been announced yet
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                The first Credible Awards cycle starts once we have a meaningful base of verified
+                businesses and reviews. Every verified business will be eligible, and we&apos;ll
+                announce categories, judges, and the timeline right here.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Button asChild>
+                  <Link href="/for-business">
+                    Get verified to be eligible <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/contact?subject=awards">Ask about nominations</Link>
+                </Button>
+              </div>
+            </Card>
           </div>
         </div>
       </section>

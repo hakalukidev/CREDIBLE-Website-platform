@@ -5,12 +5,10 @@ import {
   Users,
   Award,
   Calendar,
-  Sparkles,
   ArrowRight,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { PageShell } from '@/components/layout/page-shell';
 import { SectionHeading } from '@/components/layout/section-heading';
 import { AboutStatsSection } from '@/features/about/about-stats-section';
@@ -49,34 +47,17 @@ const VALUES = [
   },
 ];
 
-const TEAM = [
-  {
-    name: 'Credible Engineering',
-    role: 'Platform & Infrastructure',
-    initials: 'CE',
-  },
-  {
-    name: 'Verification Team',
-    role: 'Human Reviewers',
-    initials: 'VT',
-  },
-  {
-    name: 'Community & Support',
-    role: 'Moderation & Care',
-    initials: 'CS',
-  },
-  {
-    name: 'Product & Design',
-    role: 'UX & Research',
-    initials: 'PD',
-  },
-];
+const LAUNCH_YEAR = Number.parseInt(
+  process.env.NEXT_PUBLIC_LAUNCH_YEAR ?? '2026',
+  10,
+);
 
 const TIMELINE = [
-  { year: '2026', title: 'Public launch' },
-  { year: '2026', title: 'Professional profiles' },
-  { year: '2026', title: 'Embeddable widgets' },
-  { year: '2026', title: 'Founding team' },
+  {
+    year: String(Number.isFinite(LAUNCH_YEAR) ? LAUNCH_YEAR : 2026),
+    title: 'Public launch',
+    body: 'Credible opens for verified businesses and customer reviews in Bangladesh.',
+  },
 ];
 
 export default function AboutPage() {
@@ -172,29 +153,26 @@ export default function AboutPage() {
         <MotionSection className="mt-16 border-t border-border/70 pt-14">
           <section>
             <SectionHeading
-              eyebrow={
-                <>
-                  <Sparkles className="mr-1 inline h-3 w-3 align-middle" /> Team
-                </>
-              }
+              eyebrow="Team"
               title="The people behind Credible"
+              subtitle="A small team in Dhaka building public trust infrastructure. We're engineers, reviewers, and community moderators — not a faceless platform."
             />
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {TEAM.map((member, idx) => (
-                <MotionCardReveal key={member.name} style={{ transitionDelay: `${idx * 40}ms` }}>
-                  <Card className="h-full p-6 transition-all duration-300 ease-out-quart hover:-translate-y-1 hover:border-primary/30 hover:shadow-lift">
-                    <Avatar className="h-14 w-14 ring-2 ring-primary/15">
-                      <AvatarFallback className="bg-gradient-to-br from-brand-500 to-primary font-semibold text-primary-foreground">
-                        {member.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <h3 className="mt-4 font-display font-semibold">{member.name}</h3>
-                    <p className="mt-1 text-xs font-medium uppercase tracking-wide text-primary">
-                      {member.role}
-                    </p>
-                  </Card>
-                </MotionCardReveal>
-              ))}
+            <div className="mt-8 mx-auto max-w-3xl">
+              <Card className="p-6 sm:p-8">
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Our day-to-day is split across engineering, human verification review, community
+                  support, and product design. We work on a public roadmap and ship in the open. If
+                  you&apos;d like to get in touch with a specific team, use the contact page and we&apos;ll
+                  route your message.
+                </p>
+                <div className="mt-5">
+                  <Button asChild variant="outline">
+                    <Link href="/contact">
+                      Contact the team <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </Card>
             </div>
           </section>
         </MotionSection>
@@ -220,6 +198,9 @@ export default function AboutPage() {
                     {entry.year}
                   </p>
                   <h3 className="mt-1 font-display font-semibold">{entry.title}</h3>
+                  <p className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">
+                    {entry.body}
+                  </p>
                 </li>
               ))}
             </ol>

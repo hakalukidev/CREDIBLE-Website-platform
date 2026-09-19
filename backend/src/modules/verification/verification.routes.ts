@@ -15,6 +15,7 @@ import {
   revokeBadgeSchema,
   cancelApplicationSchema,
   addVerificationDocumentSchema,
+  updateVerificationDocumentSchema,
   adminApplicationListSchema,
 } from '@credible/shared';
 import { validate } from '../../middleware/validate';
@@ -228,6 +229,15 @@ router.get(
   '/admin/verification/applications/:applicationId/documents/:documentId',
   ...adminGuard,
   verificationController.adminGetDocument,
+);
+
+// Per-document override — admins can override the AI's per-document status
+// (e.g. flip a flagged doc to APPROVED, or reject an auto-approved doc).
+router.patch(
+  '/admin/verification/applications/:applicationId/documents/:documentId',
+  ...adminGuard,
+  validate(updateVerificationDocumentSchema),
+  verificationController.adminUpdateDocument,
 );
 
 router.post(

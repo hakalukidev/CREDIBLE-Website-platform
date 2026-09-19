@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import { ChromeFrame } from '@/components/layout/chrome-frame';
+import { CookieConsent } from '@/components/layout/cookie-consent';
 import { siteMetadata } from '@/lib/seo/metadata';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import '@/styles/globals.css';
@@ -42,7 +43,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var k='theme';var s=localStorage.getItem(k);var mode=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(mode==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}document.documentElement.style.colorScheme=mode;}catch(e){}})();`,
+            __html: `(function(){try{var k='theme';var s=localStorage.getItem(k);var raw=s==='dark'?'dark':s==='light'?'light':'system';var mode=raw==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):raw;if(mode==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}if(raw==='system'){document.documentElement.classList.add('system');}else{document.documentElement.classList.remove('system');}document.documentElement.style.colorScheme=mode;}catch(e){}})();`,
           }}
         />
       </head>
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <TooltipProvider delayDuration={150}>
             <ChromeFrame>{children}</ChromeFrame>
           </TooltipProvider>
+          <CookieConsent />
         </Providers>
       </body>
     </html>

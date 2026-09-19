@@ -210,10 +210,10 @@ function Kpi({
 function StatusBadge({ status }: { status: string }) {
   const tone =
     status === 'SUCCESS'
-      ? 'bg-success/10 text-success'
+      ? 'bg-success/15 text-success'
       : status === 'PENDING'
-        ? 'bg-amber-100 text-amber-900'
-        : 'bg-destructive/10 text-destructive';
+        ? 'bg-secondary/20 text-secondary-foreground'
+        : 'bg-destructive/15 text-destructive';
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${tone}`}>{status}</span>
   );

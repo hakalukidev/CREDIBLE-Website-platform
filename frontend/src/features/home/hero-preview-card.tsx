@@ -186,7 +186,9 @@ export function HeroPreviewCard({ limit = 4 }: HeroPreviewCardProps = {}) {
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary/15 text-secondary">
             <Star className="h-3.5 w-3.5 fill-current" aria-hidden />
           </span>
-          <span className="text-xs font-semibold">4.9 / 5 rating</span>
+          <span className="text-xs font-semibold">
+            {rating != null ? `${rating.toFixed(1)} / 5 rating` : 'Verified'}
+          </span>
         </div>
       </motion.div>
     </motion.div>

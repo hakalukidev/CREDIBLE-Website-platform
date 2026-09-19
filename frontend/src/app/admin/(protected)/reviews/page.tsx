@@ -103,7 +103,7 @@ export default function AdminReviewsPage() {
                           {r.targetType === 'BUSINESS' ? r.business?.displayName : r.professional?.displayName}
                         </span>
                         <span>·</span>
-                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-900">
+                        <span className="rounded bg-secondary/20 px-1.5 py-0.5 text-secondary-foreground">
                           {r.rating}★
                         </span>
                       </div>
@@ -116,16 +116,16 @@ export default function AdminReviewsPage() {
                       <span
                         className={`rounded-full px-2 py-0.5 font-medium ${
                           r.status === 'PUBLISHED'
-                            ? 'bg-emerald-100 text-emerald-700'
+                            ? 'bg-success/15 text-success'
                             : r.status === 'PENDING_MODERATION' || r.status === 'FLAGGED'
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-rose-100 text-rose-700'
+                              ? 'bg-secondary/20 text-secondary-foreground'
+                              : 'bg-destructive/15 text-destructive'
                         }`}
                       >
                         {r.status}
                       </span>
                       {r.flags.length ? (
-                        <span className="rounded bg-rose-50 px-2 py-0.5 text-rose-700">
+                        <span className="rounded bg-destructive/15 px-2 py-0.5 text-destructive">
                           {r.flags.length} flag{r.flags.length === 1 ? '' : 's'}
                         </span>
                       ) : null}

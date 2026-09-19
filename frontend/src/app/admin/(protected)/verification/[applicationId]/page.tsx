@@ -2,8 +2,19 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ExternalLink, ShieldAlert, ShieldCheck } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  ArrowLeft,
+  ExternalLink,
+  ShieldAlert,
+  ShieldCheck,
+} from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,11 +37,19 @@ import {
 } from '@/features/admin/admin-verification-hooks';
 import {
   DOCUMENT_TYPE_LABELS,
+  type VerificationDocument,
   type VerificationLevel,
   type VerificationStatusKey,
 } from '@/features/verification/verification-hooks';
+import {
+  DocumentReviewCard,
+  DocumentReviewCardSkeleton,
+} from '@/features/admin/document-review-card';
 
-const STATUS_BADGE: Record<VerificationStatusKey, 'secondary' | 'success' | 'destructive' | 'default'> = {
+const STATUS_BADGE: Record<
+  VerificationStatusKey,
+  'secondary' | 'success' | 'destructive' | 'default'
+> = {
   NOT_STARTED: 'secondary',
   PENDING: 'secondary',
   DOCUMENTS_UPLOADED: 'secondary',
@@ -74,7 +93,10 @@ export default function AdminApplicationDetailPage({
     );
   }
 
-  const isOpen = app.data.status === 'AUTO_CHECKING' || app.data.status === 'HUMAN_REVIEW_REQUIRED' || app.data.status === 'DOCUMENTS_UPLOADED';
+  const isOpen =
+    app.data.status === 'AUTO_CHECKING' ||
+    app.data.status === 'HUMAN_REVIEW_REQUIRED' ||
+    app.data.status === 'DOCUMENTS_UPLOADED';
   const isApproved = app.data.status === 'APPROVED';
 
   const onDecide = () => {
@@ -102,6 +124,13 @@ export default function AdminApplicationDetailPage({
     }
   };
 
+  // Pre-fill the admin's decision badge with whatever the AI suggested.
+  const suggested = ai.data?.suggestedDecision;
+  const aiConfidence = ai.data?.confidenceScore ?? null;
+  const hasHighSeverityFlag = (ai.data?.flags ?? []).some(
+    (f) => f.severity === 'high',
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -110,7 +139,9 @@ export default function AdminApplicationDetailPage({
             <ArrowLeft className="h-4 w-4" /> Back to queue
           </Link>
         </Button>
-        <Badge variant={STATUS_BADGE[app.data.status]}>{app.data.status.replace(/_/g, ' ')}</Badge>
+        <Badge variant={STATUS_BADGE[app.data.status]}>
+          {app.data.status.replace(/_/g, ' ')}
+        </Badge>
       </div>
 
       <Card>
@@ -118,11 +149,17 @@ export default function AdminApplicationDetailPage({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>
-                {app.data.business?.displayName ?? app.data.professional?.displayName ?? '—'}
+                {app.data.business?.displayName ??
+                  app.data.professional?.displayName ??
+                  '—'}
               </CardTitle>
               <CardDescription>
-                Applied {new Date(app.data.appliedAt).toLocaleString()} ·{' '}
-                Level <strong>{app.data.level}</strong> · Type <strong>{app.data.type}</strong>
+                Applied {new Date(app.data.appliedAt).toLocaleString()} · Level{' '}
+                <strong>{app.data.level}</strong> · Type{' '}
+                <strong>{app.data.type}</strong>
+                {typeof app.data.aiScore === 'number'
+                  ? ` · AI score ${app.data.aiScore}%`
+                  : ''}
               </CardDescription>
             </div>
             {app.data.business?.slug && (
@@ -143,52 +180,74 @@ export default function AdminApplicationDetailPage({
         </CardHeader>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Documents ({app.data.documents.length})</CardTitle>
-            <CardDescription>
-              Click any document to open the original (admin-only).
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {app.data.documents.length === 0 && (
-              <p className="text-sm text-muted-foreground">No documents uploaded.</p>
-            )}
-            {app.data.documents.map((d) => (
-              <a
-                key={d.id}
-                href={`/admin/verification/documents/${d.id}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-between rounded-md border border-border p-3 text-sm hover:bg-accent"
-              >
-                <span>
-                  <strong>{DOCUMENT_TYPE_LABELS[d.type]}</strong>
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    {d.status.toLowerCase()}
-                  </span>
-                </span>
-                <span className="text-xs text-primary">Open ↗</span>
-              </a>
-            ))}
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Documents ({app.data.documents.length})</CardTitle>
+              <CardDescription>
+                Review each document individually. AI status is shown alongside
+                your manual override.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {app.data.documents.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No documents uploaded.
+                </p>
+              ) : (
+                app.data.documents.map((d) => (
+                  <DocumentReviewCard
+                    key={d.id}
+                    applicationId={applicationId}
+                    doc={d as unknown as VerificationDocument}
+                  />
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-        <AiAnalysisCard ai={ai.data} />
+        <div className="space-y-4">
+          <AiAnalysisCard ai={ai.data} />
+        </div>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Decision</CardTitle>
           <CardDescription>
-            Approving issues a Credible Verified badge. Rejecting requires a reason and
-            can be appealed by the business.
+            Approving issues a Credible Verified badge. Rejecting requires a reason
+            and can be appealed by the business.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {isOpen ? (
             <>
+              {suggested && (
+                <div className="rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+                  <p>
+                    AI suggests{' '}
+                    <strong
+                      className={
+                        suggested === 'APPROVE' ? 'text-success' : 'text-destructive'
+                      }
+                    >
+                      {suggested}
+                    </strong>{' '}
+                    {aiConfidence !== null
+                      ? `with ${aiConfidence}% confidence`
+                      : ''}
+                    .
+                    {hasHighSeverityFlag && (
+                      <span className="ml-2 font-medium text-destructive">
+                        High-severity flags present — please review carefully.
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -212,7 +271,9 @@ export default function AdminApplicationDetailPage({
                   <select
                     id="badgeType"
                     value={badgeType}
-                    onChange={(e) => setBadgeType(e.target.value as VerificationLevel)}
+                    onChange={(e) =>
+                      setBadgeType(e.target.value as VerificationLevel)
+                    }
                     className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     <option value="BASIC">BASIC</option>
@@ -260,8 +321,8 @@ export default function AdminApplicationDetailPage({
           ) : isApproved ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                This business is currently verified. You can revoke the badge if the
-                business is no longer trustworthy.
+                This business is currently verified. You can revoke the badge if
+                the business is no longer trustworthy.
               </p>
               <Button
                 type="button"
@@ -273,8 +334,8 @@ export default function AdminApplicationDetailPage({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              This application has been {app.data.status.toLowerCase()} and cannot be
-              modified directly.
+              This application has been {app.data.status.toLowerCase()} and cannot
+              be modified directly.
             </p>
           )}
         </CardContent>
@@ -285,8 +346,8 @@ export default function AdminApplicationDetailPage({
           <DialogHeader>
             <DialogTitle>Revoke badge</DialogTitle>
             <DialogDescription>
-              Revoking immediately removes the badge from the public profile and the
-              embed widget. This action is logged.
+              Revoking immediately removes the badge from the public profile and
+              the embed widget. This action is logged.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -317,7 +378,11 @@ export default function AdminApplicationDetailPage({
               />
             </div>
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setRevokeOpen(false)}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setRevokeOpen(false)}
+              >
                 Cancel
               </Button>
               <Button
@@ -389,7 +454,7 @@ function AiAnalysisCard({
                   f.severity === 'high'
                     ? 'text-destructive'
                     : f.severity === 'medium'
-                      ? 'text-amber-700'
+                      ? 'text-secondary-foreground'
                       : 'text-muted-foreground'
                 }`}
               >
@@ -403,7 +468,30 @@ function AiAnalysisCard({
           <p className="text-xs uppercase text-muted-foreground">Suggested</p>
           <p className="font-medium">{ai.suggestedDecision}</p>
         </div>
+
+        {Object.keys(ai.extractedFields ?? {}).length > 0 && (
+          <div className="rounded-md border border-border bg-muted/20 p-2">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Extracted fields
+            </p>
+            <dl className="mt-1 grid gap-x-3 gap-y-1 text-xs">
+              {Object.entries(ai.extractedFields).map(([k, v]) => (
+                <div key={k} className="flex justify-between gap-2">
+                  <dt className="text-muted-foreground">{k}</dt>
+                  <dd className="font-mono">
+                    {typeof v === 'string' || typeof v === 'number'
+                      ? String(v)
+                      : JSON.stringify(v)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 }
+
+// Re-export for callers that import the skeleton from this module.
+export { DocumentReviewCardSkeleton };

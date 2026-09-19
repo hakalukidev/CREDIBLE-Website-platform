@@ -55,7 +55,7 @@ export default function AdminReviewDetailPage() {
         </h1>
         <p className="text-sm text-muted-foreground">
           {formatDate(review.createdAt)} · {review.targetType === 'BUSINESS' ? review.business?.displayName : review.professional?.displayName} ·{' '}
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-900">{review.rating}★</span>
+          <span className="rounded bg-secondary/20 px-1.5 py-0.5 text-secondary-foreground">{review.rating}★</span>
         </p>
       </header>
 
@@ -98,7 +98,7 @@ export default function AdminReviewDetailPage() {
                     Resolve
                   </Button>
                 ) : (
-                  <span className="text-xs text-emerald-700">Resolved</span>
+                  <span className="text-xs text-success">Resolved</span>
                 )}
               </div>
             ))

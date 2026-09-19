@@ -306,10 +306,41 @@ body {
   --primary: 350 85% 58%;
   --primary-foreground: 350 60% 10%;
   --ring: 350 85% 58%;
-  --accent: 350 45% 12%;
-  --accent-foreground: 350 55% 85%;
+  --accent: 350 45% 18%;
+  --accent-foreground: 350 55% 88%;
   --muted: 224 26% 15%;
   --muted-foreground: 220 15% 64%;
-  --border: 224 20% 20%;
-  --input: 224 20% 22%;
+  --border: 224 20% 22%;
+  --input: 224 20% 24%;
+}
+
+@media (prefers-color-scheme: light) {
+  .system .admin-shell {
+    --primary: 350 85% 53%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 350 85% 53%;
+    --accent: 350 60% 97%;
+    --accent-foreground: 350 60% 28%;
+    --muted: 350 20% 96%;
+    --muted-foreground: 350 10% 44%;
+    --border: 350 16% 90%;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .system .admin-shell {
+    --background: 224 30% 7%;
+    --foreground: 220 26% 96%;
+    --card: 224 28% 10%;
+    --card-foreground: 220 26% 96%;
+    --primary: 350 85% 58%;
+    --primary-foreground: 350 60% 10%;
+    --ring: 350 85% 58%;
+    --accent: 350 45% 18%;
+    --accent-foreground: 350 55% 88%;
+    --muted: 224 26% 15%;
+    --muted-foreground: 220 15% 64%;
+    --border: 224 20% 22%;
+    --input: 224 20% 24%;
+  }
 }

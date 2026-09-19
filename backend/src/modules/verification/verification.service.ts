@@ -790,6 +790,76 @@ export const verificationService = {
     return this.getApplication(applicationId);
   },
 
+  /**
+   * Admin per-document override. Allows a human reviewer to flip the AI's
+   * verdict on a single document without changing the overall application
+   * status. Recomputes `application.aiScore` so the queue reflects the new
+   * aggregate confidence, and writes an audit log + status history entry.
+   */
+  async adminUpdateDocumentStatus(
+    adminId: string,
+    applicationId: string,
+    documentId: string,
+    input: { status: 'APPROVED' | 'REJECTED'; reason?: string },
+  ) {
+    const app = await prisma.verificationApplication.findUnique({
+      where: { id: applicationId },
+      include: { documents: true },
+    });
+    if (!app) throw new NotFoundError('Application');
+
+    const doc = app.documents.find((d) => d.id === documentId);
+    if (!doc) throw new NotFoundError('Document');
+
+    const updated = await prisma.verificationDocument.update({
+      where: { id: documentId },
+      data: {
+        status: input.status,
+        rejectionReason: input.status === 'REJECTED' ? input.reason ?? null : null,
+      },
+    });
+
+    // Recompute the aggregate AI score so admins see the effect of overrides.
+    const totalDocs = app.documents.length;
+    const approvedDocs = app.documents.filter(
+      (d) => (d.id === documentId ? input.status : d.status) === 'APPROVED',
+    ).length;
+    const rejectedDocs = app.documents.filter(
+      (d) => (d.id === documentId ? input.status : d.status) === 'REJECTED',
+    ).length;
+    const ratioApproved = totalDocs > 0 ? approvedDocs / totalDocs : 1;
+    const ratioRejected = totalDocs > 0 ? rejectedDocs / totalDocs : 0;
+    // Score: 100 when all approved, 0 when all rejected, current aiScore scaled.
+    const baseScore = app.aiScore ?? 80;
+    let newScore: number;
+    if (ratioRejected > 0 && ratioApproved === 0) newScore = 0;
+    else if (ratioRejected > 0) newScore = Math.round(baseScore * (1 - ratioRejected));
+    else newScore = Math.round(baseScore * ratioApproved + 100 * (1 - ratioApproved));
+
+    await prisma.verificationApplication.update({
+      where: { id: applicationId },
+      data: { aiScore: Math.max(0, Math.min(100, newScore)) },
+    });
+
+    const note =
+      input.status === 'APPROVED'
+        ? `Admin approved document ${doc.type}`
+        : `Admin rejected document ${doc.type}${input.reason ? `: ${input.reason}` : ''}`;
+    await logStatus(applicationId, app.status, note, adminId);
+
+    await audit({
+      actorId: adminId,
+      action:
+        input.status === 'APPROVED'
+          ? 'verification.document.approved'
+          : 'verification.document.rejected',
+      target: documentId,
+      meta: { applicationId, documentType: doc.type, reason: input.reason ?? null },
+    });
+
+    return updated;
+  },
+
   async revoke(
     adminId: string,
     targetId: string,

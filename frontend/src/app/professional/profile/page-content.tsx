@@ -6,6 +6,7 @@ import { qk } from '@/lib/api/query-keys';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProfessionalProfileSetup } from '@/components/professional/professional-profile-setup';
 import { ProfessionalProfileForm } from '@/features/professional/professional-profile-form';
+import { VerificationCtaCard } from '@/features/verification/verification-cta-card';
 
 export function ProfessionalProfilePageContent() {
   const { data: profile, isLoading } = useQuery({
@@ -51,6 +52,7 @@ export function ProfessionalProfilePageContent() {
           Keep your public profile up to date so clients know exactly who you are.
         </p>
       </header>
+      <VerificationCtaCard target="professional" />
       <ProfessionalProfileForm />
     </div>
   );

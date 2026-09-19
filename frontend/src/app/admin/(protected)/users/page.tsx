@@ -101,10 +101,10 @@ export default function AdminUsersPage() {
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                             u.status === 'ACTIVE'
-                              ? 'bg-emerald-100 text-emerald-700'
+                              ? 'bg-success/15 text-success'
                               : u.status === 'SUSPENDED'
-                                ? 'bg-rose-100 text-rose-700'
-                                : 'bg-zinc-100 text-zinc-700'
+                                ? 'bg-destructive/15 text-destructive'
+                                : 'bg-muted text-muted-foreground'
                           }`}
                         >
                           {u.status}

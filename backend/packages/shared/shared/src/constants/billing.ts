@@ -37,7 +37,7 @@ export const FEATURE_FLAGS = [
 export type FeatureFlagKey = (typeof FEATURE_FLAGS)[number];
 
 /**
- * Default Bangladesh VAT for invoices (5%).
+ * Default VAT for invoices (5%).
  * Override via INVOICE_VAT_RATE environment variable on the API.
  */
 export const DEFAULT_INVOICE_VAT_RATE = 0.05;

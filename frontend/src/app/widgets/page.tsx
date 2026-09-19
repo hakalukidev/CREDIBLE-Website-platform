@@ -12,6 +12,8 @@ export const metadata = pageMetadata({
   path: '/widgets',
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://credible.com';
+
 const WIDGETS = [
   {
     icon: MessageSquare,
@@ -26,7 +28,7 @@ const WIDGETS = [
     maxReviews: 5
   };
 </script>
-<script src="https://credible.com/widgets/review-widget.js" async></script>`,
+<script src="${SITE_URL}/widgets/review-widget.js" async></script>`,
   },
   {
     icon: Star,
@@ -41,7 +43,7 @@ const WIDGETS = [
     showDetails: true
   };
 </script>
-<script src="https://credible.com/widgets/trust-widget.js" async></script>`,
+<script src="${SITE_URL}/widgets/trust-widget.js" async></script>`,
   },
   {
     icon: ShieldCheck,
@@ -55,14 +57,14 @@ const WIDGETS = [
     size: 'lg'
   };
 </script>
-<script src="https://credible.com/widgets/badge-widget.js" async></script>`,
+<script src="${SITE_URL}/widgets/badge-widget.js" async></script>`,
   },
   {
     icon: Code,
     name: 'Leave a Review Button',
     description:
       'A clickable button that opens the review submission page for your business in a new tab.',
-    embed: `<a href="https://credible.com/submit-review/YOUR_BUSINESS_ID"
+    embed: `<a href="${SITE_URL}/submit-review/YOUR_BUSINESS_ID"
    target="_blank"
    rel="noopener noreferrer"
    class="credible-review-btn">

@@ -493,6 +493,23 @@ export const verificationController = {
     }
   },
 
+  /** PATCH /admin/verification/applications/:applicationId/documents/:documentId
+   *  Override the AI's per-document verdict. Recomputes application.aiScore. */
+  async adminUpdateDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { applicationId, documentId } = paramsApplicationAndDoc.parse(req.params);
+      const data = await verificationService.adminUpdateDocumentStatus(
+        req.user!.id,
+        applicationId,
+        documentId,
+        req.body,
+      );
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
   /** GET /admin/verification/documents/:documentId — flat lookup so the admin
    *  can link directly to a document without knowing its application id. */
   async adminGetDocumentFlat(req: Request, res: Response, next: NextFunction) {

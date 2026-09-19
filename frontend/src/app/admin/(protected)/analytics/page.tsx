@@ -38,12 +38,47 @@ const RANGES = [
 
 const PLAN_COLORS: Record<string, string> = {
   FREE: '#9ca3af',
-  BASIC: '#1a56db',
-  PROFESSIONAL: '#10b981',
-  ENTERPRISE: '#8b5cf6',
+  BASIC: 'hsl(239 84% 54%)',
+  PROFESSIONAL: 'hsl(157 68% 44%)',
+  ENTERPRISE: 'hsl(262 83% 65%)',
 };
 
-const RATING_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981'];
+const RATING_COLORS = [
+  'hsl(0 72% 60%)',
+  'hsl(24 90% 58%)',
+  'hsl(38 92% 54%)',
+  'hsl(82 76% 52%)',
+  'hsl(157 68% 44%)',
+];
+
+function filenameFromDisposition(disposition: string | undefined, fallback: string): string {
+  if (!disposition) return fallback;
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
+  return match?.[1] ? decodeURIComponent(match[1]) : fallback;
+}
+
+function useExportCsv() {
+  return async (range: string) => {
+    const fallback = `credible-admin-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+    const response = await apiClient.get('/admin/analytics/export.csv', {
+      params: { range },
+      responseType: 'blob',
+    });
+    const blob = response.data as Blob;
+    const headers = response.headers as Record<string, string | undefined>;
+    const disposition = headers['content-disposition'] ?? headers['Content-Disposition'];
+    const filename = filenameFromDisposition(disposition, fallback);
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+}
 
 export default function AdminAnalyticsPage() {
   const [range, setRange] = useState('30d');
@@ -57,6 +92,8 @@ export default function AdminAnalyticsPage() {
       return res.data.data;
     },
   });
+
+  const exportCsv = useExportCsv();
 
   return (
     <div className="space-y-6">
@@ -79,10 +116,15 @@ export default function AdminAnalyticsPage() {
               </option>
             ))}
           </select>
-          <Button variant="outline" size="sm" asChild>
-            <a href={`/admin/analytics/export.csv?range=${range}`} download>
-              <Download className="mr-1.5 h-4 w-4" /> Export
-            </a>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void exportCsv(range);
+            }}
+          >
+            <Download className="mr-1.5 h-4 w-4" /> Export
           </Button>
         </div>
       </div>
@@ -115,7 +157,7 @@ export default function AdminAnalyticsPage() {
               <CardContent>
                 <LineChart
                   data={data.monthlyRevenue.map((m) => ({ date: m.month, count: m.amount }))}
-                  color="#1a56db"
+                  color="hsl(239 84% 54%)"
                 />
               </CardContent>
             </Card>
@@ -192,7 +234,7 @@ function Kpi({
         <div className="mt-1 text-2xl font-bold">{value}</div>
         {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
         {typeof delta === 'number' && delta !== 0 && (
-          <div className={`mt-1 text-xs ${delta >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+          <div className={`mt-1 text-xs ${delta >= 0 ? 'text-success' : 'text-destructive'}`}>
             {delta >= 0 ? '+' : ''}
             {delta}% vs prior period
           </div>
@@ -206,7 +248,7 @@ function Row({ label, value, highlight }: { label: string; value: number | strin
   return (
     <li className="flex items-center justify-between">
       <span className="text-muted-foreground">{label}</span>
-      <span className={highlight ? 'font-semibold text-amber-600' : 'font-medium'}>{value}</span>
+      <span className={highlight ? 'font-semibold text-secondary-foreground' : 'font-medium'}>{value}</span>
     </li>
   );
 }

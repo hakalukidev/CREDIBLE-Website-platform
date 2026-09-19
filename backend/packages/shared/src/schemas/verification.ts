@@ -123,6 +123,24 @@ export const addVerificationDocumentSchema = z
 export type AddVerificationDocumentInput = z.infer<typeof addVerificationDocumentSchema>;
 
 /**
+ * Admin override of an individual document's review status. Use this when
+ * AI flagged or auto-approved a document but the human reviewer disagrees.
+ * A rejection reason is required when rejecting so the owner has context.
+ */
+export const updateVerificationDocumentSchema = z
+  .object({
+    status: z.enum(['APPROVED', 'REJECTED']),
+    reason: z.string().trim().min(5).max(1000).optional(),
+  })
+  .strict()
+  .refine((d) => d.status === 'APPROVED' || Boolean(d.reason), {
+    message: 'Rejection reason is required',
+    path: ['reason'],
+  });
+
+export type UpdateVerificationDocumentInput = z.infer<typeof updateVerificationDocumentSchema>;
+
+/**
  * Narrow type reused inside the verification service to avoid leaking the
  * Prisma row into callers.
  */

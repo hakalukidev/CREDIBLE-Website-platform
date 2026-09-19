@@ -75,6 +75,12 @@ function applyClass(theme: Theme): 'light' | 'dark' {
   const root = document.documentElement;
   const resolved = resolve(theme);
   root.classList.toggle('dark', resolved === 'dark');
+  // `system` class is used by `.system .admin-shell` blocks in globals.css to
+  // theme the admin console off `prefers-color-scheme` when the user's
+  // preference is "system". We only set it in that case so a user who has
+  // explicitly picked light/dark gets the unambiguous `.dark`/default
+  // styles instead of being overridden by OS changes.
+  root.classList.toggle('system', theme === 'system');
   root.style.colorScheme = resolved;
   return resolved;
 }
