@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -117,7 +118,7 @@ function CtaButton({
   }
   return (
     <Button asChild variant={variant} size={size} className={className}>
-      <Link href={href}>{children}</Link>
+      <Link href={href as Route}>{children}</Link>
     </Button>
   );
 }
