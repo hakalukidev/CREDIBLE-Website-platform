@@ -68,7 +68,7 @@ export function AdminLoginForm({ onSuccess, embedded = false }: AdminLoginFormPr
   return (
     <form
       onSubmit={handleSubmit}
-      className={embedded ? 'space-y-4' : 'space-y-5 rounded-xl border border-border bg-card p-6 shadow-2xl text-foreground'}
+      className={embedded ? 'space-y-4' : 'space-y-5 rounded-xl border border-border bg-card p-6 shadow-2xl'}
     >
       <div className="mb-1 flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">

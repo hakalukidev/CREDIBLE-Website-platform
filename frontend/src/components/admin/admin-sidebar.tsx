@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
@@ -84,18 +85,22 @@ export function AdminSidebar() {
     });
   };
 
-  const sections = NAV_SECTIONS.map((s) => ({
-    ...s,
-    items: s.items.map((item) => ({
-      ...item,
-      badgeCount:
-        item.href === '/admin/verification'
-          ? counts.verification
-          : item.href === '/admin/reviews'
-            ? counts.flagged + counts.pendingModeration
-            : undefined,
-    })),
-  }));
+  const sections = useMemo(
+    () =>
+      NAV_SECTIONS.map((s) => ({
+        ...s,
+        items: s.items.map((item) => ({
+          ...item,
+          badgeCount:
+            item.href === '/admin/verification'
+              ? counts.verification
+              : item.href === '/admin/reviews'
+                ? counts.flagged + counts.pendingModeration
+                : undefined,
+        })),
+      })),
+    [counts.verification, counts.flagged, counts.pendingModeration],
+  );
 
   return (
     <>

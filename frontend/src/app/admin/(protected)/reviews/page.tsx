@@ -8,6 +8,10 @@ import { Button } from '@/components/ui/button';
 import { useAdminReviews } from '@/features/admin/admin-reviews-hooks';
 import { formatDate } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import {
+  AdminStatusBadge,
+  type AdminStatusTone,
+} from '@/components/admin/admin-status-badge';
 
 export default function AdminReviewsPage() {
   const [page, setPage] = useState(1);
@@ -113,17 +117,9 @@ export default function AdminReviewsPage() {
                       <p className="line-clamp-2 text-sm text-muted-foreground">{r.content}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1 text-xs">
-                      <span
-                        className={`rounded-full px-2 py-0.5 font-medium ${
-                          r.status === 'PUBLISHED'
-                            ? 'bg-success/15 text-success'
-                            : r.status === 'PENDING_MODERATION' || r.status === 'FLAGGED'
-                              ? 'bg-secondary/20 text-secondary-foreground'
-                              : 'bg-destructive/15 text-destructive'
-                        }`}
-                      >
+                      <AdminStatusBadge tone={reviewStatusTone(r.status)}>
                         {r.status}
-                      </span>
+                      </AdminStatusBadge>
                       {r.flags.length ? (
                         <span className="rounded bg-destructive/15 px-2 py-0.5 text-destructive">
                           {r.flags.length} flag{r.flags.length === 1 ? '' : 's'}
@@ -179,4 +175,10 @@ function Pagination({
       </div>
     </div>
   );
+}
+
+function reviewStatusTone(status: string): AdminStatusTone {
+  if (status === 'PUBLISHED') return 'success';
+  if (status === 'PENDING_MODERATION' || status === 'FLAGGED') return 'warning';
+  return 'destructive';
 }

@@ -8,6 +8,10 @@ import { Button } from '@/components/ui/button';
 import { useAdminUsers } from '@/features/admin/admin-extended-hooks';
 import { formatDate } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import {
+  AdminStatusBadge,
+  type AdminStatusTone,
+} from '@/components/admin/admin-status-badge';
 
 export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
@@ -98,17 +102,9 @@ export default function AdminUsersPage() {
                       <td className="py-2 text-muted-foreground">{u.email}</td>
                       <td className="py-2">{u.role}</td>
                       <td className="py-2">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                            u.status === 'ACTIVE'
-                              ? 'bg-success/15 text-success'
-                              : u.status === 'SUSPENDED'
-                                ? 'bg-destructive/15 text-destructive'
-                                : 'bg-muted text-muted-foreground'
-                          }`}
-                        >
+                        <AdminStatusBadge tone={userStatusTone(u.status)}>
                           {u.status}
-                        </span>
+                        </AdminStatusBadge>
                       </td>
                       <td className="py-2 text-muted-foreground">{formatDate(u.createdAt)}</td>
                     </tr>
@@ -124,6 +120,12 @@ export default function AdminUsersPage() {
       </Card>
     </div>
   );
+}
+
+function userStatusTone(status: string): AdminStatusTone {
+  if (status === 'ACTIVE') return 'success';
+  if (status === 'SUSPENDED') return 'destructive';
+  return 'muted';
 }
 
 function Pagination({
