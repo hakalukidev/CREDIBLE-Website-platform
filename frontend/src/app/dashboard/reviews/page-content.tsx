@@ -8,6 +8,7 @@
 // them in the list.
 
 import { useMemo, useState } from 'react';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -340,7 +341,7 @@ function ReviewCard({ review }: ReviewCardProps) {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <Link
-                href={target?.slug ?? '#'}
+                href={(target?.slug ?? '#') as Route}
                 className="truncate text-sm font-semibold text-foreground hover:text-primary hover:underline"
               >
                 {name}

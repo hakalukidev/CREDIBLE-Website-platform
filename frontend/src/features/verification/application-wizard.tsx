@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -104,7 +105,7 @@ export function ApplicationWizard({
     }
   }, [application, activeApplicationId]);
 
-  const handleCancel = () => router.push(cancelHref ?? DEFAULT_CANCEL[target]);
+  const handleCancel = () => router.push((cancelHref ?? DEFAULT_CANCEL[target]) as Route);
 
   if (appLoading && activeApplicationId) {
     return <Skeleton className="h-64" />;
