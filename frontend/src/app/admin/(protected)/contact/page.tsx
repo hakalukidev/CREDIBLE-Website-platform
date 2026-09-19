@@ -10,6 +10,10 @@ import {
 } from '@/features/admin/admin-extended-hooks';
 import { formatDate } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import {
+  AdminStatusBadge,
+  type AdminStatusTone,
+} from '@/components/admin/admin-status-badge';
 
 export default function AdminContactPage() {
   const [page, setPage] = useState(1);
@@ -82,19 +86,9 @@ export default function AdminContactPage() {
                       <td className="py-2">{c.email}</td>
                       <td className="py-2">{c.business?.displayName ?? '—'}</td>
                       <td className="py-2">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                            c.status === 'NEW'
-                              ? 'bg-blue-100 text-blue-700'
-                              : c.status === 'CONVERTED'
-                                ? 'bg-emerald-100 text-emerald-700'
-                                : c.status === 'REJECTED'
-                                  ? 'bg-rose-100 text-rose-700'
-                                  : 'bg-zinc-100 text-zinc-700'
-                          }`}
-                        >
+                        <AdminStatusBadge tone={contactStatusTone(c.status)}>
                           {c.status}
-                        </span>
+                        </AdminStatusBadge>
                       </td>
                       <td className="py-2 text-right">
                         <Button size="sm" variant="outline" onClick={() => setOpenId(c.id)}>
@@ -196,4 +190,11 @@ function Pagination({
       </div>
     </div>
   );
+}
+
+function contactStatusTone(status: string): AdminStatusTone {
+  if (status === 'NEW') return 'info';
+  if (status === 'CONVERTED') return 'success';
+  if (status === 'REJECTED') return 'destructive';
+  return 'muted';
 }

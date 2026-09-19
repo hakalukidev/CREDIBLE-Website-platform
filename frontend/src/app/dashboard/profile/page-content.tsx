@@ -3,8 +3,8 @@
 /**
  * Dashboard Profile page (client component).
  *
- * Composes the new profile-specific primitives (ProfileHeader,
- * DetailRow, AvatarUploadZone) on top of the existing dashboard
+ * Composes the profile-specific primitives (ProfileHeader,
+ * DetailRow) on top of the existing dashboard
  * primitives (SectionCard, SectionCardHeader, ProfileCompletionCard,
  * MotionStagger) and the shared `useUserProfile` hook.
  *
@@ -64,7 +64,6 @@ import { SkeletonStack } from '@/components/dashboard/primitives/skeleton-stack'
 import { ProfileCompletionCard } from '@/components/dashboard/overview/profile-completion-card';
 import { ProfileHeader } from '@/components/dashboard/profile/profile-header';
 import { DetailRow } from '@/components/dashboard/profile/detail-row';
-import { AvatarUploadZone } from '@/components/dashboard/profile/avatar-upload-zone';
 import { useUserProfile } from '@/lib/hooks/use-user-profile';
 import { refreshSessionUser } from '@/lib/auth/refresh-session-user';
 import { useProfileCompletion } from '@/lib/hooks/use-profile-completion';
@@ -197,15 +196,14 @@ export function DashboardProfileContent() {
           <MotionFadeUp className="md:col-span-2">
             <SectionCard className="h-full p-6">
               <SectionCardHeader
-                eyebrow="Identity"
                 title="Personal information"
-                description="The name and contact details shown next to your reviews and on any page you own or manage."
+                description="Manage your personal details and contact information."
                 action={
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setEditDialogOpen(true)}
-                    className="gap-2"
+                    className="gap-2 border-primary text-primary hover:bg-primary/5 focus-visible:ring-primary/50"
                   >
                     <PencilLine className="h-4 w-4" /> Edit
                   </Button>
@@ -230,18 +228,6 @@ export function DashboardProfileContent() {
                   tone="secondary"
                   value={user.email}
                   description="Email changes require a verification step."
-                  action={
-                    <Button
-                      asChild
-                      variant="link"
-                      size="sm"
-                      className="h-auto gap-1 px-0 text-primary"
-                    >
-                      <Link href="/forgot-password">
-                        Change <ArrowUpRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
-                  }
                 />
                 <DetailRow
                   icon={<Phone className="h-4 w-4" />}
@@ -264,31 +250,11 @@ export function DashboardProfileContent() {
         <MotionFadeUp delay={0.1}>
           <SectionCard className="h-full p-6">
             <SectionCardHeader
-              eyebrow="Security"
               title="Account & Security"
-              description="The basics of your account. Email and password changes use our secure OTP recovery flow."
+              description="Manage your account settings, password, and security preferences."
             />
 
             <div className="mt-5 grid gap-1">
-              <DetailRow
-                icon={<Mail className="h-4 w-4" />}
-                label="Email"
-                tone="primary"
-                value={user.email}
-                description="Visible to the businesses you review."
-                action={
-                  <Button
-                    asChild
-                    variant="link"
-                    size="sm"
-                    className="h-auto gap-1 px-0 text-primary"
-                  >
-                    <Link href="/forgot-password">
-                      Change <ArrowUpRight className="h-3.5 w-3.5" />
-                    </Link>
-                  </Button>
-                }
-              />
               <DetailRow
                 icon={<KeyRound className="h-4 w-4" />}
                 label="Password"
@@ -331,19 +297,6 @@ export function DashboardProfileContent() {
                   value={memberSinceLabel.replace(/^Member since\s+/i, '')}
                 />
               )}
-            </div>
-          </SectionCard>
-        </MotionFadeUp>
-
-        <MotionFadeUp delay={0.15}>
-          <SectionCard className="h-full p-6">
-            <SectionCardHeader
-              eyebrow="Profile photo"
-              title="Change your avatar"
-              description="Upload a photo to personalise your reviews and page presence."
-            />
-            <div className="mt-5">
-              <AvatarUploadZone currentAvatarUrl={user.avatar ?? null} />
             </div>
           </SectionCard>
         </MotionFadeUp>

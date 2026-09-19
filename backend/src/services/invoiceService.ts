@@ -259,7 +259,7 @@ function drawHeader(doc: PDFKit.PDFDocument, invoiceNumber: string): void {
     .text('Credible', { align: 'left' })
     .fontSize(10)
     .fillColor('#6B7280')
-    .text('Bangladesh trust & verification platform')
+    .text('Trust & verification platform')
     .text('support@credible.example')
     .moveUp(2);
   doc

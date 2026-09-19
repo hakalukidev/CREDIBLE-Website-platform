@@ -14,23 +14,23 @@ import { MotionSection, MotionCardReveal } from '@/components/ui/motion-primitiv
 const VALUE_PROPS = [
   {
     icon: ShieldCheck,
-    title: 'Human-reviewed verification',
-    body: 'No bots — every application is reviewed by our team.',
+    title: 'Human-reviewed',
+    body: 'No bots. Real eyes on every application.',
   },
   {
     icon: Award,
-    title: 'Prestigious badges',
-    body: 'Downloadable, shareable, verifiable badge assets.',
+    title: 'Shareable badges',
+    body: 'Downloadable, verifiable, display-ready.',
   },
   {
     icon: MessageSquare,
     title: 'Two-way reviews',
-    body: 'Publicly respond to reviews and resolve concerns.',
+    body: 'Respond publicly to every review.',
   },
   {
     icon: BarChart3,
     title: 'Transparent analytics',
-    body: 'Track trust signals and review trends over time.',
+    body: 'Track trust signals over time.',
   },
 ];
 
@@ -81,8 +81,7 @@ export default function ForBusinessPage() {
             </span>
           </h1>
           <p className="mt-5 max-w-prose text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Credible helps you earn public trust with a verified profile, prestigious badges, and a
-            frictionless review experience.
+            A verified profile, a prestigious badge, a frictionless review experience.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" variant="gradient-primary">
@@ -126,10 +125,10 @@ export default function ForBusinessPage() {
               Pricing
             </Badge>
             <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Simple, transparent pricing
+              Simple pricing
             </h2>
             <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-              Pick the tier that fits your business — change or cancel anytime.
+              Change or cancel anytime.
             </p>
           </div>
 

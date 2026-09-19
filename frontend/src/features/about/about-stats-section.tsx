@@ -22,13 +22,7 @@ const STATS = [
     label: 'Active reviewers',
     icon: UserCheck,
     suffix: '+',
-  },
-  {
-    key: 'years',
-    label: 'Years of trust',
-    icon: Sparkles,
-    suffix: '',
-  },
+  }
 ] as const;
 
 export function AboutStatsSection() {

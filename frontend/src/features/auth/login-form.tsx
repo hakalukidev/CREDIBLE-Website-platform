@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -65,7 +65,12 @@ export function LoginForm({
   onPendingChange,
 }: LoginFormProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const search = useSearchParams();
+  // The page the user was on when they opened sign-in. Passed to
+  // `postAuthRedirect` so a successful login drops them back here
+  // instead of always landing on a role dashboard.
+  const origin = search.size > 0 ? `${pathname}?${search.toString()}` : pathname;
   const setSession = useSession((s) => s.setSession);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -110,7 +115,7 @@ export function LoginForm({
       }
       setSession(data);
       toast.success(adminOnly ? 'Welcome back, admin.' : 'Welcome back!');
-      router.push(postAuthRedirect(search, data.user.role, { adminOnly }) as never);
+      router.push(postAuthRedirect(search, data.user.role, { adminOnly, origin }) as never);
     },
     onError: (err) => toast.error(friendlyMessage(err, 'login')),
   });
@@ -130,7 +135,7 @@ export function LoginForm({
         return;
       }
       toast.success('Welcome!');
-      router.push(postAuthRedirect(search, session.user.role, { adminOnly }) as never);
+      router.push(postAuthRedirect(search, session.user.role, { adminOnly, origin }) as never);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Social sign-in failed';
       toast.error(message);

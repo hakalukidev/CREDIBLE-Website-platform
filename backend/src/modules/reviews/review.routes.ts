@@ -37,6 +37,14 @@ router.post(
   validate(createReviewSchema),
   reviewController.create,
 );
+// NOTE: /reviews/me MUST be registered BEFORE /reviews/:id so Express
+// doesn't capture "me" as the :id parameter.
+router.get(
+  '/reviews/me',
+  authRequired,
+  ensureActiveUser,
+  reviewController.listMine,
+);
 router.get(
   '/reviews/:id',
   authRequired,
@@ -49,12 +57,6 @@ router.patch(
   ensureActiveUser,
   validate(updateReviewSchema),
   reviewController.update,
-);
-router.get(
-  '/reviews/me',
-  authRequired,
-  ensureActiveUser,
-  reviewController.listMine,
 );
 router.post(
   '/reviews/:id/respond',

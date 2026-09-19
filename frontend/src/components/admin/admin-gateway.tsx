@@ -22,25 +22,25 @@ export function AdminGatewayModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideDefaultClose
-        className="max-w-sm border-zinc-800 bg-zinc-950 p-0 shadow-2xl"
+        className="max-w-sm border-border bg-card p-0 text-card-foreground shadow-2xl"
         onPointerDownOutside={(e) => e.preventDefault()}
       >
-        <div className="flex items-center gap-3 border-b border-zinc-800/80 px-6 py-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-600/15">
-            <KeyRound className="h-4 w-4 text-rose-500" />
+        <div className="flex items-center gap-3 border-b border-border px-6 py-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15">
+            <KeyRound className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <DialogTitle className="text-sm font-bold uppercase tracking-widest text-zinc-200">
+            <DialogTitle className="text-sm font-bold uppercase tracking-widest text-foreground">
               Admin Access
             </DialogTitle>
-            <p className="text-xs text-zinc-500">Authorized personnel only</p>
+            <p className="text-xs text-muted-foreground">Authorized personnel only</p>
           </div>
-          <ShieldCheck className="ml-auto h-4 w-4 text-zinc-700" />
+          <ShieldCheck className="ml-auto h-4 w-4 text-muted-foreground" />
         </div>
         <div className="px-6 pb-6">
           <AdminLoginForm embedded onSuccess={() => onOpenChange(false)} />
         </div>
-        <div className="border-t border-zinc-800/80 bg-zinc-900/40 px-6 py-3 text-center text-[11px] text-zinc-600">
+        <div className="border-t border-border bg-muted/40 px-6 py-3 text-center text-[11px] text-muted-foreground">
           All access attempts are recorded in the audit trail.
         </div>
       </DialogContent>

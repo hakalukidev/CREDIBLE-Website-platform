@@ -9,7 +9,13 @@ import {
   Search as SearchIcon,
   XCircle,
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +27,10 @@ import {
 } from '@/features/admin/admin-verification-hooks';
 import type { VerificationStatusKey } from '@/features/verification/verification-hooks';
 
-const STATUS_FILTERS: Array<{ label: string; value: VerificationStatusKey | 'ALL' }> = [
+const STATUS_FILTERS: Array<{
+  label: string;
+  value: VerificationStatusKey | 'ALL';
+}> = [
   { label: 'All', value: 'ALL' },
   { label: 'In review', value: 'HUMAN_REVIEW_REQUIRED' },
   { label: 'Auto-checking', value: 'AUTO_CHECKING' },
@@ -29,7 +38,19 @@ const STATUS_FILTERS: Array<{ label: string; value: VerificationStatusKey | 'ALL
   { label: 'Rejected', value: 'REJECTED' },
 ];
 
-const STATUS_BADGE: Record<VerificationStatusKey, 'secondary' | 'success' | 'destructive' | 'default'> = {
+const TARGET_FILTERS: Array<{
+  label: string;
+  value: 'ALL' | 'BUSINESS' | 'PROFESSIONAL';
+}> = [
+  { label: 'All profiles', value: 'ALL' },
+  { label: 'Businesses', value: 'BUSINESS' },
+  { label: 'Professionals', value: 'PROFESSIONAL' },
+];
+
+const STATUS_BADGE: Record<
+  VerificationStatusKey,
+  'secondary' | 'success' | 'destructive' | 'default'
+> = {
   NOT_STARTED: 'secondary',
   PENDING: 'secondary',
   DOCUMENTS_UPLOADED: 'secondary',
@@ -40,7 +61,10 @@ const STATUS_BADGE: Record<VerificationStatusKey, 'secondary' | 'success' | 'des
 };
 
 export default function AdminVerificationQueuePage() {
-  const [filter, setFilter] = useState<VerificationStatusKey | 'ALL'>('HUMAN_REVIEW_REQUIRED');
+  const [filter, setFilter] = useState<VerificationStatusKey | 'ALL'>(
+    'HUMAN_REVIEW_REQUIRED',
+  );
+  const [target, setTarget] = useState<'ALL' | 'BUSINESS' | 'PROFESSIONAL'>('ALL');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
@@ -48,6 +72,7 @@ export default function AdminVerificationQueuePage() {
   const list = useAdminApplications({
     status: filter === 'ALL' ? undefined : filter,
     search: search || undefined,
+    targetType: target === 'ALL' ? undefined : target,
     page,
     perPage: 20,
   });
@@ -57,7 +82,7 @@ export default function AdminVerificationQueuePage() {
       <header>
         <h1 className="text-2xl font-bold tracking-tight">Verification queue</h1>
         <p className="text-sm text-muted-foreground">
-          Review applications, approve badges, and revoke misbehaving businesses.
+          Review applications, approve badges, and revoke misbehaving profiles.
         </p>
       </header>
 
@@ -92,7 +117,7 @@ export default function AdminVerificationQueuePage() {
         <CardHeader>
           <CardTitle>Applications</CardTitle>
           <CardDescription>
-            Use the filters below to narrow down by status or search by business name.
+            Filter by status, target type, or search by name.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -111,10 +136,30 @@ export default function AdminVerificationQueuePage() {
                 {f.label}
               </Button>
             ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Profile type
+            </span>
+            {TARGET_FILTERS.map((f) => (
+              <Button
+                key={f.value}
+                type="button"
+                variant={target === f.value ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setTarget(f.value);
+                  setPage(1);
+                }}
+              >
+                {f.label}
+              </Button>
+            ))}
             <div className="ml-auto flex items-center gap-2">
               <SearchIcon className="h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by business name…"
+                placeholder="Search by name…"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -144,6 +189,7 @@ export default function AdminVerificationQueuePage() {
               <thead className="text-left text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="px-2 py-2">Entity</th>
+                  <th className="px-2 py-2">Type</th>
                   <th className="px-2 py-2">Level</th>
                   <th className="px-2 py-2">Documents</th>
                   <th className="px-2 py-2">Status</th>
@@ -191,19 +237,30 @@ export default function AdminVerificationQueuePage() {
 }
 
 function Row({ app }: { app: AdminApplication }) {
+  const isBusiness = Boolean(app.business);
   const target = app.business ?? app.professional;
   return (
     <tr className="border-t border-border">
       <td className="px-2 py-3">
-        <Link href={`/admin/verification/${app.id}`} className="font-medium hover:underline">
+        <Link
+          href={`/admin/verification/${app.id}`}
+          className="font-medium hover:underline"
+        >
           {target?.displayName ?? '—'}
         </Link>
         <p className="text-xs text-muted-foreground">{target?.slug}</p>
       </td>
+      <td className="px-2 py-3 text-xs">
+        <Badge variant="outline">
+          {isBusiness ? 'Business' : 'Professional'}
+        </Badge>
+      </td>
       <td className="px-2 py-3 text-xs">{app.level}</td>
       <td className="px-2 py-3 text-xs">{app.documents.length}</td>
       <td className="px-2 py-3">
-        <Badge variant={STATUS_BADGE[app.status]}>{app.status.replace(/_/g, ' ')}</Badge>
+        <Badge variant={STATUS_BADGE[app.status]}>
+          {app.status.replace(/_/g, ' ')}
+        </Badge>
       </td>
       <td className="px-2 py-3 text-xs text-muted-foreground">
         {new Date(app.appliedAt).toLocaleDateString()}

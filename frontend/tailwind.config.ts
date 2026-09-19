@@ -77,29 +77,34 @@ const config: Config = {
         '4xl': 'var(--radius-4xl)',
       },
       boxShadow: {
-        card: '0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06)',
-        pop: '0 8px 24px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)',
-        soft: '0 4px 20px -4px rgba(15, 23, 42, 0.08)',
+        card: '0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.05)',
+        pop: '0 12px 32px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.05)',
+        soft: '0 6px 24px -8px rgba(15, 23, 42, 0.10)',
+        lift: '0 24px 48px -16px rgba(15, 23, 42, 0.18)',
         glow: '0 0 0 1px hsl(var(--primary) / 0.08), 0 8px 40px -8px hsl(var(--primary) / 0.5)',
         'glow-lg': '0 0 0 1px hsl(var(--primary) / 0.10), 0 16px 60px -12px hsl(var(--primary) / 0.55)',
       },
       fontSize: {
         display: [
-          'clamp(2.5rem, 1.2rem + 4vw, 4.5rem)',
+          'clamp(2.5rem, 1.2rem + 4vw, 4.25rem)',
           {
             lineHeight: '1.04',
             letterSpacing: '-0.035em',
-            fontWeight: '600',
+            fontWeight: '700',
           },
         ],
         'display-sm': [
-          'clamp(2rem, 1.2rem + 2.5vw, 3.25rem)',
-          { lineHeight: '1.08', letterSpacing: '-0.03em', fontWeight: '600' },
+          'clamp(1.9rem, 1.2rem + 2.5vw, 3rem)',
+          { lineHeight: '1.1', letterSpacing: '-0.03em', fontWeight: '700' },
         ],
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         display: ['var(--font-display)', 'var(--font-inter)', 'system-ui', 'sans-serif'],
+      },
+      transitionTimingFunction: {
+        'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
+        'out-quart': 'cubic-bezier(0.25, 1, 0.5, 1)',
       },
       keyframes: {
         'accordion-down': { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },

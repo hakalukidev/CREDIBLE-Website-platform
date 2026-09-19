@@ -68,21 +68,21 @@ export function AdminLoginForm({ onSuccess, embedded = false }: AdminLoginFormPr
   return (
     <form
       onSubmit={handleSubmit}
-      className={embedded ? 'space-y-4' : 'space-y-5 rounded-xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl'}
+      className={embedded ? 'space-y-4' : 'space-y-5 rounded-xl border border-border bg-card p-6 shadow-2xl'}
     >
       <div className="mb-1 flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           {awaitingCode ? 'Two-factor verification' : 'Secure gateway'}
         </p>
-        <ShieldCheck className="h-4 w-4 text-rose-500" />
+        <ShieldCheck className="h-4 w-4 text-primary" />
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="admin-login-id" className="text-sm font-medium text-zinc-300">
+        <Label htmlFor="admin-login-id" className="text-sm font-medium">
           Email or phone
         </Label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="admin-login-id"
             autoComplete="username"
@@ -91,19 +91,19 @@ export function AdminLoginForm({ onSuccess, embedded = false }: AdminLoginFormPr
             value={loginId}
             onChange={(e) => setLoginId(e.target.value)}
             disabled={awaitingCode}
-            className="h-11 border-zinc-800 bg-zinc-900 pl-10 text-zinc-100 placeholder:text-zinc-600 focus:border-rose-600 focus:ring-rose-600/30"
+            className="h-11 pl-10"
           />
         </div>
       </div>
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label htmlFor="admin-password" className="text-sm font-medium text-zinc-300">
+          <Label htmlFor="admin-password" className="text-sm font-medium">
             Password
           </Label>
         </div>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="admin-password"
             type="password"
@@ -113,14 +113,14 @@ export function AdminLoginForm({ onSuccess, embedded = false }: AdminLoginFormPr
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={awaitingCode}
-            className="h-11 border-zinc-800 bg-zinc-900 pl-10 text-zinc-100 placeholder:text-zinc-600 focus:border-rose-600 focus:ring-rose-600/30"
+            className="h-11 pl-10"
           />
         </div>
       </div>
 
       {awaitingCode && (
-        <div className="space-y-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
-          <Label htmlFor="admin-otp" className="flex items-center gap-1.5 text-sm font-medium text-zinc-300">
+        <div className="space-y-1.5 rounded-lg border border-border bg-muted/40 p-3">
+          <Label htmlFor="admin-otp" className="flex items-center gap-1.5 text-sm font-medium">
             <Smartphone className="h-3.5 w-3.5" /> One-time code
           </Label>
           <Input
@@ -131,12 +131,12 @@ export function AdminLoginForm({ onSuccess, embedded = false }: AdminLoginFormPr
             placeholder="000000"
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 8))}
-            className="h-11 border-zinc-800 bg-zinc-900 text-center text-lg tracking-[0.4em] text-zinc-100 placeholder:text-zinc-600 focus:border-rose-600 focus:ring-rose-600/30"
+            className="h-11 text-center text-lg tracking-[0.4em]"
           />
           <button
             type="button"
             onClick={() => requestOtp.mutate({ loginId: loginId.trim(), password })}
-            className="text-xs text-zinc-500 hover:text-zinc-300"
+            className="text-xs text-muted-foreground hover:text-foreground"
           >
             Resend code
           </button>
@@ -146,7 +146,7 @@ export function AdminLoginForm({ onSuccess, embedded = false }: AdminLoginFormPr
       <Button
         type="submit"
         disabled={isPending}
-        className="h-11 w-full gap-2 bg-rose-600 text-base font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+        className="h-11 w-full gap-2 text-base font-semibold disabled:opacity-60"
       >
         {isPending ? (
           <>

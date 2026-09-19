@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { MapPin, Star } from 'lucide-react';
+import { MapPin, Star, ArrowRight } from 'lucide-react';
 import { VerifiedBadge } from '@/components/verification/verified-badge';
 import { StarRating } from '@/components/reviews/star-rating';
 import { Badge } from '@/components/ui/badge';
@@ -123,7 +123,7 @@ export function BusinessCard({
       href={`/business/${slug}`}
       onClick={onClick}
       aria-label={`View profile of ${name}`}
-      className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/90 text-card-foreground shadow-card backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-pop focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card text-card-foreground shadow-card transition-[transform,box-shadow,border-color] duration-300 ease-out-quart hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-lift focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
     >
       {/* Image container — 144px fixed height. Rounded only at the
           top so the card's rounded corners are preserved on the cover. */}
@@ -134,7 +134,7 @@ export function BusinessCard({
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-cover transition-transform duration-500 ease-out-quart group-hover:scale-[1.08]"
             onError={() => setImgError(true)}
             priority={false}
           />
@@ -144,18 +144,29 @@ export function BusinessCard({
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-cover transition-transform duration-500 ease-out-quart group-hover:scale-[1.08]"
             onError={() => setLogoError(true)}
             priority={false}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-500/15 via-primary/10 to-secondary/10 transition-transform duration-500 group-hover:scale-105">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-500/15 via-primary/10 to-secondary/10 transition-transform duration-500 ease-out-quart group-hover:scale-[1.08]">
             <span className="font-display text-4xl font-bold text-primary/50">{initial}</span>
           </div>
         )}
 
         {/* Verification badge overlay */}
         <VerificationOverlay level={badgeType} />
+
+        {/* Hover-reveal action chip */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-3 bottom-3 flex justify-end"
+        >
+          <span className="inline-flex translate-x-1 translate-y-1 items-center gap-1.5 rounded-full border border-border/60 bg-card/95 px-3 py-1.5 text-xs font-semibold text-foreground opacity-0 shadow-soft backdrop-blur-sm transition-all duration-300 ease-out-quart group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100">
+            View Profile
+            <ArrowRight className="h-3 w-3" aria-hidden />
+          </span>
+        </div>
       </div>
 
       {/* Content */}
@@ -216,18 +227,6 @@ export function BusinessCard({
             </div>
           )}
         </div>
-      </div>
-
-      {/* CTA — visual cue only; the entire card is the link */}
-      <div className="px-5 pb-5">
-        <span
-          className={cn(
-            'pointer-events-none flex h-9 w-full items-center justify-center rounded-full text-sm font-medium shadow-sm transition-all duration-300',
-            'border border-border/80 bg-background/60 text-foreground group-hover:border-transparent group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-primary/30 group-hover:shadow-md',
-          )}
-        >
-          View Profile
-        </span>
       </div>
     </Link>
   );

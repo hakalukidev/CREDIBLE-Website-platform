@@ -8,8 +8,8 @@ import { friendlyMessage } from '@/components/ui/friendly-error';
 import { cn } from '@/lib/utils';
 import { uploadToStorage } from '@/lib/upload';
 
-const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
-const MAX_BYTES = 5 * 1024 * 1024;
+export const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+export const MAX_BYTES = 5 * 1024 * 1024;
 
 export interface ProfileImageUploadProps {
   /** Existing image URL (after upload this gets replaced). */

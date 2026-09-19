@@ -11,11 +11,20 @@ interface TrendingReviewsProps {
   limit?: number;
 }
 
-const PRAISE = [
-  'Customers consistently call this business verified, honest, and reliable.',
-  'Highly recommended — real reviews from real, identity-checked customers.',
-  'Top-rated in its category, backed by a human-reviewed Credible badge.',
-];
+const FALLBACK_QUOTE = 'Verified by Credible.';
+const MAX_QUOTE_LENGTH = 160;
+
+function pickQuote(b: { tagline?: string | null; description?: string | null }): string {
+  const trimmedTagline = b.tagline?.trim();
+  if (trimmedTagline) return trimmedTagline;
+  const trimmedDesc = b.description?.trim();
+  if (trimmedDesc) {
+    return trimmedDesc.length > MAX_QUOTE_LENGTH
+      ? `${trimmedDesc.slice(0, MAX_QUOTE_LENGTH - 1).trimEnd()}…`
+      : trimmedDesc;
+  }
+  return FALLBACK_QUOTE;
+}
 
 /**
  * Trending reviews — a reviews.io-style social-proof strip that surfaces
@@ -39,7 +48,7 @@ export function TrendingReviews({ limit = 4 }: TrendingReviewsProps = {}) {
   if (isError) return null;
   if (items.length === 0) return null;
 
-  const reviews = items.slice(0, limit).map((b, idx) => ({
+  const reviews = items.slice(0, limit).map((b) => ({
     name: b.displayName,
     location: [b.city, b.state, b.country].filter(Boolean).join(' · '),
     rating:
@@ -47,7 +56,7 @@ export function TrendingReviews({ limit = 4 }: TrendingReviewsProps = {}) {
         ? Number(b.ratingAverage)
         : null,
     count: b.ratingCount,
-    quote: PRAISE[idx % PRAISE.length],
+    quote: pickQuote(b),
     slug: b.slug,
   }));
 

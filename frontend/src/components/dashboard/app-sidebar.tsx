@@ -141,22 +141,6 @@ function NavLinks({ pathname, onNavigate }: NavLinksProps) {
           </Link>
         );
       })}
-      <div className="mt-3 pt-3 border-t border-border/40">
-        <Link
-          href="/"
-          onClick={onNavigate}
-          className="group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-        >
-          <span
-            className={cn(
-              'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors bg-transparent text-muted-foreground group-hover:bg-background/80 group-hover:text-foreground',
-            )}
-          >
-            <Globe className="h-4 w-4" aria-hidden />
-          </span>
-          <span className="truncate">Explore Website</span>
-        </Link>
-      </div>
     </nav>
   );
 }
@@ -268,6 +252,21 @@ export function SidebarContent({ pathname, onSignOut, onNavigate }: SidebarConte
 
       {/* User Card - Sticky at bottom */}
       <div className="flex-shrink-0 sticky bottom-0 bg-background/80 backdrop-blur-sm p-4 pt-0">
+        <Link
+          href="/"
+          onClick={onNavigate}
+          className="mb-3 group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-accent/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+        >
+          <span
+            aria-hidden
+            className={cn(
+              'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors bg-transparent text-muted-foreground group-hover:bg-background/80 group-hover:text-foreground',
+            )}
+          >
+            <Globe className="h-4 w-4" aria-hidden />
+          </span>
+          <span className="truncate">Explore Website</span>
+        </Link>
         <UserCard onSignOut={onSignOut} />
       </div>
     </div>

@@ -38,22 +38,22 @@ function AdminShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="admin-shell min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="admin-shell min-h-screen bg-background text-foreground">
       <AdminSessionTimer onExpire={exitAdmin} />
       <div className="grid md:grid-cols-[16rem_minmax(0,1fr)]">
         <AdminSidebar />
         <div className="flex min-h-screen min-w-0 flex-col">
-          <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-zinc-800 bg-zinc-950/90 px-4 backdrop-blur">
+          <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur">
             <Button
               variant="ghost"
               size="icon"
-              className="text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100 md:hidden"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground md:hidden"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open sidebar"
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="flex items-center gap-2 text-rose-500">
+            <div className="flex items-center gap-2 text-primary">
               <ShieldAlert className="h-4 w-4" />
               <span className="text-xs font-semibold uppercase tracking-wider">
                 Restricted console
@@ -62,7 +62,6 @@ function AdminShell({ children }: { children: ReactNode }) {
             <div className="ml-auto flex items-center gap-3">
               <Button
                 variant="outline"
-                className="border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
                 onClick={exitAdmin}
                 disabled={logout.isPending}
               >

@@ -16,11 +16,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/input';
 import { appealVerificationSchema } from '@credible/shared';
-import { useAppealApplication } from './verification-hooks';
+import { useAppealApplication, type VerificationTarget } from './verification-hooks';
 import { friendlyMessage } from '@/components/ui/friendly-error';
 
 interface Props {
-  businessId: string;
+  target: VerificationTarget;
+  entityId: string;
   applicationId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -28,12 +29,12 @@ interface Props {
 
 type FormValues = z.infer<typeof appealVerificationSchema>;
 
-export function AppealForm({ businessId, applicationId, open, onOpenChange }: Props) {
+export function AppealForm({ target, entityId, applicationId, open, onOpenChange }: Props) {
   const form = useForm<FormValues>({
     resolver: zodResolver(appealVerificationSchema),
     defaultValues: { reason: '' },
   });
-  const appeal = useAppealApplication(businessId, applicationId);
+  const appeal = useAppealApplication(target, entityId, applicationId);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
@@ -53,7 +54,7 @@ export function AppealForm({ businessId, applicationId, open, onOpenChange }: Pr
           <DialogTitle>Submit an appeal</DialogTitle>
           <DialogDescription>
             Briefly explain why you believe the decision should be reconsidered. You can
-            also re-upload additional documents from the application page once it's
+            also re-upload additional documents from the application page once it&apos;s
             reopened.
           </DialogDescription>
         </DialogHeader>

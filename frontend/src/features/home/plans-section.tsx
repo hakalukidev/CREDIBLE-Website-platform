@@ -1,5 +1,8 @@
 'use client';
 
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FriendlyError } from '@/components/ui/friendly-error';
 import { PlanCard, type FeatureBullet } from './plan-card';
@@ -49,11 +52,23 @@ export function PlansSection({
 
   if (!plans || plans.length === 0) {
     return (
-      <FriendlyError
-        kind="plans"
-        title="Plans coming soon"
-        body="Pricing details are not published yet. Please check back later or contact us."
-      />
+      <div className="mx-auto max-w-xl rounded-2xl border border-dashed bg-muted/40 p-6 text-center sm:p-8">
+        <h3 className="font-display text-lg font-semibold">Pricing is unpublished</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Our standard subscription tiers are still being finalised. Reach out and
+          we&apos;ll send you a tailored quote based on your business size and verification needs.
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <Button asChild>
+            <Link href="/contact?subject=pricing">
+              Request a quote <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/browse">Browse the directory</Link>
+          </Button>
+        </div>
+      </div>
     );
   }
 

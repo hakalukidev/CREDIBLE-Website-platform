@@ -551,9 +551,6 @@ export function BrowseResults({ initial = {} }: Props) {
             <p className="text-sm font-medium text-foreground">
               No results match your filters.
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Try widening your search or clearing a filter.
-            </p>
             {activeFilterCount > 0 && (
               <Button
                 type="button"
@@ -572,17 +569,7 @@ export function BrowseResults({ initial = {} }: Props) {
       {items.length > 0 && (
         <>
           <p className="text-xs text-muted-foreground">
-            Showing {items.length} of {total.toLocaleString()}{' '}
-            {total === 1 ? 'result' : 'results'}
-            {type === 'all' && (
-              <>
-                {' '}
-                ({businessMeta?.total ?? 0}{' '}
-                {(businessMeta?.total ?? 0) === 1 ? 'business' : 'businesses'},{' '}
-                {proMeta?.total ?? 0}{' '}
-                {(proMeta?.total ?? 0) === 1 ? 'professional' : 'professionals'})
-              </>
-            )}
+            {total.toLocaleString()} {total === 1 ? 'result' : 'results'}
             {debouncedQ ? (
               <>
                 {' '}for <span className="font-medium text-foreground">&ldquo;{debouncedQ}&rdquo;</span>

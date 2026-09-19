@@ -3,19 +3,32 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRight, Check, FileUp, Trash2, Upload, X } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CircleAlert,
+  FileUp,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input, Textarea } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { friendlyMessage } from '@/components/ui/friendly-error';
 import { uploadToStorage } from '@/lib/upload';
 import {
-  DOCUMENT_TYPES,
   DOCUMENT_TYPE_LABELS,
   useApply,
   useCancelApplication,
@@ -28,12 +41,26 @@ import {
   type VerificationApplication,
   type VerificationDocument,
   type VerificationLevel,
+  type VerificationTarget,
 } from './verification-hooks';
+import {
+  REQUIRED_DOCUMENTS_BY_TARGET,
+  getMissingRequiredDocs,
+  labelFor,
+} from './document-requirements';
+import { StatusTimeline } from './status-timeline';
 
 interface Props {
-  businessId: string;
+  /** Which profile type this wizard belongs to. */
+  target: VerificationTarget;
+  /** Entity id (businessId or professionalId). */
+  entityId: string;
+  /** Optional: an already-created application id to resume. */
   applicationId?: string;
+  /** Optional callback fired when a fresh application is created. */
   onCreated?: (app: VerificationApplication) => void;
+  /** Optional: override the cancel/redirect destination. */
+  cancelHref?: string;
 }
 
 type Step = 'choose-level' | 'upload' | 'review' | 'submitting';
@@ -47,10 +74,17 @@ interface SubmitValues {
   additionalNotes?: string;
 }
 
+const DEFAULT_CANCEL: Record<VerificationTarget, string> = {
+  business: '/business/dashboard',
+  professional: '/professional/dashboard',
+};
+
 export function ApplicationWizard({
-  businessId,
+  target,
+  entityId,
   applicationId,
   onCreated,
+  cancelHref,
 }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(applicationId ? 'upload' : 'choose-level');
@@ -59,7 +93,8 @@ export function ApplicationWizard({
   );
 
   const { data: application, isLoading: appLoading } = useVerificationApplication(
-    businessId,
+    target,
+    entityId,
     activeApplicationId,
   );
 
@@ -69,6 +104,8 @@ export function ApplicationWizard({
     }
   }, [application, activeApplicationId]);
 
+  const handleCancel = () => router.push(cancelHref ?? DEFAULT_CANCEL[target]);
+
   if (appLoading && activeApplicationId) {
     return <Skeleton className="h-64" />;
   }
@@ -77,7 +114,8 @@ export function ApplicationWizard({
   if (!activeApplicationId) {
     return (
       <ChooseLevelStep
-        businessId={businessId}
+        target={target}
+        entityId={entityId}
         onApplied={(app) => {
           setActiveApplicationId(app.id);
           setStep('upload');
@@ -89,12 +127,13 @@ export function ApplicationWizard({
 
   return (
     <WizardSteps
+      target={target}
       step={step}
       setStep={setStep}
       application={application!}
-      businessId={businessId}
+      entityId={entityId}
       applicationId={activeApplicationId}
-      onCancel={() => router.push('/business/dashboard')}
+      onCancel={handleCancel}
     />
   );
 }
@@ -104,13 +143,15 @@ export function ApplicationWizard({
 // ----------------------------------------------------------------------------
 
 function ChooseLevelStep({
-  businessId,
+  target,
+  entityId,
   onApplied,
 }: {
-  businessId: string;
+  target: VerificationTarget;
+  entityId: string;
   onApplied: (app: VerificationApplication) => void;
 }) {
-  const apply = useApply(businessId);
+  const apply = useApply(target, entityId);
   const form = useForm<ChooseLevelValues>({
     defaultValues: { level: 'BASIC', type: 'BASIC' },
   });
@@ -125,17 +166,19 @@ function ChooseLevelStep({
     }
   });
 
+  const requiredDocs = REQUIRED_DOCUMENTS_BY_TARGET[target];
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>1 · Choose a verification level</CardTitle>
         <CardDescription>
-          All three tiers include AI-assisted review. CERTIFIED and PREMIUM add an
-          on-site visit and faster review SLAs.
+          All three tiers include AI-assisted review. CERTIFIED and PREMIUM add a
+          business call or on-site visit and faster review SLAs.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4" onSubmit={onSubmit}>
+        <form className="space-y-6" onSubmit={onSubmit}>
           <fieldset className="grid gap-3 md:grid-cols-3">
             {(['BASIC', 'CERTIFIED', 'PREMIUM'] as const).map((level) => (
               <label
@@ -154,7 +197,9 @@ function ChooseLevelStep({
                 />
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold">{level}</span>
-                  {form.watch('level') === level && <Check className="h-4 w-4 text-primary" />}
+                  {form.watch('level') === level && (
+                    <Check className="h-4 w-4 text-primary" />
+                  )}
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
                   {LEVEL_DESCRIPTIONS[level]}
@@ -173,6 +218,20 @@ function ChooseLevelStep({
               <option value="BASIC">BASIC — digital review</option>
               <option value="PREMIUM">PREMIUM — includes site visit</option>
             </select>
+          </div>
+
+          <div className="rounded-lg border border-dashed border-border bg-muted/20 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              What you&apos;ll need to upload
+            </p>
+            <ul className="mt-2 space-y-1 text-sm">
+              {requiredDocs.map((docType) => (
+                <li key={docType} className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{labelFor(docType)}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="flex justify-end">
@@ -198,25 +257,28 @@ const LEVEL_DESCRIPTIONS: Record<VerificationLevel, string> = {
 // ----------------------------------------------------------------------------
 
 function WizardSteps({
+  target,
   step,
   setStep,
   application,
-  businessId,
+  entityId,
   applicationId,
   onCancel,
 }: {
+  target: VerificationTarget;
   step: Step;
   setStep: (s: Step) => void;
   application: VerificationApplication;
-  businessId: string;
+  entityId: string;
   applicationId: string;
   onCancel: () => void;
 }) {
   if (step === 'upload') {
     return (
       <UploadStep
+        target={target}
         application={application}
-        businessId={businessId}
+        entityId={entityId}
         applicationId={applicationId}
         onNext={() => setStep('review')}
         onCancel={onCancel}
@@ -226,8 +288,9 @@ function WizardSteps({
   if (step === 'review') {
     return (
       <ReviewStep
+        target={target}
         application={application}
-        businessId={businessId}
+        entityId={entityId}
         applicationId={applicationId}
         onBack={() => setStep('upload')}
         onSubmit={() => {
@@ -239,8 +302,8 @@ function WizardSteps({
   if (step === 'submitting') {
     return (
       <SubmittedStep
-        application={application}
-        businessId={businessId}
+        target={target}
+        entityId={entityId}
         applicationId={applicationId}
         onCancel={onCancel}
       />
@@ -254,44 +317,61 @@ function WizardSteps({
 // ----------------------------------------------------------------------------
 
 function UploadStep({
+  target,
   application,
-  businessId,
+  entityId,
   applicationId,
   onNext,
   onCancel,
 }: {
+  target: VerificationTarget;
   application: VerificationApplication;
-  businessId: string;
+  entityId: string;
   applicationId: string;
   onNext: () => void;
   onCancel: () => void;
 }) {
-  const { data: documents, isLoading } = useVerificationDocuments(businessId, applicationId);
-  const uploadMutation = useUploadDocument(businessId, applicationId);
-  const deleteMutation = useDeleteDocument(businessId, applicationId);
+  const { data: documents, isLoading } = useVerificationDocuments(
+    target,
+    entityId,
+    applicationId,
+  );
+  const uploadMutation = useUploadDocument(target, entityId, applicationId);
+  const deleteMutation = useDeleteDocument(target, entityId, applicationId);
   const [progress, setProgress] = useState<number | null>(null);
 
-  const docs = documents ?? application.documents.map((d) => ({
-    id: d.id,
-    type: d.type as DocumentType,
-    status: d.status,
-    fileKey: '',
-    fileUrl: '',
-    mimeType: '',
-    fileSize: 0,
-    originalName: '',
-    uploadedAt: '',
-    applicationId,
-  } as unknown as VerificationDocument));
+  const requiredDocs = REQUIRED_DOCUMENTS_BY_TARGET[target];
 
-  const requiredTypes = useMemo(() => {
-    // 3 unique document types is the minimum for any useful submission.
-    const types = new Set(docs.map((d) => d.type));
-    DOCUMENT_TYPES.forEach((t) => types.add(t));
-    return Array.from(types);
-  }, [docs]);
+  // Prefer fresh data from the documents endpoint, but fall back to whatever
+  // the parent application payload already has so the list never goes empty
+  // mid-refetch.
+  const docs = useMemo<VerificationDocument[]>(() => {
+    if (documents && documents.length > 0) return documents;
+    return application.documents.map((d) => ({
+      id: d.id,
+      applicationId,
+      type: d.type,
+      status: d.status,
+      fileKey: '',
+      fileUrl: d.fileUrl ?? '',
+      mimeType: d.mimeType ?? '',
+      fileSize: d.fileSize ?? 0,
+      originalName: d.originalName ?? '',
+      uploadedAt: d.uploadedAt ?? '',
+    }));
+  }, [documents, application, applicationId]);
 
-  const canProceed = docs.length >= 3;
+  const uploadedTypes = docs.map((d) => d.type);
+  const missingRequired = getMissingRequiredDocs(uploadedTypes, target);
+  const canProceed = missingRequired.length === 0;
+
+  // Build the set of allowed doc types for the picker: required first
+  // (whether uploaded or not), then anything already uploaded.
+  const availableTypes: DocumentType[] = useMemo(() => {
+    const set = new Set<DocumentType>(requiredDocs);
+    uploadedTypes.forEach((t) => set.add(t));
+    return Array.from(set);
+  }, [requiredDocs, uploadedTypes]);
 
   async function handleFileChange(file: File, type: DocumentType) {
     try {
@@ -322,46 +402,50 @@ function UploadStep({
       <CardHeader>
         <CardTitle>2 · Upload supporting documents</CardTitle>
         <CardDescription>
-          Upload at least 3 documents (PDF, JPG, or PNG; max 20MB each). We use them to
-          verify your business registration, identity, and address.
+          Upload the documents listed below. Each one is reviewed by our AI extractor
+          and then by a human reviewer. PDF, JPG, or PNG · max 20 MB each.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-3">
-          {docs.map((d) => (
-            <div
-              key={d.id}
-              className="flex items-center justify-between rounded-md border border-border bg-background p-3 text-sm"
-            >
-              <div className="flex items-center gap-3">
-                <FileUp className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">
-                    {DOCUMENT_TYPE_LABELS[d.type]}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {d.mimeType} · {Math.round((d.fileSize ?? 0) / 1024)} KB
-                  </p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={() => deleteMutation.mutate(d.id)}
-                aria-label="Remove document"
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
+      <CardContent className="space-y-5">
+        <RequiredChecklist
+          required={requiredDocs}
+          uploadedTypes={uploadedTypes}
+        />
+
+        <div className="grid gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Uploaded documents
+          </p>
+          {docs.length === 0 ? (
+            <p className="rounded-md border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+              No documents uploaded yet. Use the picker below to add your first
+              required document.
+            </p>
+          ) : (
+            <div className="grid gap-2">
+              {docs.map((d) => (
+                <DocumentRow
+                  key={d.id}
+                  doc={d}
+                  onDelete={() => deleteMutation.mutate(d.id)}
+                  deleting={deleteMutation.isPending}
+                />
+              ))}
             </div>
-          ))}
+          )}
         </div>
 
-        <UploadRow requiredTypes={requiredTypes} onFile={handleFileChange} />
+        <UploadRow
+          availableTypes={availableTypes}
+          uploadedTypes={uploadedTypes}
+          onFile={handleFileChange}
+        />
 
         {progress !== null && (
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Uploading… {progress}%</p>
+            <p className="text-xs text-muted-foreground">
+              Uploading… {progress}%
+            </p>
             <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full bg-primary transition-all"
@@ -371,12 +455,19 @@ function UploadStep({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-4">
           <p className="text-xs text-muted-foreground">
-            {docs.length}/3 documents ·{' '}
-            <span className={canProceed ? 'text-green-600' : 'text-destructive'}>
-              {canProceed ? 'ready to continue' : 'at least 3 required'}
-            </span>
+            {docs.length} document{docs.length === 1 ? '' : 's'} uploaded ·{' '}
+            {canProceed ? (
+              <span className="font-medium text-green-600">
+                All required documents present
+              </span>
+            ) : (
+              <span className="font-medium text-amber-700">
+                {missingRequired.length} required document
+                {missingRequired.length === 1 ? '' : 's'} remaining
+              </span>
+            )}
           </p>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={onCancel}>
@@ -392,19 +483,103 @@ function UploadStep({
   );
 }
 
+function RequiredChecklist({
+  required,
+  uploadedTypes,
+}: {
+  required: readonly DocumentType[];
+  uploadedTypes: DocumentType[];
+}) {
+  const uploadedSet = new Set(uploadedTypes);
+  return (
+    <div className="rounded-lg border border-border bg-muted/20 p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Required documents
+      </p>
+      <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+        {required.map((docType) => {
+          const done = uploadedSet.has(docType);
+          return (
+            <li key={docType} className="flex items-center gap-2 text-sm">
+              {done ? (
+                <Check className="h-4 w-4 text-green-600" />
+              ) : (
+                <CircleAlert className="h-4 w-4 text-amber-600" />
+              )}
+              <span className={done ? 'text-foreground' : 'text-muted-foreground'}>
+                {labelFor(docType)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function DocumentRow({
+  doc,
+  onDelete,
+  deleting,
+}: {
+  doc: VerificationDocument;
+  onDelete: () => void;
+  deleting: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-md border border-border bg-background p-3 text-sm">
+      <div className="flex items-center gap-3">
+        <FileUp className="h-5 w-5 text-muted-foreground" />
+        <div>
+          <p className="font-medium">{labelFor(doc.type)}</p>
+          <p className="text-xs text-muted-foreground">
+            {doc.originalName || doc.fileUrl || '—'}
+            {doc.mimeType
+              ? ` · ${doc.mimeType}${doc.fileSize ? ` · ${Math.round(doc.fileSize / 1024)} KB` : ''}`
+              : ''}
+          </p>
+        </div>
+      </div>
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        onClick={onDelete}
+        disabled={deleting}
+        aria-label="Remove document"
+      >
+        <Trash2 className="h-4 w-4 text-destructive" />
+      </Button>
+    </div>
+  );
+}
+
 function UploadRow({
-  requiredTypes,
+  availableTypes,
+  uploadedTypes,
   onFile,
 }: {
-  requiredTypes: DocumentType[];
+  availableTypes: DocumentType[];
+  uploadedTypes: DocumentType[];
   onFile: (file: File, type: DocumentType) => void;
 }) {
-  const [type, setType] = useState<DocumentType>(requiredTypes[0] ?? 'TRADE_LICENSE');
-  // re-sync if list changes
-  useEffect(
-    () => setType((curr) => curr ?? requiredTypes[0] ?? 'TRADE_LICENSE'),
-    [requiredTypes],
-  );
+  // Prefer the next missing required type as the default selection, otherwise
+  // the first available type.
+  const requiredDocs = availableTypes.filter((t) => {
+    // We can't know which are required from this prop alone, so fall back to
+    // any not-yet-uploaded type.
+    return !uploadedTypes.includes(t);
+  });
+  const defaultType =
+    requiredDocs[0] ?? availableTypes[0] ?? ('OTHER' as DocumentType);
+  const [type, setType] = useState<DocumentType>(defaultType);
+
+  useEffect(() => {
+    setType(defaultType);
+    // We intentionally only re-sync when the available list changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableTypes.join(',')]);
+
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed border-border bg-muted/30 p-3">
       <select
@@ -413,9 +588,9 @@ function UploadRow({
         className="rounded-md border border-input bg-background px-3 py-2 text-sm"
         aria-label="Document type"
       >
-        {DOCUMENT_TYPES.filter((t) => requiredTypes.includes(t)).map((t) => (
+        {availableTypes.map((t) => (
           <option key={t} value={t}>
-            {DOCUMENT_TYPE_LABELS[t]}
+            {DOCUMENT_TYPE_LABELS[t] ?? t}
           </option>
         ))}
       </select>
@@ -433,6 +608,9 @@ function UploadRow({
           }}
         />
       </label>
+      <p className="basis-full text-xs text-muted-foreground">
+        PDF, JPG, or PNG · max 20 MB
+      </p>
     </div>
   );
 }
@@ -442,19 +620,21 @@ function UploadRow({
 // ----------------------------------------------------------------------------
 
 function ReviewStep({
+  target,
   application,
-  businessId,
+  entityId,
   applicationId,
   onBack,
   onSubmit,
 }: {
+  target: VerificationTarget;
   application: VerificationApplication;
-  businessId: string;
+  entityId: string;
   applicationId: string;
   onBack: () => void;
   onSubmit: () => void;
 }) {
-  const submit = useSubmitApplication(businessId, applicationId);
+  const submit = useSubmitApplication(target, entityId, applicationId);
   const form = useForm<SubmitValues>({
     defaultValues: { additionalNotes: application.additionalNotes ?? '' },
   });
@@ -469,30 +649,76 @@ function ReviewStep({
     }
   });
 
+  const requiredDocs = REQUIRED_DOCUMENTS_BY_TARGET[target];
+  const uploadedTypes = new Set(application.documents.map((d) => d.type));
+  const missingRequired = requiredDocs.filter((t) => !uploadedTypes.has(t));
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>3 · Review &amp; submit</CardTitle>
         <CardDescription>
-          Once submitted, our team will review your application within 3 business days.
+          Once submitted, our team will review your application. You&apos;ll receive an
+          email the moment we have an update.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <SummaryRow label="Level" value={application.level} />
         <SummaryRow label="Type" value={application.type} />
-        <SummaryRow label="Documents" value={`${application.documents.length} file(s)`} />
+        <SummaryRow
+          label="Documents"
+          value={`${application.documents.length} file(s)`}
+        />
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Required documents submitted
+          </p>
+          <ul className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
+            {requiredDocs.map((docType) => {
+              const done = uploadedTypes.has(docType);
+              return (
+                <li key={docType} className="flex items-center gap-2">
+                  {done ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <CircleAlert className="h-4 w-4 text-amber-600" />
+                  )}
+                  <span className={done ? '' : 'text-muted-foreground'}>
+                    {labelFor(docType)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          {missingRequired.length > 0 && (
+            <p className="mt-2 text-xs text-amber-700">
+              Some required documents are missing — go back and upload them before
+              submitting.
+            </p>
+          )}
+        </div>
 
         <form onSubmit={onConfirmed} className="space-y-4">
           <div>
-            <Label htmlFor="additionalNotes">Additional notes for the reviewer (optional)</Label>
-            <Textarea id="additionalNotes" rows={4} {...form.register('additionalNotes')} />
+            <Label htmlFor="additionalNotes">
+              Additional notes for the reviewer (optional)
+            </Label>
+            <Textarea
+              id="additionalNotes"
+              rows={4}
+              {...form.register('additionalNotes')}
+            />
           </div>
 
           <div className="flex justify-between">
             <Button type="button" variant="ghost" onClick={onBack}>
               <ArrowLeft className="h-4 w-4" /> Back
             </Button>
-            <Button type="submit" loading={submit.isPending}>
+            <Button
+              type="submit"
+              loading={submit.isPending}
+              disabled={missingRequired.length > 0}
+            >
               Submit for review
             </Button>
           </div>
@@ -516,17 +742,17 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 // ----------------------------------------------------------------------------
 
 function SubmittedStep({
-  application,
-  businessId,
+  target,
+  entityId,
   applicationId,
   onCancel,
 }: {
-  application: VerificationApplication;
-  businessId: string;
+  target: VerificationTarget;
+  entityId: string;
   applicationId: string;
   onCancel: () => void;
 }) {
-  const cancel = useCancelApplication(businessId, applicationId);
+  const cancel = useCancelApplication(target, entityId, applicationId);
 
   return (
     <Card>
@@ -536,7 +762,8 @@ function SubmittedStep({
           <CardTitle>Your application is being reviewed</CardTitle>
         </div>
         <CardDescription>
-          We'll email you the moment we have an update. You can also track progress below.
+          We&apos;ll email you the moment we have an update. You can also track progress
+          below.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -556,10 +783,12 @@ function SubmittedStep({
             <X className="h-4 w-4" /> Cancel application
           </Button>
         </div>
-        <StatusTimeline businessId={businessId} applicationId={applicationId} />
+        <StatusTimeline
+          target={target}
+          entityId={entityId}
+          applicationId={applicationId}
+        />
       </CardContent>
     </Card>
   );
 }
-
-import { StatusTimeline } from './status-timeline';

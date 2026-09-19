@@ -1,15 +1,23 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   useVerificationApplication,
   type VerificationStatusKey,
+  type VerificationTarget,
 } from './verification-hooks';
 
 interface Props {
-  businessId: string;
+  target: VerificationTarget;
+  entityId: string;
   applicationId: string;
 }
 
@@ -23,7 +31,10 @@ const STATUS_LABEL: Record<VerificationStatusKey, string> = {
   REJECTED: 'Rejected',
 };
 
-const STATUS_VARIANT: Record<VerificationStatusKey, 'default' | 'secondary' | 'destructive' | 'success' | 'outline'> = {
+const STATUS_VARIANT: Record<
+  VerificationStatusKey,
+  'default' | 'secondary' | 'destructive' | 'success' | 'outline'
+> = {
   NOT_STARTED: 'outline',
   PENDING: 'secondary',
   DOCUMENTS_UPLOADED: 'secondary',
@@ -41,8 +52,12 @@ const ORDER: VerificationStatusKey[] = [
   'APPROVED',
 ];
 
-export function StatusTimeline({ businessId, applicationId }: Props) {
-  const { data: app, isLoading } = useVerificationApplication(businessId, applicationId);
+export function StatusTimeline({ target, entityId, applicationId }: Props) {
+  const { data: app, isLoading } = useVerificationApplication(
+    target,
+    entityId,
+    applicationId,
+  );
 
   if (isLoading) return <Skeleton className="h-48" />;
   if (!app) return null;
@@ -61,11 +76,14 @@ export function StatusTimeline({ businessId, applicationId }: Props) {
             <CardDescription>
               Latest update:{' '}
               {new Date(
-                app.statusHistory[app.statusHistory.length - 1]?.createdAt ?? app.appliedAt,
+                app.statusHistory[app.statusHistory.length - 1]?.createdAt ??
+                  app.appliedAt,
               ).toLocaleString()}
             </CardDescription>
           </div>
-          <Badge variant={STATUS_VARIANT[app.status]}>{STATUS_LABEL[app.status]}</Badge>
+          <Badge variant={STATUS_VARIANT[app.status]}>
+            {STATUS_LABEL[app.status]}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent>
@@ -102,7 +120,9 @@ export function StatusTimeline({ businessId, applicationId }: Props) {
 function AiAnalysisSummary({
   ai,
 }: {
-  ai: NonNullable<ReturnType<typeof useVerificationApplication>['data']>['aiAnalysis'];
+  ai: NonNullable<
+    ReturnType<typeof useVerificationApplication>['data']
+  >['aiAnalysis'];
 }) {
   if (!ai) return null;
   return (

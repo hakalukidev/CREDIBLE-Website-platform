@@ -57,7 +57,7 @@ export default function CategoriesPage() {
         </div>
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-grid [mask-image:radial-gradient(60%_60%_at_50%_20%,black,transparent)]" />
 
-        <div className="container-wide relative py-20 md:py-24">
+        <div className="container-wide relative py-4 md:py-8 lg:py-12">
           <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">
             <Sparkles className="mr-1.5 h-3 w-3" />
             Browse

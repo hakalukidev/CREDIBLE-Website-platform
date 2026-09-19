@@ -59,13 +59,13 @@ export function AdminSessionTimer({ onExpire }: { onExpire: () => void }) {
 
   return (
     <Dialog open={showWarning} onOpenChange={(o) => setShowWarning(o)}>
-      <DialogContent className="max-w-sm border-zinc-800 bg-zinc-950">
+      <DialogContent className="max-w-sm border-border bg-card text-card-foreground">
         <DialogHeader>
-          <div className="flex items-center gap-2 text-rose-500">
+          <div className="flex items-center gap-2 text-primary">
             <Timer className="h-5 w-5" />
-            <DialogTitle className="text-zinc-100">Session expiring soon</DialogTitle>
+            <DialogTitle className="text-foreground">Session expiring soon</DialogTitle>
           </div>
-          <DialogDescription className="text-zinc-400">
+          <DialogDescription className="text-muted-foreground">
             You&apos;ve been inactive for 25 minutes. The admin session locks
             automatically after 30 minutes of inactivity for security.
           </DialogDescription>
@@ -73,7 +73,6 @@ export function AdminSessionTimer({ onExpire }: { onExpire: () => void }) {
         <div className="flex justify-end gap-3">
           <Button
             variant="outline"
-            className="border-zinc-800 text-zinc-200 hover:bg-zinc-900"
             onClick={() => {
               handleActivity();
               setShowWarning(false);

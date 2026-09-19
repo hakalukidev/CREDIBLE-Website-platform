@@ -10,15 +10,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   VERIFICATION_LEVEL_LABELS,
 } from '@credible/shared';
-import { useBadge, useBadgeEmbed } from './verification-hooks';
+import { useBadge, useBadgeEmbed, type VerificationTarget } from './verification-hooks';
 
 interface Props {
-  businessId: string;
+  target: VerificationTarget;
+  entityId: string;
 }
 
-export function BadgeManagement({ businessId }: Props) {
-  const { data: badge, isLoading } = useBadge(businessId);
-  const { data: embed } = useBadgeEmbed(businessId);
+export function BadgeManagement({ target, entityId }: Props) {
+  const { data: badge, isLoading } = useBadge(target, entityId);
+  const { data: embed } = useBadgeEmbed(target, entityId);
   const [activeTab, setActiveTab] = useState('embed');
 
   if (isLoading) return <Skeleton className="h-48" />;

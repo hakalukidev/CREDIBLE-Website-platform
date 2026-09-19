@@ -5,12 +5,10 @@ import {
   Users,
   Award,
   Calendar,
-  Sparkles,
   ArrowRight,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { PageShell } from '@/components/layout/page-shell';
 import { SectionHeading } from '@/components/layout/section-heading';
 import { AboutStatsSection } from '@/features/about/about-stats-section';
@@ -30,72 +28,35 @@ const VALUES = [
   {
     icon: ShieldCheck,
     title: 'Trust above all',
-    body: 'Every verification badge is backed by human review. We never auto-approve — our team personally inspects every application.',
+    body: 'Every badge backed by human review. Never auto-approved.',
   },
   {
     icon: Eye,
     title: 'Transparency',
-    body: 'Reviews are public. Business responses are public. Our verification criteria are public. Trust is built on openness.',
+    body: 'Reviews, responses, and criteria — all public.',
   },
   {
     icon: Users,
     title: 'Community-driven',
-    body: 'Our platform is powered by real people sharing real experiences. No fake reviews. No paid rankings.',
+    body: 'Real people, real experiences. No fakes, no paid rankings.',
   },
   {
     icon: Award,
     title: 'Excellence recognized',
-    body: 'The Credible badge is a mark of quality that businesses proudly display and customers instantly trust.',
+    body: 'A badge businesses display and customers trust.',
   },
 ];
 
-const TEAM = [
-  {
-    name: 'Credible Engineering',
-    role: 'Platform & Infrastructure',
-    bio: 'Designs, builds, and operates the platform that powers trust for thousands of businesses across Bangladesh.',
-    initials: 'CE',
-  },
-  {
-    name: 'Verification Team',
-    role: 'Human Reviewers',
-    bio: 'Reviews every application personally. Documents, photos, business records — nothing ships a badge without a real person behind it.',
-    initials: 'VT',
-  },
-  {
-    name: 'Community & Support',
-    role: 'Moderation & Care',
-    bio: 'Keeps the conversation honest. Reviews reports, enforces guidelines, and helps users and businesses alike.',
-    initials: 'CS',
-  },
-  {
-    name: 'Product & Design',
-    role: 'UX & Research',
-    bio: 'Ships the features you use every day. Talks to real customers, writes real copy, and ships real improvements every week.',
-    initials: 'PD',
-  },
-];
+const LAUNCH_YEAR = Number.parseInt(
+  process.env.NEXT_PUBLIC_LAUNCH_YEAR ?? '2026',
+  10,
+);
 
 const TIMELINE = [
   {
-    year: '2026',
+    year: String(Number.isFinite(LAUNCH_YEAR) ? LAUNCH_YEAR : 2026),
     title: 'Public launch',
-    body: 'Credible opens to the public with verified business listings, customer reviews, and a transparent verification program.',
-  },
-  {
-    year: '2026',
-    title: 'Professional profiles',
-    body: 'Solo practitioners — doctors, lawyers, consultants — get their own profile type, with category-specific verification.',
-  },
-  {
-    year: '2026',
-    title: 'Embeddable widgets',
-    body: 'Verified businesses can drop the Credible badge on their own website with a single snippet, linking back to their public profile.',
-  },
-  {
-    year: '2026',
-    title: 'Founding team',
-    body: 'A small, focused group of engineers, designers, and operators set out to build the trust layer Bangladesh\'s businesses deserve.',
+    body: 'Credible opens for verified businesses and customer reviews in Bangladesh.',
   },
 ];
 
@@ -117,13 +78,13 @@ export default function AboutPage() {
         eyebrow="About"
         title={
           <>
-            Building the{' '}
+            The trust layer for{' '}
             <span className="text-gradient bg-gradient-to-r from-brand-600 to-primary">
-              infrastructure of trust
+              Bangladesh.
             </span>
           </>
         }
-        subtitle="Credible was created to solve a simple problem: it's hard to know which businesses to trust. We provide a transparent platform where real customer reviews meet rigorous verification — so you can make confident decisions."
+        subtitle="Real customer reviews, met with rigorous verification."
       >
         <AboutStatsSection />
 
@@ -156,26 +117,10 @@ export default function AboutPage() {
                 <SectionHeading title="How it works" as="h2" />
                 <ol className="mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground">
                   {[
-                    {
-                      n: '1',
-                      strong: 'Find a business',
-                      body: 'Search our directory of businesses and professionals across Bangladesh.',
-                    },
-                    {
-                      n: '2',
-                      strong: 'Read real reviews',
-                      body: 'See verified reviews from real customers, with OTP-confirmed submissions.',
-                    },
-                    {
-                      n: '3',
-                      strong: 'Check verification',
-                      body: 'Look for the Credible Verified or Certified badge, backed by human document review.',
-                    },
-                    {
-                      n: '4',
-                      strong: 'Leave your own review',
-                      body: 'Share your experience to help others make informed decisions.',
-                    },
+                    { n: '1', strong: 'Search', body: 'Explore the directory.' },
+                    { n: '2', strong: 'Read reviews', body: 'Only OTP-verified people post.' },
+                    { n: '3', strong: 'Check the badge', body: 'Human-reviewed, always.' },
+                    { n: '4', strong: 'Share yours', body: 'Your experience helps.' },
                   ].map((step) => (
                     <li key={step.n} className="flex items-start gap-3">
                       <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-primary text-xs font-bold text-white shadow-sm">
@@ -191,10 +136,8 @@ export default function AboutPage() {
               <div>
                 <SectionHeading title="For businesses" as="h2" />
                 <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-                  Credible gives businesses the tools to earn and display public trust. Claim your
-                  profile, collect verified reviews, and apply for the prestigious Credible Verified
-                  badge. Your trust score is computed transparently from real data — not algorithms
-                  or paywalls.
+                  Claim your profile, collect verified reviews, and apply for the Credible Verified
+                  badge. Your trust score comes from real data — never paywalls.
                 </p>
                 <Button asChild className="mt-5 rounded-full">
                   <Link href="/for-business">
@@ -210,31 +153,26 @@ export default function AboutPage() {
         <MotionSection className="mt-16 border-t border-border/70 pt-14">
           <section>
             <SectionHeading
-              eyebrow={
-                <>
-                  <Sparkles className="mr-1 inline h-3 w-3 align-middle" /> Team
-                </>
-              }
+              eyebrow="Team"
               title="The people behind Credible"
-              subtitle="A small, focused group shipping real infrastructure for trust."
+              subtitle="A small team in Dhaka building public trust infrastructure. We're engineers, reviewers, and community moderators — not a faceless platform."
             />
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {TEAM.map((member, idx) => (
-                <MotionCardReveal key={member.name} style={{ transitionDelay: `${idx * 40}ms` }}>
-                  <Card className="h-full p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-pop">
-                    <Avatar className="h-14 w-14 ring-2 ring-primary/15">
-                      <AvatarFallback className="bg-gradient-to-br from-brand-500 to-primary font-semibold text-primary-foreground">
-                        {member.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <h3 className="mt-4 font-display font-semibold">{member.name}</h3>
-                    <p className="text-xs font-medium uppercase tracking-wide text-primary">
-                      {member.role}
-                    </p>
-                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{member.bio}</p>
-                  </Card>
-                </MotionCardReveal>
-              ))}
+            <div className="mt-8 mx-auto max-w-3xl">
+              <Card className="p-6 sm:p-8">
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Our day-to-day is split across engineering, human verification review, community
+                  support, and product design. We work on a public roadmap and ship in the open. If
+                  you&apos;d like to get in touch with a specific team, use the contact page and we&apos;ll
+                  route your message.
+                </p>
+                <div className="mt-5">
+                  <Button asChild variant="outline">
+                    <Link href="/contact">
+                      Contact the team <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </Card>
             </div>
           </section>
         </MotionSection>
@@ -248,7 +186,6 @@ export default function AboutPage() {
                 </>
               }
               title="Our journey"
-              subtitle="From a small idea to a public trust platform — the milestones so far."
             />
             <ol className="relative mt-8 space-y-8 border-l border-primary/20 pl-6">
               {TIMELINE.map((entry, idx) => (
@@ -261,7 +198,9 @@ export default function AboutPage() {
                     {entry.year}
                   </p>
                   <h3 className="mt-1 font-display font-semibold">{entry.title}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{entry.body}</p>
+                  <p className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">
+                    {entry.body}
+                  </p>
                 </li>
               ))}
             </ol>
@@ -276,9 +215,7 @@ export default function AboutPage() {
             />
             <SectionHeading align="center" title="Our mission" />
             <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
-              We believe trust should be earned, not bought. Credible exists to make that belief a
-              reality — creating a level playing field where great businesses rise on merit, and
-              customers always know what they&apos;re getting into.
+              Trust should be earned, not bought.
             </p>
           </section>
         </MotionSection>

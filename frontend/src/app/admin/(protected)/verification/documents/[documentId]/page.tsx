@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api/client';
 import { useQuery } from '@tanstack/react-query';
 import { formatDate } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 
 interface AdminDocument {
   id: string;
@@ -41,9 +41,6 @@ export default function AdminVerificationDocumentPage() {
     retry: false,
   });
 
-  // The route above is a placeholder — actual lookups should come from the
-  // admin application detail. Render a friendly fallback if the data is
-  // missing.
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -54,13 +51,30 @@ export default function AdminVerificationDocumentPage() {
 
   return (
     <div className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">Document {documentId.slice(0, 8)}</h1>
-        <p className="text-sm text-muted-foreground">
-          Open this document from the verification queue — that route embeds
-          the parent application context.
-        </p>
-      </header>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Document {documentId.slice(0, 8)}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            For full context, open this document from the parent verification application.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/verification">
+              <ArrowLeft className="h-4 w-4" /> Back to queue
+            </Link>
+          </Button>
+          {data?.applicationId && (
+            <Button asChild variant="ghost" size="sm">
+              <Link href={`/admin/verification/${data.applicationId}`}>
+                Back to application
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
 
       {data ? (
         <>
@@ -100,18 +114,14 @@ export default function AdminVerificationDocumentPage() {
               </CardContent>
             </Card>
           ) : null}
-
-          <p className="text-sm">
-            <Link className="underline" href={`/admin/verification/${data.applicationId}`}>
-              ← Back to application
-            </Link>
-          </p>
         </>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          Could not load document. Navigate from the verification application
-          detail page to see its documents.
-        </p>
+        <Card>
+          <CardContent className="pt-6 text-sm text-muted-foreground">
+            We couldn&apos;t load this document. Use the verification queue to open documents
+            through their parent application — the context is required for review.
+          </CardContent>
+        </Card>
       )}
     </div>
   );

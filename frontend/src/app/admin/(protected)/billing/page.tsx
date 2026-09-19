@@ -10,6 +10,7 @@ import {
 import { formatDate, formatRelative } from '@/lib/utils';
 import { PLAN_DISPLAY } from '@credible/shared';
 import { Loader2, Banknote, Users, ReceiptText, Tag } from 'lucide-react';
+import { AdminStatusBadge } from '@/components/admin/admin-status-badge';
 
 export default function AdminBillingOverviewPage() {
   const { data: stats, isLoading: statsLoading } = useAdminBillingStats();
@@ -210,11 +211,9 @@ function Kpi({
 function StatusBadge({ status }: { status: string }) {
   const tone =
     status === 'SUCCESS'
-      ? 'bg-success/10 text-success'
+      ? 'success'
       : status === 'PENDING'
-        ? 'bg-amber-100 text-amber-900'
-        : 'bg-destructive/10 text-destructive';
-  return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${tone}`}>{status}</span>
-  );
+        ? 'warning'
+        : 'destructive';
+  return <AdminStatusBadge tone={tone}>{status}</AdminStatusBadge>;
 }

@@ -8,9 +8,11 @@ import type { EligibilityResponse } from './verification-hooks';
 
 interface Props {
   eligibility: EligibilityResponse;
+  /** Human noun for the profile type ("business" / "professional"). */
+  entityLabel?: string;
 }
 
-export function EligibilityPanel({ eligibility }: Props) {
+export function EligibilityPanel({ eligibility, entityLabel = 'business' }: Props) {
   const { checks, eligible, alreadyVerified } = eligibility;
 
   return (
@@ -34,7 +36,7 @@ export function EligibilityPanel({ eligibility }: Props) {
           </Badge>
         </div>
         <CardDescription>
-          Credible Verified is reserved for businesses that meet these quality thresholds.
+          Credible Verified is reserved for {entityLabel === 'professional' ? 'professionals' : 'businesses'} that meet these quality thresholds.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -53,7 +55,7 @@ export function EligibilityPanel({ eligibility }: Props) {
 
         {!eligible && (
           <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-            Meet the criteria above to unlock verification. Most businesses qualify within a few
+            Meet the criteria above to unlock verification. Most {entityLabel === 'professional' ? 'professionals' : 'businesses'} qualify within a few
             weeks of consistent customer reviews.
           </p>
         )}

@@ -4,7 +4,13 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { DashboardKpis } from '@/features/business/dashboard-kpis';
 import { ReviewItem, type ReviewItemModel } from '@/components/business/review-item';
 import { ReviewResponseForm } from '@/components/business/review-response-form';
@@ -17,16 +23,9 @@ export default function BusinessDashboardPage() {
   const [respondTo, setRespondTo] = useState<ReviewItemModel | null>(null);
   const [reportReview, setReportReview] = useState<ReviewItemModel | null>(null);
 
-  const { data: profile } = useQuery({
-    queryKey: qk.businesses.me(),
-    queryFn: async () => {
-      const res = await apiClient.get<{ success: true; data: { id: string; verificationStatus: string } }>(
-        '/businesses/me/profile',
-      );
-      return res.data.data;
-    },
-  });
-
+  // The verification status banner and the dialog open-state both live in
+  // `DashboardLayout` now, so we don't need to re-fetch `businesses/me/profile`
+  // here. Reviews still need their own query.
   const { data: recent } = useQuery({
     queryKey: qk.reviews.owner(1, 5, { sortBy: 'createdAt', sortOrder: 'desc' }),
     queryFn: async () => {
@@ -60,19 +59,6 @@ export default function BusinessDashboardPage() {
       </header>
 
       <DashboardKpis />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Verification status</CardTitle>
-          <CardDescription>
-            Current level: {profile?.verificationStatus ?? 'NOT_STARTED'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Phase 3 will introduce the full Credible Verified application flow. Until
-          then, all published businesses enjoy the baseline trust features.
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
