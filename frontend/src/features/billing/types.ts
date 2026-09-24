@@ -7,7 +7,7 @@ export type SubscriptionPlan = 'FREE' | 'BASIC' | 'PROFESSIONAL' | 'ENTERPRISE';
 
 export type BillingCycle = 'ONE_TIME' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
 
-export type PaymentGateway = 'AAMARPAY' | 'SSLCOMMERZ' | 'MANUAL';
+export type PaymentGateway = 'STRIPE' | 'PAYPAL' | 'MANUAL';
 
 export type DiscountType = 'PERCENTAGE' | 'FIXED_AMOUNT';
 

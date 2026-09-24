@@ -110,7 +110,7 @@ const RULES = [
       'Harassment, threats, or intimidation of other users.',
       'Attempting to circumvent platform security or rate limits.',
       'Scraping or harvesting user data without explicit consent.',
-      'Using the platform for any activity that violates Bangladeshi law.',
+      'Using the platform for any activity that violates applicable local law.',
     ],
   },
 ];

@@ -25,7 +25,7 @@ const SECTIONS: Section[] = [
   {
     id: 'controller',
     heading: '1. Data controller',
-    body: 'Credible is the data controller for personal information collected through this platform. Our registered office is in Dhaka, Bangladesh, and our Data Protection Officer can be reached at dpo@credible.com.',
+    body: 'Credible is the data controller for personal information collected through this platform. Our Data Protection Officer can be reached at dpo@credible.com.',
   },
   {
     id: 'collect',
@@ -50,12 +50,12 @@ const SECTIONS: Section[] = [
   {
     id: 'processors',
     heading: '6. Third-party processors',
-    body: 'Payment gateways (SSLCommerz, aamarPay) for transactions; email delivery (SendGrid); cloud hosting (AWS, Cloudflare); error monitoring (Sentry); and analytics (privacy-respecting, no third-party advertising trackers).',
+    body: 'Payment gateways (Stripe, PayPal) for transactions; email delivery (SendGrid); cloud hosting (AWS, Cloudflare); error monitoring (Sentry); and analytics (privacy-respecting, no third-party advertising trackers).',
   },
   {
     id: 'transfers',
     heading: '7. International transfers',
-    body: 'Some processors store data outside Bangladesh. Where that occurs we rely on standard contractual clauses or the processor\'s published compliance with applicable data-protection law. You can request a copy of the relevant safeguards by emailing dpo@credible.com.',
+    body: 'Some processors store data outside your country of residence. Where that occurs we rely on standard contractual clauses or the processor\'s published compliance with applicable data-protection law. You can request a copy of the relevant safeguards by emailing dpo@credible.com.',
   },
   {
     id: 'public',
@@ -128,7 +128,7 @@ export default function PrivacyPage() {
           <p className="mb-6 text-xs text-muted-foreground">
             <time dateTime={LAST_UPDATED}>
               Last updated:{' '}
-              {new Date(LAST_UPDATED).toLocaleDateString('en-BD', {
+              {new Date(LAST_UPDATED).toLocaleDateString('en-GB', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',

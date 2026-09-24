@@ -3,22 +3,22 @@ import { organizationSchema } from './structured-data';
 
 const SITE_NAME = 'Credible';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-const DEFAULT_TITLE = 'Credible — Find, review, and verify trusted businesses';
+const DEFAULT_TITLE = 'Credible — Discover, review, and verify businesses and professionals';
 const DEFAULT_DESCRIPTION =
-  'Credible is a trust and verification platform where the public can search for and review businesses and professionals, and businesses can apply for the Credible Verified badge.';
+  'Credible is a trust and verification platform where the public can search for and review businesses and professionals, and businesses can apply for the Credible Certified badge.';
 
 export const siteMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: DEFAULT_TITLE, template: `%s · ${SITE_NAME}` },
   description: DEFAULT_DESCRIPTION,
   applicationName: SITE_NAME,
-  keywords: ['trust', 'reviews', 'business verification', 'credible', 'BD', 'Bangladesh'],
+  keywords: ['trust', 'reviews', 'business verification', 'credible', 'professional verification', 'OTP-verified reviews'],
   authors: [{ name: 'Credible' }],
   creator: 'Credible',
   publisher: 'Credible',
   openGraph: {
     type: 'website',
-    locale: 'en_BD',
+    locale: 'en',
     siteName: SITE_NAME,
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,

@@ -60,8 +60,8 @@ export default function AdminPaymentsPage() {
             onChange={(e) => setGateway(e.target.value)}
           >
             <option value="">Any gateway</option>
-            <option value="AAMARPAY">aamarPay</option>
-            <option value="SSLCOMMERZ">SSLCommerz</option>
+            <option value="STRIPE">Stripe</option>
+            <option value="PAYPAL">PayPal</option>
             <option value="MANUAL">Manual</option>
           </select>
           <Button onClick={() => setPage(1)}>Apply</Button>

@@ -34,7 +34,7 @@ export type BlogCategory = (typeof CATEGORIES)[number];
 export const POSTS: BlogPost[] = [
   {
     slug: 'why-trust-matters',
-    title: 'Why trust matters more than ever in Bangladesh',
+    title: 'Why trust matters more than ever online',
     excerpt:
       "In a digital-first economy, consumers rely on online reviews before making purchasing decisions. Here's why building public trust is critical for every business.",
     category: 'Trust',
@@ -49,7 +49,7 @@ export const POSTS: BlogPost[] = [
     body: [
       {
         type: 'paragraph',
-        text: "Bangladesh's digital economy is growing faster than the frameworks meant to protect it. Every day, millions of consumers make decisions about which restaurant to try, which doctor to visit, or which mobile repair shop to trust — all based on signals that are easier to fake than ever.",
+        text: "Digital commerce is growing faster than the frameworks meant to protect it. Every day, millions of consumers make decisions about which restaurant to try, which doctor to visit, or which repair shop to trust — all based on signals that are easier to fake than ever.",
       },
       { type: 'heading', level: 2, text: 'Trust is the new currency' },
       {
@@ -289,14 +289,14 @@ export const POSTS: BlogPost[] = [
     relatedSlugs: ['platform-updates-august-2026', 'how-verification-works'],
   },
   {
-    slug: 'building-trust-in-bangladesh',
-    title: 'Building trust in Bangladesh: a long-form view',
+    slug: 'building-trust-field-report',
+    title: 'Building trust: a long-form field report',
     excerpt:
-      'A field report from the verification desk — what we learned visiting 200+ businesses across Dhaka, Chattogram, and Sylhet.',
+      'A field report from the verification desk — what we learned visiting 200+ businesses, and how those lessons shaped the product.',
     category: 'Trust',
     date: '2026-06-30',
     readTime: '8 min',
-    coverEmoji: '🇧🇩',
+    coverEmoji: '📍',
     author: {
       name: 'Credible Editorial',
       role: 'Trust & Insights',
@@ -305,7 +305,7 @@ export const POSTS: BlogPost[] = [
     body: [
       {
         type: 'paragraph',
-        text: 'For six months our verification team travelled the country. We sat in 200+ businesses — from Gulshan offices to Old Dhaka shops — and asked the same question: what would make your customers trust you more?',
+        text: 'For six months our verification team travelled the country. We sat in 200+ businesses — from corporate offices to small neighbourhood shops — and asked the same question: what would make your customers trust you more?',
       },
       { type: 'heading', level: 2, text: 'What we heard' },
       {

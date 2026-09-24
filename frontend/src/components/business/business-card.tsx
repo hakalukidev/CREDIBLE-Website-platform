@@ -2,16 +2,22 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { MapPin, Star, ArrowRight } from 'lucide-react';
-import { VerifiedBadge } from '@/components/verification/verified-badge';
-import { StarRating } from '@/components/reviews/star-rating';
+import { MapPin, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SafeImage } from '@/components/ui/safe-image';
+import {
+  formatLocation,
+  VerificationOverlay,
+  ViewProfileStrip,
+  type VerificationLevel,
+} from '@/components/ui/profile-card-shared';
 import { cn } from '@/lib/utils';
 
 export interface BusinessCardProps {
-  id: string;
+  /** Kept for backward compatibility with list callers that pass it as a
+   *  React `key`. The card itself does not need the id. */
+  id?: string;
   slug: string;
   name: string;
   /** Short marketing line shown under the business name. Takes priority over `description`. */
@@ -21,8 +27,7 @@ export interface BusinessCardProps {
   logo?: string | null;
   rating?: number | null;
   reviewCount?: number;
-  isVerified?: boolean;
-  badgeType?: 'NONE' | 'BASIC' | 'CERTIFIED' | 'PREMIUM';
+  badgeType?: VerificationLevel;
   location?: {
     city?: string | null;
     state?: string | null;
@@ -40,48 +45,7 @@ export interface BusinessCardProps {
   };
 }
 
-function formatLocation(loc?: BusinessCardProps['location']): string | null {
-  if (!loc) return null;
-  const parts = [loc.city, loc.state, loc.country].filter(Boolean);
-  return parts.length > 0 ? parts.join(', ') : null;
-}
-
-function VerificationOverlay({
-  level,
-}: {
-  level: 'NONE' | 'BASIC' | 'CERTIFIED' | 'PREMIUM';
-}) {
-  if (level === 'NONE') return null;
-
-  const label =
-    level === 'CERTIFIED'
-      ? 'Certified'
-      : level === 'PREMIUM'
-        ? 'Verified Premium'
-        : 'Verified';
-
-  const colorClass =
-    level === 'CERTIFIED'
-      ? 'bg-secondary/90 text-secondary-foreground'
-      : level === 'PREMIUM'
-        ? 'bg-success/90 text-success-foreground'
-        : 'bg-primary/90 text-primary-foreground';
-
-  return (
-    <span
-      className={cn(
-        'absolute top-3 left-3 z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide backdrop-blur-sm',
-        colorClass,
-      )}
-    >
-      <VerifiedBadge level={level} size="sm" withLabel={false} />
-      {label}
-    </span>
-  );
-}
-
 export function BusinessCard({
-  id,
   slug,
   name,
   tagline,
@@ -108,7 +72,11 @@ export function BusinessCard({
     showEstablishedYear = true,
   } = showFeatures;
 
-  const displayLocation = formatLocation(location);
+  const displayLocation = formatLocation([
+    location?.city,
+    location?.state,
+    location?.country,
+  ]);
   const initial = name?.charAt(0)?.toUpperCase() ?? '?';
   const ratingNum = typeof rating === 'string' ? parseFloat(rating) : (rating ?? 0);
 
@@ -118,12 +86,15 @@ export function BusinessCard({
     typeof coverImage === 'string' && coverImage.trim().length > 0 ? coverImage : undefined;
   const safeLogo = typeof logo === 'string' && logo.trim().length > 0 ? logo : undefined;
 
-  const cardContent = (
+  return (
     <Link
       href={`/business/${slug}`}
       onClick={onClick}
       aria-label={`View profile of ${name}`}
-      className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card text-card-foreground shadow-card transition-[transform,box-shadow,border-color] duration-300 ease-out-quart hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-lift focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      className={cn(
+        'group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card text-card-foreground shadow-card transition-[transform,box-shadow,border-color] duration-300 ease-out-quart hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-lift focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+        className,
+      )}
     >
       {/* Image container — 144px fixed height. Rounded only at the
           top so the card's rounded corners are preserved on the cover. */}
@@ -154,19 +125,7 @@ export function BusinessCard({
           </div>
         )}
 
-        {/* Verification badge overlay */}
         <VerificationOverlay level={badgeType} />
-
-        {/* Hover-reveal action chip */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-3 bottom-3 flex justify-end"
-        >
-          <span className="inline-flex translate-x-1 translate-y-1 items-center gap-1.5 rounded-full border border-border/60 bg-card/95 px-3 py-1.5 text-xs font-semibold text-foreground opacity-0 shadow-soft backdrop-blur-sm transition-all duration-300 ease-out-quart group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100">
-            View Profile
-            <ArrowRight className="h-3 w-3" aria-hidden />
-          </span>
-        </div>
       </div>
 
       {/* Content */}
@@ -228,10 +187,10 @@ export function BusinessCard({
           )}
         </div>
       </div>
+
+      <ViewProfileStrip />
     </Link>
   );
-
-  return cardContent;
 }
 
 /* -------------------------------------------------------------------------- */

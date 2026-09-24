@@ -48,7 +48,7 @@ const SECTIONS: Section[] = [
   {
     id: 'subscriptions',
     heading: '6. Subscriptions and payments',
-    body: 'Paid subscriptions are processed through SSLCommerz or aamarPay. Prices are listed in Bangladeshi Taka (BDT). Subscriptions auto-renew unless cancelled. Refund requests are handled on a case-by-case basis within 14 days of payment.',
+    body: 'Paid subscriptions are processed through trusted payment gateways. Prices are listed in US Dollars (USD) by default. Subscriptions auto-renew unless cancelled. Refund requests are handled on a case-by-case basis within 14 days of payment.',
   },
   {
     id: 'acceptable-use',
@@ -83,7 +83,7 @@ const SECTIONS: Section[] = [
   {
     id: 'disputes',
     heading: '13. Dispute resolution',
-    body: 'We will try to resolve disputes informally first. Contact us at support@credible.com. If a dispute is not resolved within 30 days, either party may pursue formal proceedings in the courts of Dhaka, Bangladesh.',
+    body: 'We will try to resolve disputes informally first. Contact us at support@credible.com. If a dispute is not resolved within 30 days, the matter will be handled in accordance with the governing law set out below.',
   },
   {
     id: 'modifications',
@@ -98,7 +98,7 @@ const SECTIONS: Section[] = [
   {
     id: 'governing-law',
     heading: '16. Governing law',
-    body: 'These terms are governed by the laws of Bangladesh. Any disputes shall be resolved in the courts of Dhaka, Bangladesh.',
+    body: 'These terms are governed by applicable international commercial law. Any disputes that cannot be resolved informally will be handled by a recognised arbitration body.',
   },
   {
     id: 'contact',
@@ -136,7 +136,7 @@ export default function TermsPage() {
         <p className="mb-6 text-xs text-muted-foreground">
           <time dateTime={LAST_UPDATED}>
             Last updated:{' '}
-            {new Date(LAST_UPDATED).toLocaleDateString('en-BD', {
+            {new Date(LAST_UPDATED).toLocaleDateString('en-GB', {
               year: 'numeric',
               month: 'long',
               day: 'numeric',

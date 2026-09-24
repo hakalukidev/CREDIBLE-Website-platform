@@ -1,12 +1,12 @@
 'use client';
 
-import { makeDynamicRoute } from '@/components/dashboard/route-skeleton';
+/**
+ * Legacy /dashboard/reviews — deep-links to the "Reviews" tab on
+ * the viewer's own profile via the `#reviews` hash anchor.
+ */
 
-const DashboardReviewsContent = makeDynamicRoute(
-  () => import('./page-content').then((m) => ({ default: m.DashboardReviewsContent })),
-  'reviews',
-);
+import { DashboardRedirect } from '@/components/dashboard-redirect';
 
-export default function DashboardReviewsPage() {
-  return <DashboardReviewsContent />;
+export default function LegacyDashboardReviewsPage() {
+  return <DashboardRedirect target={(handle) => `/profile/${handle}#reviews`} />;
 }

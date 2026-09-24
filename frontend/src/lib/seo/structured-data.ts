@@ -62,7 +62,7 @@ export function organizationSchema() {
     '@id': ORG_ID,
     name: SITE_NAME,
     legalName: 'Credible',
-    alternateName: 'Credible Bangladesh',
+    alternateName: 'Credible',
     url: SITE_URL,
     logo: {
       '@type': 'ImageObject',
@@ -72,27 +72,24 @@ export function organizationSchema() {
     },
     image: `${SITE_URL}/og-default.png`,
     description:
-      'Credible is a trust and verification platform where the public can search for and review businesses and professionals, and businesses can apply for the Credible Verified badge.',
+      'Credible is a trust and verification platform where the public can search for and review businesses and professionals, and businesses can apply for the Credible Certified badge.',
     foundingDate: '2024',
-    areaServed: {
-      '@type': 'Country',
-      name: 'Bangladesh',
-      alternateName: 'BD',
-    },
-    knowsLanguage: ['en', 'bn'],
+    areaServed: [
+      { '@type': 'Thing', name: 'Worldwide' },
+    ],
+    knowsLanguage: ['en'],
     knowsAbout: [
       'Business verification',
       'Customer reviews',
       'Trust scoring',
       'Reputation management',
-      'Bangladesh small business',
     ],
     contactPoint: [
       {
         '@type': 'ContactPoint',
         contactType: 'customer support',
         url: `${SITE_URL}/contact`,
-        availableLanguage: ['English', 'Bengali'],
+        availableLanguage: ['English'],
       },
       {
         '@type': 'ContactPoint',
@@ -113,7 +110,7 @@ export function websiteSchemaWithSearchAction() {
     '@id': WEBSITE_ID,
     name: SITE_NAME,
     url: SITE_URL,
-    inLanguage: 'en-BD',
+    inLanguage: 'en',
     publisher: { '@id': ORG_ID },
     potentialAction: {
       '@type': 'SearchAction',
@@ -211,8 +208,8 @@ export function businessSchema(input: BusinessSchemaInput) {
       : undefined,
     openingHoursSpecification: normalizeOpeningHours(input.hoursJson),
     priceRange: input.priceRange ?? '$$',
-    currenciesAccepted: 'BDT',
-    paymentAccepted: 'Cash, Credit Card, bKash, Nagad',
+    currenciesAccepted: 'USD',
+    paymentAccepted: 'Cash, Credit Card, Online Banking',
     aggregateRating,
     // Brand authority — the business owner can claim a Credible badge. This
     // mirrors Google's own "Brand" markup and helps the rich-result merger
@@ -221,7 +218,7 @@ export function businessSchema(input: BusinessSchemaInput) {
     // The publisher attribution is required by Google's UGC policy for
     // third-party reviews to surface as rich results.
     publisher: { '@id': ORG_ID },
-    inLanguage: 'en-BD',
+    inLanguage: 'en',
   };
 }
 
@@ -287,7 +284,7 @@ export function reviewSchema(input: ReviewSchemaInput) {
       identifier: input.authorId,
     },
     datePublished: input.createdAt,
-    inLanguage: 'en-BD',
+    inLanguage: 'en',
     publisher: PUBLISHER,
     isPartOf: {
       '@id': `${SITE_URL}/business/${input.businessSlug}#business`,
@@ -428,7 +425,7 @@ export function claimReviewSchema(input: ClaimReviewInput) {
       url: SITE_URL,
     },
     datePublished: input.issuedAt,
-    inLanguage: 'en-BD',
+    inLanguage: 'en',
   };
 }
 
@@ -448,16 +445,16 @@ export function webApplicationSchema() {
     operatingSystem: 'Any (web)',
     browserRequirements: 'Requires JavaScript. Requires HTML5.',
     description:
-      'Discover, review, and verify trusted businesses across Bangladesh.',
+      'Discover, review, and verify trusted businesses and professionals across the world.',
     offers: {
       '@type': 'Offer',
       price: '0',
-      priceCurrency: 'BDT',
+      priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
       url: `${SITE_URL}/for-business`,
     },
     publisher: { '@id': ORG_ID },
-    inLanguage: 'en-BD',
+    inLanguage: 'en',
   };
 }
 

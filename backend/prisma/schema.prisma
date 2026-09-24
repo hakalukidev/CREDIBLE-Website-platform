@@ -102,6 +102,12 @@ enum SubscriptionPlan {
   ENTERPRISE
 }
 
+enum PlanAudience {
+  ALL
+  BUSINESS
+  PROFESSIONAL
+}
+
 enum SubscriptionStatus {
   ACTIVE
   TRIALING
@@ -177,6 +183,18 @@ model User {
   status          UserStatus       @default(ACTIVE)
   locale          String?          @default("en")
   lastLoginAt     DateTime?
+  // Profile fields (Phase 6 — public user profile redesign)
+  username              String?   @unique
+  slug                  String?   @unique
+  coverImage            String?
+  coverColor            String?
+  headline              String?
+  bio                   String?   @db.Text
+  location              String?
+  website               String?
+  isHireable            Boolean   @default(false)
+  // Account settings — cap username edits at 2 per lifetime.
+  usernameChangedCount  Int       @default(0)
   // OAuth
   providers       OAuthAccount[]
   // Relations
@@ -193,6 +211,11 @@ model User {
   // Phase 5
   apiKeys         ApiKey[]
   dataRequests    DataRequest[]
+  // Phase 6 — public profile join tables
+  socialLinks     UserSocialLink[]
+  skills          UserSkill[]
+  experience      UserExperience[]
+  education       UserEducation[]
   // Timestamps
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
@@ -201,6 +224,8 @@ model User {
   @@index([role])
   @@index([status])
   @@index([createdAt])
+  @@index([username])
+  @@index([slug])
 }
 
 model OAuthAccount {
@@ -631,6 +656,15 @@ model SubscriptionPlanInfo {
   hasBadge        Boolean          @default(false)
   priority        Int              @default(0)
   isActive        Boolean          @default(true)
+  // Marketing-only fields. `highlights` is an ordered list of bullet
+  // strings rendered on the /for-business and /for-professionals
+  // pricing sections. `ctaLabel` overrides the default "Get started"
+  // CTA copy. `audience` filters which marketing surfaces the plan
+  // appears on — set to BUSINESS or PROFESSIONAL to scope a plan to a
+  // single audience, or ALL to show it on both.
+  highlights      String[]         @default([])
+  ctaLabel        String?
+  audience        PlanAudience     @default(ALL)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 }
@@ -996,4 +1030,67 @@ model DataRequest {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+// ============================================================
+// Phase 6 — Public user profile join tables
+//
+// These power the redesigned `/profile/[username]` surface.
+// All tables cascade on user deletion to keep the public view
+// consistent with the user's actual existence.
+// ============================================================
+
+model UserSocialLink {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'youtube' | 'website'
+  platform  String
+  url       String   @db.Text
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([userId, position])
+}
+
+model UserSkill {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([userId, position])
+}
+
+model UserExperience {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        String
+  company     String
+  logoUrl     String?
+  startDate   DateTime
+  endDate     DateTime? // null = "Present"
+  description String?   @db.Text
+  position    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId, position])
+}
+
+model UserEducation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school    String
+  detail    String? // e.g. "BA, Product Design"
+  startYear Int?
+  endYear   Int? // null = "Present"
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([userId, position])
 }

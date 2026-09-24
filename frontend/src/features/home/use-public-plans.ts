@@ -13,6 +13,13 @@ export interface PublicPlan {
   currency: string;
   hasBadge: boolean;
   hasVerification: boolean;
+  /** Ordered marketing bullet points supplied by admin. Falls back to
+   *  the boolean flags below when empty. */
+  highlights: string[];
+  /** Optional override for the default "Get started" CTA copy. */
+  ctaLabel: string | null;
+  /** Which marketing surface the plan appears on. */
+  audience: 'ALL' | 'BUSINESS' | 'PROFESSIONAL';
 }
 
 interface State {

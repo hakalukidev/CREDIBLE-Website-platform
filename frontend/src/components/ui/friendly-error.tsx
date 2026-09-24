@@ -29,6 +29,7 @@ export type FriendlyErrorKind =
   | 'upload'
   | 'subscription'
   | 'verification'
+  | 'verify-email'
   | 'admin'
   | 'generic';
 
@@ -87,6 +88,10 @@ const COPY: Record<
   verification: {
     title: 'Verification unavailable',
     body: "We couldn't load the verification details. Please refresh the page.",
+  },
+  'verify-email': {
+    title: 'Verification failed',
+    body: "That code didn't work. Please check the email and try again, or request a new code.",
   },
   admin: {
     title: 'Admin data unavailable',

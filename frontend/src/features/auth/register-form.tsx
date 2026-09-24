@@ -59,6 +59,13 @@ interface RegisterFormProps {
    * a Google-style card footer) reflect the same loading spinner.
    */
   onPendingChange?: (isPending: boolean) => void;
+  /**
+   * Fired after a successful registration. The parent typically uses
+   * this to either close the modal (when the account is already
+   * verified, e.g. OAuth) or flip into an in-modal verification screen
+   * (when `emailVerified` is false).
+   */
+  onRegistered?: (session: AuthSession) => void;
 }
 
 /**
@@ -73,6 +80,7 @@ export function RegisterForm({
   variant = 'standalone',
   externalSubmitId,
   onPendingChange,
+  onRegistered,
 }: RegisterFormProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
@@ -114,7 +122,22 @@ export function RegisterForm({
     },
     onSuccess: (data) => {
       setSession(data);
-      toast.success('Welcome to Credible!');
+      if (onRegistered) {
+        // Parent takes over — typically either closes the modal or
+        // flips into the email-verification screen. Don't auto-redirect
+        // or we end up bypassing the verify flow.
+        onRegistered(data);
+        return;
+      }
+      // Standalone usage (no parent owner): if the account needs
+      // verification we keep the toast but stay put so the user can
+      // re-open the verify modal from a banner. Either way the
+      // dashboard banner surfaces on the next page.
+      toast.success(
+        data.user.emailVerified
+          ? 'Welcome to Credible!'
+          : 'Account created — check your email to verify.',
+      );
       router.push(postAuthRedirect(search, data.user.role, { origin }) as never);
     },
     onError: (err) => toast.error(friendlyMessage(err, 'register')),

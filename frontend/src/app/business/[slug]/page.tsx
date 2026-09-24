@@ -15,6 +15,7 @@ import { unwrapReviewsListEnvelope } from '@/components/business/review-item';
 import { ReviewForm } from '@/features/review/review-form';
 import { ContactForm } from '@/features/business/contact-form';
 import { GalleryCarousel } from '@/components/business/gallery-carousel';
+import { SafeImage } from '@/components/ui/safe-image';
 import { HoursCard } from '@/components/business/hours-card';
 import { businessMetadata } from '@/lib/seo/metadata';
 import {
@@ -121,8 +122,9 @@ export default async function BusinessProfilePage({ params }: PageProps) {
     rating: r.rating,
     title: r.title ?? undefined,
     content: r.content,
-    author: [r.user.firstName, r.user.lastName].filter(Boolean).join(' ') || 'Anonymous',
-    authorId: r.user.id,
+    author:
+      [r.user?.firstName, r.user?.lastName].filter(Boolean).join(' ') || 'Anonymous',
+    authorId: r.user?.id ?? '',
     createdAt: r.createdAt,
     helpfulCount: r.helpfulCount,
     response:
@@ -219,6 +221,38 @@ export default async function BusinessProfilePage({ params }: PageProps) {
             <Badge variant="secondary">{business.category.name}</Badge>
           )}
         </div>
+
+        {(business.coverImage || business.logo) && (
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+            <div className="relative aspect-[5/2] w-full">
+              {business.coverImage ? (
+                <SafeImage
+                  src={business.coverImage}
+                  alt={`${business.displayName} cover photo`}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 720px"
+                  className="object-cover"
+                  priority
+                />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-br from-primary/20 to-gold-100" aria-hidden />
+              )}
+            </div>
+            {business.logo && (
+              <div className="flex items-end gap-3 px-4 pb-4 sm:px-6 sm:pb-5 -mt-8 sm:-mt-10">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-4 border-card bg-muted shadow-card sm:h-20 sm:w-20">
+                  <SafeImage
+                    src={business.logo}
+                    alt={`${business.displayName} profile photo`}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {business.gallery && business.gallery.length > 0 && (
           <GalleryCarousel

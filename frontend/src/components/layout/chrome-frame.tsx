@@ -4,6 +4,9 @@ import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { SiteHeader } from './header';
 import { SiteFooter } from './footer';
+import { SearchOverlay } from './search-overlay';
+import { BottomNav } from './bottom-nav';
+import { VerificationBanner } from '@/components/auth/verification-banner';
 
 interface ChromeFrameProps {
   children: ReactNode;
@@ -28,11 +31,14 @@ export function ChromeFrame({ children }: ChromeFrameProps) {
 
   return (
     <>
+      {!ownsChrome && <VerificationBanner />}
       {!ownsChrome && <SiteHeader />}
       <main id="main-content" className="min-h-[60vh]" tabIndex={-1}>
         {children}
       </main>
       {!ownsChrome && <SiteFooter />}
+      {!ownsChrome && <SearchOverlay />}
+      {!ownsChrome && <BottomNav />}
     </>
   );
 }

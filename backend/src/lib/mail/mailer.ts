@@ -68,6 +68,15 @@ export function renderTemplate(name: string, vars: Record<string, unknown>): { s
     }),
 
     // ----- Phase 2 — guest review flow & notifications -----
+    emailVerificationOtp: (v) => ({
+      subject: 'Your Credible verification code',
+      html: `
+        <p>Hi ${escape(v.firstName ?? 'there')},</p>
+        <p>Use this code to verify your email address on Credible:</p>
+        <p style="font-size:28px;font-weight:700;letter-spacing:6px;margin:16px 0;">${escape(v.code)}</p>
+        <p>It expires in ${escape(String(v.expiresInMinutes ?? 10))} minutes. If you didn't create this account, you can safely ignore this email.</p>
+      `.trim(),
+    }),
     reviewOtpRequested: (v) => ({
       subject: `Your Credible verification code for ${escape(v.businessName ?? 'a business')}`,
       html: `

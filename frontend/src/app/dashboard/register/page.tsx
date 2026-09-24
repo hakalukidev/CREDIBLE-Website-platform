@@ -1,25 +1,19 @@
 'use client';
 
-import { makeDynamicRoute } from '@/components/dashboard/route-skeleton';
-import { PageHeader } from '@/components/dashboard/page-header';
+/**
+ * Legacy /dashboard/register — sends visitors to the public
+ * register wizard at `/profile/register`. Auth is bypassed so
+ * marketing links from search engines and emails still land on
+ * the right surface without forcing sign-up first.
+ */
 
-const RegisterWizard = makeDynamicRoute(
-  () =>
-    import('@/components/dashboard/register/register-wizard').then((m) => ({
-      default: m.RegisterWizard,
-    })),
-  'register',
-);
+import { DashboardRedirect } from '@/components/dashboard-redirect';
 
-export default function DashboardRegisterPage() {
+export default function LegacyDashboardRegisterPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Get on Credible"
-        title="Register a page"
-        description="Set up your business or professional page in two short steps. The same forms power the rest of the dashboard."
-      />
-      <RegisterWizard />
-    </div>
+    <DashboardRedirect
+      target="/profile/register"
+      bypassAuthForRegister
+    />
   );
 }

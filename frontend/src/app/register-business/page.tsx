@@ -13,5 +13,5 @@
 import { redirect } from 'next/navigation';
 
 export default function RegisterBusinessLegacyPage(): never {
-  redirect('/register?next=/dashboard/register%3Ftype%3Dbusiness');
+  redirect('/register?next=/profile/register%2Fbusiness');
 }

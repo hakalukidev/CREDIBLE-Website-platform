@@ -74,14 +74,6 @@ export default function ProfessionalVerificationPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">Verification</h1>
-        <p className="text-sm text-muted-foreground">
-          Earn the Credible Verified badge to unlock premium trust features on your
-          professional profile.
-        </p>
-      </header>
-
       {isApproved ? (
         <ApprovedView
           target="professional"

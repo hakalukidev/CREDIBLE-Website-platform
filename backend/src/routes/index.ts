@@ -18,6 +18,7 @@ import { dataRequestsRouter } from '../modules/users/data-requests.controller';
 import { statsRouter } from '../modules/stats/stats.controller';
 import { publicVerificationRouter } from '../modules/verification/public.routes';
 import { userRouter } from '../modules/users/users.routes';
+import { profileRouter } from '../modules/users/profile.routes';
 import { subscriptionRouter } from '../modules/subscriptions/subscriptions.routes';
 import { categoryRouter } from '../modules/categories/categories.routes';
 import { billingRouter } from '../modules/admin/voucher.controller';
@@ -59,6 +60,10 @@ router.get('/health', async (_req, res) => {
 
   router.use('/auth', authRouter);
   router.use('/users', userRouter);
+  // Phase 6 — public profile join-table CRUD (skills, social links, etc.).
+  // Mounted under `/users/me/profile` so the frontend can hit e.g.
+  // POST /users/me/profile/skills and DELETE /users/me/profile/experience/:id.
+  router.use('/users/me/profile', profileRouter);
   router.use('/businesses', businessRouter);
   // Phase 2 — owner-scoped dashboard endpoints. Mounted under the same
   // `/businesses` prefix so paths stay consistent with the existing route

@@ -65,9 +65,15 @@ function AuthModalMount() {
   // sign-in, signup, and OAuth round-trips. `closeAuth` is a no-op
   // when `authOpen` is already false, so this won't churn on re-renders
   // for an already-signed-in user.
+  //
+  // Exception: when the modal is parked in `verify` mode after signup,
+  // we keep it open until the user confirms the code (or skips). The
+  // verify panel's own success handler flips authOpen off.
   useEffect(() => {
-    if (session) closeAuth();
-  }, [session, closeAuth]);
+    if (!session) return;
+    if (authMode === 'verify' && !session.user.emailVerified) return;
+    closeAuth();
+  }, [session, closeAuth, authMode]);
 
   return (
     <AuthModal

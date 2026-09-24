@@ -36,7 +36,7 @@ export function useRequireAuth(opts: UseRequireAuthOptions = {}) {
   useEffect(() => {
     if (missingUser) {
       // Preserve the full path + query string so deep links like
-      // /dashboard/register?type=business survive the round-trip through
+      // /profile/register/business survive the round-trip through
       // /login (otherwise the user lands on the wizard's choice step
       // instead of the form they originally wanted).
       const next =

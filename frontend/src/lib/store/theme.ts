@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 type Theme = 'light' | 'dark' | 'system';
 
-export type AuthMode = 'signin' | 'signup';
+export type AuthMode = 'signin' | 'signup' | 'verify';
 
 interface UIState {
   theme: Theme;
@@ -17,6 +17,16 @@ interface UIState {
   authMode: AuthMode;
   openAuth: (mode?: AuthMode) => void;
   closeAuth: () => void;
+  /** Update `authMode` without toggling `authOpen`. Used by the verify
+   *  panel to flip the root layout's awareness when the modal parks
+   *  itself in `verify` mode after a successful signup. */
+  setAuthMode: (mode: AuthMode) => void;
+  /** Full-screen mobile search overlay (triggered by the floating-pill
+   *  Search button on small screens). Lives in the store so any component
+   *  can open it. */
+  searchOverlayOpen: boolean;
+  openSearchOverlay: () => void;
+  closeSearchOverlay: () => void;
 }
 
 export const useUI = create<UIState>()(
@@ -34,6 +44,11 @@ export const useUI = create<UIState>()(
           s.authOpen && s.authMode === mode ? s : { authOpen: true, authMode: mode },
         ),
       closeAuth: () => set((s) => (s.authOpen ? { authOpen: false } : s)),
+      setAuthMode: (mode) =>
+        set((s) => (s.authMode === mode ? s : { authMode: mode })),
+      searchOverlayOpen: false,
+      openSearchOverlay: () => set({ searchOverlayOpen: true }),
+      closeSearchOverlay: () => set({ searchOverlayOpen: false }),
     }),
     {
       name: 'credible-ui',

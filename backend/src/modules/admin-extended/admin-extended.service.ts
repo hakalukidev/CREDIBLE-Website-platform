@@ -6,6 +6,7 @@
  * place so the controller stays thin.
  */
 import type { Prisma, User, UserRole, UserStatus } from '@prisma/client';
+import type { AdminUpsertPlanInput } from '@credible/shared';
 import { prisma } from '../../lib/db/prisma';
 
 const USER_SAFE_SELECT = {
@@ -436,6 +437,72 @@ export const adminExtendedService = {
       where: { key },
       create: { key, valueJson: value as Prisma.InputJsonValue, updatedBy },
       update: { valueJson: value as Prisma.InputJsonValue, updatedBy },
+    });
+  },
+
+  // ---------------------------------------------------------------------------
+  // Subscription plans (marketing pricing manager)
+  // ---------------------------------------------------------------------------
+
+  async listAllPlans() {
+    return prisma.subscriptionPlanInfo.findMany({ orderBy: { priority: 'asc' } });
+  },
+
+  async upsertPlan(code: string, input: AdminUpsertPlanInput) {
+    // Only forward fields the admin actually sent so a partial update
+    // doesn't blank-out unspecified columns. `code` is the lookup key
+    // and is never overwritten.
+    const data: Prisma.SubscriptionPlanInfoUpdateInput = {};
+    if (input.name !== undefined) data.name = input.name;
+    if (input.description !== undefined) data.description = input.description ?? null;
+    if (input.priceYearly !== undefined)
+      data.priceYearly = input.priceYearly as unknown as Prisma.Decimal;
+    if (input.priceMonthly !== undefined)
+      data.priceMonthly = input.priceMonthly as unknown as Prisma.Decimal;
+    if (input.currency !== undefined) data.currency = input.currency;
+    if (input.audience !== undefined) data.audience = input.audience;
+    if (input.highlights !== undefined) data.highlights = input.highlights;
+    if (input.ctaLabel !== undefined) data.ctaLabel = input.ctaLabel;
+    if (input.hasBadge !== undefined) data.hasBadge = input.hasBadge;
+    if (input.hasVerification !== undefined) data.hasVerification = input.hasVerification;
+    if (input.isActive !== undefined) data.isActive = input.isActive;
+    if (input.priority !== undefined) data.priority = input.priority;
+
+    return prisma.subscriptionPlanInfo.upsert({
+      where: { code: code as Prisma.SubscriptionPlanInfoWhereUniqueInput['code'] },
+      create: {
+        code: code as Prisma.SubscriptionPlanInfoCreateInput['code'],
+        name: input.name ?? code,
+        description: input.description ?? null,
+        priceYearly: (input.priceYearly ?? 0) as unknown as Prisma.Decimal,
+        priceMonthly: (input.priceMonthly ?? 0) as unknown as Prisma.Decimal,
+        currency: input.currency ?? 'USD',
+        audience: input.audience ?? 'ALL',
+        highlights: input.highlights ?? [],
+        ctaLabel: input.ctaLabel ?? null,
+        hasBadge: input.hasBadge ?? false,
+        hasVerification: input.hasVerification ?? false,
+        isActive: input.isActive ?? true,
+        priority: input.priority ?? 0,
+      },
+      update: data,
+    });
+  },
+
+  async deletePlan(code: string) {
+    // Refuse to remove a plan that has live subscriptions — the owner
+    // would otherwise end up on a row that no longer exists in
+    // SubscriptionPlanInfo (which the in-app subscription view reads).
+    const inUse = await prisma.subscription.count({ where: { plan: code as never } });
+    if (inUse > 0) {
+      const err = new Error(
+        `Plan ${code} has ${inUse} live subscription(s). Disable it instead.`,
+      );
+      (err as Error & { code?: string }).code = 'PLAN_IN_USE';
+      throw err;
+    }
+    await prisma.subscriptionPlanInfo.delete({
+      where: { code: code as Prisma.SubscriptionPlanInfoWhereUniqueInput['code'] },
     });
   },
 };

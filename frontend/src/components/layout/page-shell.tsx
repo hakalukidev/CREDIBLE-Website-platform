@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
  */
 interface PageShellProps {
   children: React.ReactNode;
-  /** Optional small caps text shown above the H1, e.g. "Bangladesh's trust layer". */
+  /** Optional small caps text shown above the H1, e.g. "The trust layer". */
   eyebrow?: React.ReactNode;
   /** H1 content. Always rendered as `<h1>`. */
   title: React.ReactNode;

@@ -374,7 +374,7 @@ const REVIEW_SAMPLES: Record<string, ReviewSample[]> = {
     { rating: 5, title: 'Best coffee in town', content: 'Their pour-over is consistently excellent. Staff is warm and the wifi actually works.', author: 'Tasnim H.' },
     { rating: 5, title: 'My weekend go-to', content: 'Cosy place, friendly baristas, and the almond croissants are unforgettable.', author: 'Rifat A.' },
     { rating: 4, title: 'Great brunch', content: 'Eggs benedict was perfect. Only wish they had more plant-based options.', author: 'Sumaiya C.' },
-    { rating: 5, title: 'Calm and well-lit', content: 'Perfect for working remotely — never too loud, plugs at every table.', author: 'Imran K.' },
+    { rating: 5, title: 'Calm and well-lit', content: 'Perfect for working remotely never too loud, plugs at every table.', author: 'Imran K.' },
     { rating: 4, title: 'Solid coffee', content: 'Beans are clearly fresh. Pastries sometimes sell out before noon.', author: 'Farzana A.' },
     { rating: 5, title: 'Reliable favourite', content: 'I have been coming here for 3 years. Quality never slips.', author: 'Shuvo S.' },
   ],

@@ -50,7 +50,12 @@ export const authController = {
         purpose: string;
       };
       const result = await authService.requestOtp(email, phone, purpose);
-      res.json({ success: true, data: result });
+      // The service still returns the OTP `code` for internal callers
+      // (e.g. the register flow passes it straight into the email
+      // template). Never echo it back to the public API — that would
+      // defeat the entire purpose of email verification.
+      const { code: _code, devCode: _devCode, ...publicResult } = result;
+      res.json({ success: true, data: publicResult });
     } catch (e) {
       next(e);
     }

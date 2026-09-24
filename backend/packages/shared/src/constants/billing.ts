@@ -36,6 +36,33 @@ export const FEATURE_FLAGS = [
 
 export type FeatureFlagKey = (typeof FEATURE_FLAGS)[number];
 
+/** Human-readable labels for each feature flag — used as marketing
+ *  bullet copy when admins haven't supplied a custom `highlights`
+ *  list on a plan. */
+export const PLAN_HIGHLIGHT_LABELS: Record<FeatureFlagKey, string> = {
+  canList: 'Public profile page',
+  canCollectReviews: 'Verified reviews',
+  canRespondReviews: 'Two-way reviews',
+  canGetVerified: 'Application review',
+  canUseWidgets: 'Website widgets',
+  canGenerateQR: 'QR code generator',
+  canSendInvitations: 'Review invitations',
+  reviewWidget: 'Reviews widget',
+  trustScoreWidget: 'Trust score widget',
+  customDomain: 'Custom domain',
+  badgeDisplay: 'Verified badge',
+  analytics: 'Analytics dashboard',
+};
+
+export const PLAN_AUDIENCES = ['ALL', 'BUSINESS', 'PROFESSIONAL'] as const;
+export type PlanAudience = (typeof PLAN_AUDIENCES)[number];
+
+export const PLAN_AUDIENCE_LABEL: Record<PlanAudience, string> = {
+  ALL: 'All audiences',
+  BUSINESS: 'For business only',
+  PROFESSIONAL: 'For professionals only',
+};
+
 /**
  * Default VAT for invoices (5%).
  * Override via INVOICE_VAT_RATE environment variable on the API.

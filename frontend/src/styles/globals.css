@@ -62,9 +62,28 @@
     --brand-900: 242 59% 26%;
     --brand-950: 243 64% 17%;
 
+    /* Gold scale — used for awards, certified badges, gold accents */
+    --gold-50: 48 100% 96%;
+    --gold-100: 48 95% 90%;
+    --gold-200: 45 96% 80%;
+    --gold-300: 43 96% 68%;
+    --gold-400: 42 96% 58%;
+    --gold-500: 43 95% 52%;
+    --gold-600: 38 92% 44%;
+    --gold-700: 33 80% 34%;
+    --gold: 43 95% 52%;
+    --gold-foreground: 35 80% 14%;
+
 --radius: 0.75rem;
     --radius-2xl: 1rem;
     --radius-4xl: 1.5rem;
+
+    /* Header dimensions — used by both default and floating header */
+    --header-h-mobile: 56px;
+    --header-h-desktop: 72px;
+    --header-floating-h: 52px;
+    --header-border: 224 16% 91%;
+    --header-search-bg: 220 20% 98%;
   }
 
   .dark {
@@ -244,6 +263,70 @@ body {
 
   .anim-gradient {
     background-size: 200% 200%;
+  }
+
+  /* Light hero gradient — used by the redesigned hero. Pure white at the
+     edges, faint indigo + gold tints near the top — feels airy, never moody. */
+  .bg-light-hero {
+    background-image:
+      radial-gradient(40% 35% at 50% 0%, hsl(239 84% 54% / 0.07) 0%, transparent 70%),
+      radial-gradient(28% 24% at 85% 18%, hsl(43 95% 52% / 0.07) 0%, transparent 70%),
+      radial-gradient(38% 30% at 15% 22%, hsl(239 84% 54% / 0.05) 0%, transparent 70%);
+  }
+
+  /* Gold radial highlight used on award cards. */
+  .bg-gold-grad {
+    background-image:
+      radial-gradient(60% 60% at 50% 0%, hsl(43 95% 60% / 0.22) 0%, transparent 65%),
+      linear-gradient(180deg, hsl(48 100% 99%) 0%, hsl(48 60% 96%) 100%);
+  }
+
+  .text-comfortaa {
+    font-family: var(--font-comfortaa), var(--font-inter), system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  /* Hide scrollbar on horizontal scrolling rows. */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Header search field base — light-on-light per spec (1.5px border, #F9FAFB bg). */
+  .credible-search-field {
+    background-color: hsl(var(--header-search-bg));
+    border: 1.5px solid hsl(var(--header-border));
+  }
+  .credible-search-field:focus-within,
+  .credible-search-field[data-focused='true'] {
+    background-color: #ffffff;
+    border-color: hsl(var(--primary));
+    border-width: 2px;
+    box-shadow: 0 0 0 4px hsl(220 80% 50% / 0.10);
+  }
+
+  /* Underline slide for nav links */
+  .nav-underline {
+    position: relative;
+  }
+  .nav-underline::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    height: 2px;
+    width: 100%;
+    background-color: hsl(var(--primary));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-underline:hover::after,
+  .nav-underline[data-active='true']::after {
+    transform: scaleX(1);
   }
 }
 

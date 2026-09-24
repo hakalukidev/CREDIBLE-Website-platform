@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SkeletonStack } from '@/components/dashboard/primitives/skeleton-stack';
+import { SkeletonStack } from '@/components/ui/skeleton-stack';
 import { MotionFadeUp } from '@/components/ui/motion-primitives';
 import { duration, easeOut } from '@/lib/animations';
 import { cn } from '@/lib/utils';

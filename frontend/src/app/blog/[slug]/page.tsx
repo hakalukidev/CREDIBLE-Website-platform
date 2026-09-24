@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowRight, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import {
   slugifyHeading,
   type BlogPostBlock,
 } from '@/features/blog/posts';
+import { ShareButtons } from '@/components/blog/share-buttons';
 
 export const revalidate = 86_400;
 
@@ -98,7 +100,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               <p className="font-medium text-foreground">{post.author.name}</p>
               <p className="text-xs">
                 <time dateTime={post.date}>
-                  {new Date(post.date).toLocaleDateString('en-BD', {
+                  {new Date(post.date).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -133,45 +135,54 @@ export default async function BlogPostPage({ params }: PageProps) {
               <RenderBlock key={idx} block={block} />
             ))}
 
-            <div className="mt-10 rounded-2xl border border-border/60 bg-gradient-to-br from-card to-primary/[0.04] p-6 shadow-card">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                Share this post
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <ShareLink
-                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(postUrl)}`}
-                  label="Twitter"
-                />
-                <ShareLink
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`}
-                  label="Facebook"
-                />
-                <ShareLink
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`}
-                  label="LinkedIn"
-                />
-              </div>
-            </div>
+            <ShareButtons url={postUrl} title={post.title} />
           </div>
         </div>
 
         {related.length > 0 && (
-          <section className="mx-auto mt-16 max-w-3xl border-t pt-8">
-            <h2 className="font-display text-lg font-semibold">Related posts</h2>
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+          <section className="mx-auto mt-16 max-w-5xl border-t border-border/60 pt-10">
+            <div className="flex items-end justify-between">
+              <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                Related posts
+              </h2>
+              <Link
+                href={'/blog' as never}
+                className="hidden items-center gap-1 text-sm font-semibold text-primary transition-colors hover:text-primary/80 sm:inline-flex"
+              >
+                All posts
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <ul className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((r) => (
                 <li key={r.slug}>
                   <Link
-                    href={`/blog/${r.slug}`}
-                    className="group flex h-full flex-col rounded-2xl border border-border/60 bg-card/60 p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-pop"
+                    href={`/blog/${r.slug}` as never}
+                    className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-pop"
                   >
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                      {r.category} · {r.readTime}
-                    </p>
-                    <p className="mt-2 font-medium leading-snug group-hover:text-primary">
-                      {r.title}
-                    </p>
-                    <p className="mt-2 text-sm text-muted-foreground">{r.excerpt}</p>
+                    <div
+                      className="flex aspect-[16/10] items-center justify-center bg-gradient-to-br from-primary/10 via-brand-200/20 to-gold/20 text-5xl transition-transform duration-500 group-hover:scale-[1.03]"
+                      aria-hidden
+                    >
+                      {r.coverEmoji}
+                    </div>
+                    <div className="flex flex-1 flex-col p-5">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">
+                          {r.category}
+                        </Badge>
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" aria-hidden />
+                          {r.readTime}
+                        </span>
+                      </div>
+                      <h3 className="font-display text-base font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+                        {r.title}
+                      </h3>
+                      <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                        {r.excerpt}
+                      </p>
+                    </div>
                   </Link>
                 </li>
               ))}
@@ -211,19 +222,6 @@ export default async function BlogPostPage({ params }: PageProps) {
         </section>
       </article>
     </>
-  );
-}
-
-function ShareLink({ href, label }: { href: string; label: string }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="rounded-full border border-border/70 bg-background/70 px-4 py-2 text-xs font-medium text-foreground shadow-sm backdrop-blur transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:text-primary"
-    >
-      {label}
-    </a>
   );
 }
 

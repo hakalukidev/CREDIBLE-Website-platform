@@ -20,7 +20,7 @@ import { breadcrumbSchema, organizationSchema } from '@/lib/seo/structured-data'
 export const metadata = pageMetadata({
   title: 'About Credible',
   description:
-    'Learn about Credible — the trust and verification platform helping the public find and review trusted businesses in Bangladesh.',
+    'Learn about Credible — the trust and verification platform helping the public find, review, and verify businesses and professionals across the world.',
   path: '/about',
 });
 
@@ -56,7 +56,7 @@ const TIMELINE = [
   {
     year: String(Number.isFinite(LAUNCH_YEAR) ? LAUNCH_YEAR : 2026),
     title: 'Public launch',
-    body: 'Credible opens for verified businesses and customer reviews in Bangladesh.',
+    body: 'Credible opens for verified businesses, professionals, and customer reviews worldwide.',
   },
 ];
 
@@ -78,9 +78,9 @@ export default function AboutPage() {
         eyebrow="About"
         title={
           <>
-            The trust layer for{' '}
+            A trust layer for{' '}
             <span className="text-gradient bg-gradient-to-r from-brand-600 to-primary">
-              Bangladesh.
+              the world.
             </span>
           </>
         }
@@ -155,7 +155,7 @@ export default function AboutPage() {
             <SectionHeading
               eyebrow="Team"
               title="The people behind Credible"
-              subtitle="A small team in Dhaka building public trust infrastructure. We're engineers, reviewers, and community moderators — not a faceless platform."
+              subtitle="A small, distributed team building public trust infrastructure. We're engineers, reviewers, and community moderators — not a faceless platform."
             />
             <div className="mt-8 mx-auto max-w-3xl">
               <Card className="p-6 sm:p-8">

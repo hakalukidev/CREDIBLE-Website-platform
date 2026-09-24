@@ -27,6 +27,21 @@ export function initials(first?: string | null, last?: string | null): string {
   return (f + l).toUpperCase() || '?';
 }
 
+/** Join a first/last pair into a display name, skipping blanks. */
+export function fullName(first?: string | null, last?: string | null): string {
+  return [first, last].filter((p): p is string => Boolean(p && p.trim())).join(' ').trim();
+}
+
+/** Strip scheme + leading www and append non-root path. Falls back to raw input. */
+export function prettyUrl(raw: string): string {
+  try {
+    const u = new URL(raw);
+    return u.hostname.replace(/^www\./, '') + (u.pathname !== '/' ? u.pathname : '');
+  } catch {
+    return raw;
+  }
+}
+
 export function maskEmail(email: string): string {
   if (!email || !email.includes('@')) return '';
   const [user, domain] = email.split('@');

@@ -67,6 +67,7 @@ export const qk = {
       ['billing', 'admin', 'subscriptions', filters] as const,
     adminVouchers: (filters: Record<string, unknown>) =>
       ['billing', 'admin', 'vouchers', filters] as const,
+    adminPlans: () => ['billing', 'admin', 'plans'] as const,
   },
   analytics: {
     business: (range: string) => ['analytics', 'business', range] as const,
@@ -77,6 +78,10 @@ export const qk = {
   },
   users: {
     me: () => ['users', 'me'] as const,
+    /** Public profile lookup by username/slug — used by `/profile/[username]`. */
+    byUsername: (username: string) => ['users', 'by-username', username] as const,
+    /** Owner's own profile (auth-required). */
+    meProfile: () => ['users', 'me', 'profile'] as const,
   },
   userDashboard: {
     overview: () => ['dashboard', 'overview'] as const,

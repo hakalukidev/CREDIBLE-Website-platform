@@ -30,7 +30,12 @@ export interface AdminReview {
   reportCount: number;
   helpfulCount: number;
   createdAt: string;
-  user: {
+  /**
+   * The author. Optional because an admin-side review for a deleted
+   * account arrives without an embedded user — UI must fall back to
+   * "Anonymous" rather than throw on `review.user.firstName`.
+   */
+  user?: {
     id: string;
     email: string;
     firstName: string | null;
@@ -44,7 +49,7 @@ export interface AdminReview {
     reason: string;
     notes: string | null;
     flaggedById: string;
-    flaggedBy: { id: string; email: string; firstName: string | null; lastName: string | null };
+    flaggedBy?: { id: string; email: string; firstName: string | null; lastName: string | null };
     resolvedAt: string | null;
     resolvedById: string | null;
     createdAt: string;

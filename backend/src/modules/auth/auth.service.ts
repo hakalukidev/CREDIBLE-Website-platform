@@ -4,6 +4,7 @@ import { hashOtp, randomToken, verifyOtp as verifyOtpHash } from '@credible/shar
 import { issueTokenPair, signRefreshToken, verifyRefreshToken } from '../../lib/utils/jwt';
 import { prisma } from '../../lib/db/prisma';
 import { env } from '../../config/env';
+import { queues } from '../../lib/queue/queues';
 import { authRepository } from './auth.repository';
 import type { RegisterInput, LoginInput } from '@credible/shared';
 import type { AuthSession } from '@credible/types';
@@ -29,6 +30,23 @@ export const authService = {
       phone: input.phone,
       role,
     });
+
+    // Issue a fresh email-verification code so the new owner can confirm
+    // ownership of the address in one tap from the modal. Failures are
+    // non-fatal — the user can request a new code from the dashboard
+    // banner if the email bounces.
+    const { code: verifyCode } = await this.requestOtp(input.email, undefined, 'email_verify');
+    await queues['send-email']
+      .add('email-verification', {
+        template: 'emailVerificationOtp',
+        to: input.email,
+        vars: {
+          firstName: user.firstName,
+          code: verifyCode,
+          expiresInMinutes: Math.round(env.OTP_EXPIRES_IN_SECONDS / 60),
+        },
+      })
+      .catch(() => undefined);
 
     const tokens = issueTokenPair({ id: user.id, email: user.email, role: user.role });
 
@@ -60,6 +78,7 @@ export const authService = {
         role: user.role,
         firstName: user.firstName ?? undefined,
         lastName: user.lastName ?? undefined,
+        emailVerified: false,
       },
       tokens,
     };
@@ -87,6 +106,7 @@ export const authService = {
         firstName: user.firstName ?? undefined,
         lastName: user.lastName ?? undefined,
         avatar: user.avatar ?? undefined,
+        emailVerified: user.emailVerifiedAt !== null,
       },
       tokens,
     };
@@ -106,6 +126,7 @@ export const authService = {
         role: user.role,
         firstName: user.firstName ?? undefined,
         lastName: user.lastName ?? undefined,
+        emailVerified: user.emailVerifiedAt !== null,
       },
       tokens,
     };
@@ -128,8 +149,15 @@ export const authService = {
     });
 
     // In production the code is sent via email/SMS and never returned.
-    // We return it here only in development for testing.
-    return { sent: true, devCode: process.env.NODE_ENV === 'development' ? code : undefined };
+    // We still surface it for internal callers (e.g. the register
+    // flow passes it straight into the email template) and for the
+    // development-only `devCode` echo used by `/auth/otp/request`
+    // integration tests.
+    return {
+      sent: true,
+      code,
+      devCode: process.env.NODE_ENV === 'development' ? code : undefined,
+    };
   },
 
   async verifyOtp(
@@ -137,7 +165,7 @@ export const authService = {
     phone: string | undefined,
     code: string,
     purpose: string,
-  ): Promise<{ verified: boolean }> {
+  ): Promise<{ verified: boolean; userId?: string }> {
     const otp = await authRepository.findActiveOtp(email, phone, purpose);
     if (!otp) throw new BadRequestError('Invalid or expired code', 'OTP_INVALID');
     if (otp.attempts >= 5) throw new BadRequestError('Too many attempts', 'OTP_LOCKED');
@@ -149,15 +177,22 @@ export const authService = {
     }
     await authRepository.consumeOtp(otp.id);
 
+    let userId: string | undefined;
     if (email && purpose === 'email_verify') {
       const user = await authRepository.findUserByEmail(email);
-      if (user) await authRepository.updateUser(user.id, { emailVerifiedAt: new Date() });
+      if (user) {
+        await authRepository.updateUser(user.id, { emailVerifiedAt: new Date() });
+        userId = user.id;
+      }
     }
     if (phone && purpose === 'phone_verify') {
       const user = await authRepository.findUserByPhone(phone);
-      if (user) await authRepository.updateUser(user.id, { phoneVerifiedAt: new Date() });
+      if (user) {
+        await authRepository.updateUser(user.id, { phoneVerifiedAt: new Date() });
+        userId = user.id;
+      }
     }
 
-    return { verified: true };
+    return { verified: true, userId };
   },
 };

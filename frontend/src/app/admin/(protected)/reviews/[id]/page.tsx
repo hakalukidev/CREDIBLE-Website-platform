@@ -51,7 +51,7 @@ export default function AdminReviewDetailPage() {
     <div className="space-y-4">
       <header>
         <h1 className="text-2xl font-bold tracking-tight">
-          Review by {review.user.firstName ?? review.user.email}
+          Review by {review.user?.firstName ?? review.user?.email ?? 'Anonymous'}
         </h1>
         <p className="text-sm text-muted-foreground">
           {formatDate(review.createdAt)} · {review.targetType === 'BUSINESS' ? review.business?.displayName : review.professional?.displayName} ·{' '}
@@ -82,7 +82,7 @@ export default function AdminReviewDetailPage() {
                 <div>
                   <div className="font-medium">{f.reason}</div>
                   <div className="text-xs text-muted-foreground">
-                    by {f.flaggedBy.email} · {formatDate(f.createdAt)}
+                    by {f.flaggedBy?.email ?? 'Anonymous'} · {formatDate(f.createdAt)}
                     {f.resolvedAt ? ` · resolved ${formatDate(f.resolvedAt)}` : ''}
                   </div>
                 </div>
@@ -176,7 +176,7 @@ export default function AdminReviewDetailPage() {
           setHideConfirm(false);
         }}
         title="Hide review"
-        description={`This removes “${review.title ?? `Review by ${review.user.firstName ?? review.user.email}`}” from the public profile immediately. The review is not deleted and can be published again.`}
+        description={`This removes “${review.title ?? `Review by ${review.user?.firstName ?? review.user?.email ?? 'Anonymous'}`}” from the public profile immediately. The review is not deleted and can be published again.`}
         confirmLabel="Hide review"
         requireType="HIDE"
         loading={force.isPending}

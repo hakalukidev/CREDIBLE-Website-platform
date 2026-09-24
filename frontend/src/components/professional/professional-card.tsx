@@ -3,13 +3,16 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { MapPin, Star } from 'lucide-react';
-import { VerifiedBadge } from '@/components/verification/verified-badge';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SafeImage } from '@/components/ui/safe-image';
+import {
+  formatLocation,
+  VerificationOverlay,
+  ViewProfileStrip,
+  type VerificationLevel,
+} from '@/components/ui/profile-card-shared';
 import { cn } from '@/lib/utils';
-
-type VerificationLevel = 'NONE' | 'BASIC' | 'CERTIFIED' | 'PREMIUM';
 
 export interface ProfessionalCardProps {
   slug: string;
@@ -27,38 +30,6 @@ export interface ProfessionalCardProps {
   badgeType?: VerificationLevel;
   onClick?: () => void;
   className?: string;
-}
-
-function formatLocation(city?: string | null, country?: string | null): string | null {
-  const parts = [city, country].filter(Boolean);
-  return parts.length > 0 ? parts.join(', ') : null;
-}
-
-function VerificationOverlay({ level }: { level: VerificationLevel }) {
-  if (level === 'NONE') return null;
-  const label =
-    level === 'CERTIFIED'
-      ? 'Certified'
-      : level === 'PREMIUM'
-        ? 'Verified Premium'
-        : 'Verified';
-  const colorClass =
-    level === 'CERTIFIED'
-      ? 'bg-secondary/90 text-secondary-foreground'
-      : level === 'PREMIUM'
-        ? 'bg-success/90 text-success-foreground'
-        : 'bg-primary/90 text-primary-foreground';
-  return (
-    <span
-      className={cn(
-        'absolute top-3 left-3 z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide backdrop-blur-sm',
-        colorClass,
-      )}
-    >
-      <VerifiedBadge level={level} size="sm" withLabel={false} />
-      {label}
-    </span>
-  );
 }
 
 /**
@@ -90,7 +61,7 @@ export function ProfessionalCard({
   const safeAvatar =
     typeof avatar === 'string' && avatar.trim().length > 0 ? avatar : undefined;
 
-  const displayLocation = formatLocation(city, country);
+  const displayLocation = formatLocation([city, country]);
   const initial = name?.charAt(0)?.toUpperCase() ?? '?';
   const ratingNum = typeof rating === 'string' ? parseFloat(rating) : (rating ?? 0);
 
@@ -177,16 +148,7 @@ export function ProfessionalCard({
         </div>
       </div>
 
-      <div className="px-5 pb-5">
-        <span
-          className={cn(
-            'pointer-events-none flex h-9 w-full items-center justify-center rounded-full text-sm font-medium shadow-sm transition-all duration-300',
-            'border border-border/80 bg-background/60 text-foreground group-hover:border-transparent group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-primary/30 group-hover:shadow-md',
-          )}
-        >
-          View Profile
-        </span>
-      </div>
+      <ViewProfileStrip />
     </Link>
   );
 }

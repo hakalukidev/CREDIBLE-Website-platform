@@ -15,6 +15,7 @@ import {
   adminOverrideSubscriptionSchema,
   adminUpdateContactRequestSchema,
   adminUpdateSettingSchema,
+  adminUpsertPlanSchema,
 } from '@credible/shared';
 import { adminExtendedService } from './admin-extended.service';
 import { audit } from '../../lib/audit/log';
@@ -22,6 +23,9 @@ import { NotFoundError } from '../../lib/errors/AppError';
 
 const paramsId = z.object({ id: z.string().min(1) });
 const paramsKey = z.object({ key: z.string().min(1).max(120) });
+const paramsPlanCode = z.object({
+  code: z.enum(['FREE', 'BASIC', 'PROFESSIONAL', 'ENTERPRISE']),
+});
 
 export const adminExtendedController = {
   // ---------------------------------------------------------------------------
@@ -437,6 +441,51 @@ export const adminExtendedController = {
         meta: { value: value as Prisma.InputJsonValue },
       });
       res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // Subscription plans (marketing pricing manager)
+  // ---------------------------------------------------------------------------
+
+  async listPlans(_req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await adminExtendedService.listAllPlans();
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async upsertPlan(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { code } = paramsPlanCode.parse(req.params);
+      const input = adminUpsertPlanSchema.parse({ ...req.body, code });
+      const data = await adminExtendedService.upsertPlan(code, input);
+      await audit({
+        actorId: req.user!.id,
+        action: 'admin.billing.plan.upsert',
+        target: code,
+        meta: { code, name: input.name ?? data.name, isActive: data.isActive },
+      });
+      res.json({ success: true, data });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async deletePlan(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { code } = paramsPlanCode.parse(req.params);
+      await adminExtendedService.deletePlan(code);
+      await audit({
+        actorId: req.user!.id,
+        action: 'admin.billing.plan.delete',
+        target: code,
+      });
+      res.json({ success: true, data: { code } });
     } catch (e) {
       next(e);
     }

@@ -18,7 +18,12 @@ export interface ReviewItemModel {
   helpfulCount: number;
   createdAt: string;
   businessId?: string;
-  user: {
+  /**
+   * The author. Optional because a deleted author leaves an orphan review
+   * (the row stays for audit/display) — the UI falls back to "Anonymous"
+   * instead of crashing.
+   */
+  user?: {
     id: string;
     firstName?: string | null;
     lastName?: string | null;
@@ -87,8 +92,12 @@ export function ReviewItem({
   onReport,
   className,
 }: ReviewItemProps) {
-  const authorName = review.user.firstName ?? 'Anonymous';
+  // The author may be missing (e.g. account deleted) — fall back to
+  // "Anonymous" so the row still renders instead of throwing.
+  const user = review.user;
+  const authorName = user?.firstName ?? 'Anonymous';
   const initials = authorName.charAt(0).toUpperCase();
+  const avatarUrl = user?.avatar ?? null;
 
   return (
     <article
@@ -100,8 +109,8 @@ export function ReviewItem({
       {/* Header row — avatar + identity + rating */}
       <header className="flex items-start gap-3">
         <Avatar className="h-10 w-10 shrink-0">
-          {review.user.avatar && (
-            <AvatarImage src={review.user.avatar} alt={authorName} />
+          {avatarUrl && (
+            <AvatarImage src={avatarUrl} alt={authorName} />
           )}
           <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
             {initials}

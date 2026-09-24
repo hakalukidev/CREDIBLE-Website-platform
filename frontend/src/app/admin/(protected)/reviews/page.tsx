@@ -101,7 +101,7 @@ export default function AdminReviewsPage() {
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span>{formatDate(r.createdAt)}</span>
                         <span>·</span>
-                        <span>{r.user.email}</span>
+                        <span>{r.user?.email ?? 'Anonymous'}</span>
                         <span>·</span>
                         <span className="font-medium">
                           {r.targetType === 'BUSINESS' ? r.business?.displayName : r.professional?.displayName}

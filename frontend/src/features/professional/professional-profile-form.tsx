@@ -322,7 +322,7 @@ function EditProfessionalProfile() {
       toast.success('Professional profile deleted');
       await refreshSessionTokens();
       qc.invalidateQueries({ queryKey: qk.professionals.all() });
-      router.push('/dashboard/profile');
+      router.push('/profile/me' as never);
     },
     onError: (err) => {
       toast.error(friendlyMessage(err, 'profile'));

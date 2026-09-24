@@ -35,19 +35,19 @@ const CONTACTS = [
   {
     icon: Phone,
     title: 'Phone',
-    value: '+880 1700-000000',
+    value: 'Available on request',
     detail: 'Press enquiries only',
   },
   {
     icon: MapPin,
     title: 'Location',
-    value: 'Dhaka, Bangladesh',
-    detail: 'Operating across Bangladesh',
+    value: 'Worldwide',
+    detail: 'Operating across regions',
   },
   {
     icon: Clock,
     title: 'Business hours',
-    value: '9 AM – 6 PM BST',
+    value: '9 AM – 6 PM GMT',
     detail: 'Monday through Friday',
   },
 ] as const;

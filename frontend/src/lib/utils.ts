@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(input: string | Date, locale = 'en-BD'): string {
+export function formatDate(input: string | Date, locale = 'en-GB'): string {
   const d = typeof input === 'string' ? new Date(input) : input;
   return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(d);
 }
@@ -38,6 +38,5 @@ export function debounce<T extends (...args: unknown[]) => void>(fn: T, delay = 
 export function debugWarn(message: string, ...rest: unknown[]): void {
   if (typeof window === 'undefined') return;
   if (process.env.NODE_ENV === 'production') return;
-  // eslint-disable-next-line no-console
   console.warn(message, ...rest);
 }

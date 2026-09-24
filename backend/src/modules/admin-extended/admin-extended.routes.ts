@@ -14,6 +14,7 @@ import {
   adminListAuditLogsSchema,
   adminListPaymentsSchema,
   adminListSubscriptionsSchema,
+  adminUpsertPlanSchema,
 } from '@credible/shared';
 import { adminAuthRequired, ensureActiveUser } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
@@ -87,6 +88,15 @@ router.get(
 // Settings
 router.get('/settings', adminExtendedController.listSettings);
 router.put('/settings/:key', adminExtendedController.upsertSetting);
+
+// Subscription plans (marketing pricing manager)
+router.get('/billing/plans', adminExtendedController.listPlans);
+router.put(
+  '/billing/plans/:code',
+  validate(adminUpsertPlanSchema),
+  adminExtendedController.upsertPlan,
+);
+router.delete('/billing/plans/:code', adminExtendedController.deletePlan);
 
 export { router as adminExtendedRouter };
 export default router;

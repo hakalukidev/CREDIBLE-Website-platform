@@ -71,6 +71,9 @@ export const subscriptionService = {
       features: ReturnType<typeof featureService.getFeaturesFor>;
       hasVerification: boolean;
       hasBadge: boolean;
+      highlights: string[];
+      ctaLabel: string | null;
+      audience: 'ALL' | 'BUSINESS' | 'PROFESSIONAL';
     }>
   > {
     const plans = await prisma.subscriptionPlanInfo.findMany({
@@ -88,6 +91,9 @@ export const subscriptionService = {
       features: featureService.getFeaturesFor(plan.code as SubscriptionPlan),
       hasVerification: plan.hasVerification,
       hasBadge: plan.hasBadge,
+      highlights: plan.highlights,
+      ctaLabel: plan.ctaLabel,
+      audience: plan.audience,
     }));
   },
 

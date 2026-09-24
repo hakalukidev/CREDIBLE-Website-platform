@@ -48,6 +48,17 @@ export interface AuthSession {
     firstName?: string;
     lastName?: string;
     avatar?: string;
+    // Public profile fields (Phase 6).
+    username?: string;
+    slug?: string;
+    headline?: string;
+    /**
+     * Whether the user's email is verified. The backend sets this on
+     * `/auth/register`, `/auth/login`, `/auth/refresh`, and after the
+     * `/auth/otp/verify` flow completes. Frontends can use it to
+     * decide whether to show a "Verify your email" prompt.
+     */
+    emailVerified?: boolean;
   };
   tokens: AuthTokens;
 }

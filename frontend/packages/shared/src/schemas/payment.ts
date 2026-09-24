@@ -78,3 +78,36 @@ export const adminListSubscriptionsSchema = z
     search: z.string().trim().max(120).optional(),
   })
   .strict();
+
+export const planAudienceEnum = z.enum(['ALL', 'BUSINESS', 'PROFESSIONAL']);
+
+/**
+ * Upsert payload for the admin pricing-plans manager.
+ * Identifies a row by its `code` (FREE | BASIC | PROFESSIONAL | ENTERPRISE);
+ * every other field is optional so a partial PATCH keeps the existing
+ * values. The admin form sends the full row on save for predictability.
+ */
+export const adminUpsertPlanSchema = z
+  .object({
+    code: subscriptionPlanEnum,
+    name: z.string().trim().min(1).max(80).optional(),
+    description: z.string().trim().max(500).optional(),
+    priceYearly: z.number().nonnegative().max(1_000_000).optional(),
+    priceMonthly: z.number().nonnegative().max(1_000_000).optional(),
+    currency: z
+      .string()
+      .trim()
+      .length(3)
+      .transform((v) => v.toUpperCase())
+      .optional(),
+    audience: planAudienceEnum.optional(),
+    highlights: z.array(z.string().trim().min(1).max(140)).max(20).optional(),
+    ctaLabel: z.string().trim().min(1).max(40).nullable().optional(),
+    hasBadge: z.boolean().optional(),
+    hasVerification: z.boolean().optional(),
+    isActive: z.boolean().optional(),
+    priority: z.number().int().min(0).max(1000).optional(),
+  })
+  .strict();
+
+export type AdminUpsertPlanInput = z.infer<typeof adminUpsertPlanSchema>;

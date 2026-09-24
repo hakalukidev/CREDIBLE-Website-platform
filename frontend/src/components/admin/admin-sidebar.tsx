@@ -54,7 +54,10 @@ const NAV_SECTIONS: Array<{ title: string; items: NavItem[] }> = [
   },
   {
     title: 'Finance',
-    items: [{ href: '/admin/billing', label: 'Billing', icon: Banknote }],
+    items: [
+      { href: '/admin/billing', label: 'Billing', icon: Banknote },
+      { href: '/admin/billing/plans', label: 'Pricing plans', icon: Banknote },
+    ],
   },
   {
     title: 'Insights',

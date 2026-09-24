@@ -15,7 +15,7 @@ function CheckoutPageInner() {
   const planId = search.get('plan') as SubscriptionPlan | null;
   const cycle = (search.get('cycle') as BillingCycle) ?? 'MONTHLY';
 
-  const [gateway, setGateway] = useState<PaymentGateway>('AAMARPAY');
+  const [gateway, setGateway] = useState<PaymentGateway>('STRIPE');
   const [voucher, setVoucher] = useState<{ code: string; discountAmount: number; discountedPrice: number } | null>(null);
 
   const { data: plans, isLoading } = usePlans();
@@ -77,7 +77,7 @@ function CheckoutPageInner() {
             />
           )}
           <hr className="my-2" />
-          <Row label="Total due" value={`${amount.toLocaleString()} BDT`} bold />
+          <Row label="Total due" value={`$${amount.toLocaleString()}`} bold />
         </CardContent>
       </Card>
 
@@ -90,22 +90,22 @@ function CheckoutPageInner() {
       <Card>
         <CardHeader>
           <CardTitle>Payment method</CardTitle>
-          <CardDescription>We support aamarPay and SSLCommerz (cards, mobile banking).</CardDescription>
+          <CardDescription>We support Stripe and PayPal (cards, wallets, bank transfer).</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-2 sm:grid-cols-2">
           <PaymentOption
-            value="AAMARPAY"
-            title="aamarPay"
-            description="Cards, bKash, Nagad, Rocket, Upay"
-            selected={gateway === 'AAMARPAY'}
-            onSelect={() => setGateway('AAMARPAY')}
+            value="STRIPE"
+            title="Stripe"
+            description="Cards, Apple Pay, Google Pay"
+            selected={gateway === 'STRIPE'}
+            onSelect={() => setGateway('STRIPE')}
           />
           <PaymentOption
-            value="SSLCOMMERZ"
-            title="SSLCommerz"
-            description="Cards, mobile banking, internet banking"
-            selected={gateway === 'SSLCOMMERZ'}
-            onSelect={() => setGateway('SSLCOMMERZ')}
+            value="PAYPAL"
+            title="PayPal"
+            description="PayPal balance, cards, bank transfer"
+            selected={gateway === 'PAYPAL'}
+            onSelect={() => setGateway('PAYPAL')}
           />
         </CardContent>
       </Card>
@@ -126,7 +126,7 @@ function CheckoutPageInner() {
             <Loader2 className="h-4 w-4 animate-spin" /> Redirecting…
           </>
         ) : (
-          <>Pay {amount.toLocaleString()} BDT with {gateway === 'AAMARPAY' ? 'aamarPay' : 'SSLCommerz'}</>
+          <>Pay ${amount.toLocaleString()} with {gateway === 'STRIPE' ? 'Stripe' : 'PayPal'}</>
         )}
       </Button>
 

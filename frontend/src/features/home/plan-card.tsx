@@ -34,7 +34,7 @@ const PROFESSIONAL_FEATURES: FeatureBullet[] = [
 
 function formatPrice(plan: PublicPlan): { display: string; suffix?: string } {
   if (plan.code === 'FREE') return { display: 'Free' };
-  const symbol = plan.currency === 'BDT' ? '৳' : `${plan.currency} `;
+  const symbol = plan.currency === 'USD' ? '$' : `${plan.currency} `;
   return { display: `${symbol}${plan.priceMonthly.toLocaleString()}`, suffix: '/mo' };
 }
 

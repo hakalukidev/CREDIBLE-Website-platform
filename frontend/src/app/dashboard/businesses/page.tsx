@@ -1,12 +1,12 @@
 'use client';
 
-import { makeDynamicRoute } from '@/components/dashboard/route-skeleton';
+/**
+ * Legacy /dashboard/businesses — deep-links to the "Your Pages"
+ * tab on the viewer's own profile via the `#pages` hash anchor.
+ */
 
-const DashboardBusinessesContent = makeDynamicRoute(
-  () => import('./page-content').then((m) => ({ default: m.DashboardBusinessesContent })),
-  'list',
-);
+import { DashboardRedirect } from '@/components/dashboard-redirect';
 
-export default function DashboardBusinessesPage() {
-  return <DashboardBusinessesContent />;
+export default function LegacyDashboardBusinessesPage() {
+  return <DashboardRedirect target={(handle) => `/profile/${handle}#pages`} />;
 }
